@@ -28,7 +28,7 @@ class AlbumController extends Controller
      */
     public function index(Index $request)
     {
-        return view('pages.photo_albums.index', ['records' => Album::paginate(10)]);
+        return view('photo::pages.albums.index', ['records' => Album::paginate(10)]);
     }
 
     /**
@@ -40,7 +40,7 @@ class AlbumController extends Controller
      */
     public function show(Show $request, Album $album)
     {
-        return view('pages.photo_albums.show', [
+        return view('photo::pages.albums.show', [
             'record' => $album,
         ]);
 
@@ -54,7 +54,7 @@ class AlbumController extends Controller
      */
     public function create(Create $request)
     {
-        return view('pages.photo_albums.create', [
+        return view('photo::pages.albums.create', [
             'model' => new Album,
         ]);
     }
@@ -73,7 +73,7 @@ class AlbumController extends Controller
         if ($model->save()) {
 
             session()->flash('app_message', 'Album saved successfully');
-            return redirect()->route('photo_albums.index');
+            return redirect()->route('photo::albums.index');
         } else {
             session()->flash('app_message', 'Something is wrong while saving Album');
         }
@@ -89,7 +89,7 @@ class AlbumController extends Controller
      */
     public function edit(Edit $request, Album $album)
     {
-        return view('pages.photo_albums.edit', [
+        return view('photo::pages.albums.edit', [
             'model' => $album,
         ]);
     }
@@ -108,7 +108,7 @@ class AlbumController extends Controller
         if ($album->save()) {
 
             session()->flash('app_message', 'Album successfully updated');
-            return redirect()->route('photo_albums.index');
+            return redirect()->route('photo::albums.index');
         } else {
             session()->flash('app_error', 'Something is wrong while updating Album');
         }

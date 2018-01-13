@@ -29,7 +29,7 @@ class PhotoController extends Controller
      */
     public function index(Index $request)
     {
-        return view('pages.photo_photos.index', ['records' => Photo::paginate(10)]);
+        return view('photo::pages.photos.index', ['records' => Photo::paginate(10)]);
     }
 
     /**
@@ -41,7 +41,7 @@ class PhotoController extends Controller
      */
     public function show(Show $request, Photo $photo)
     {
-        return view('pages.photo_photos.show', [
+        return view('photo::pages.photos.show', [
             'record' => $photo,
         ]);
 
@@ -55,12 +55,11 @@ class PhotoController extends Controller
      */
     public function create(Create $request)
     {
-        $photo_locations = PhotoLocation::all(['id']);
+        $photo_locations = Location::all(['id']);
 
-        return view('pages.photo_photos.create', [
+        return view('photo::pages.photos.create', [
             'model' => new Photo,
             "photo_locations" => $photo_locations,
-
         ]);
     }
 
@@ -78,7 +77,7 @@ class PhotoController extends Controller
         if ($model->save()) {
 
             session()->flash('app_message', 'Photo saved successfully');
-            return redirect()->route('photo_photos.index');
+            return redirect()->route('photo::photos.index');
         } else {
             session()->flash('app_message', 'Something is wrong while saving Photo');
         }
@@ -94,9 +93,9 @@ class PhotoController extends Controller
      */
     public function edit(Edit $request, Photo $photo)
     {
-        $photo_locations = PhotoLocation::all(['id']);
+        $photo_locations = Location::all(['id']);
 
-        return view('pages.photo_photos.edit', [
+        return view('photo::pages.photos.edit', [
             'model' => $photo,
             "photo_locations" => $photo_locations,
 
@@ -117,7 +116,7 @@ class PhotoController extends Controller
         if ($photo->save()) {
 
             session()->flash('app_message', 'Photo successfully updated');
-            return redirect()->route('photo_photos.index');
+            return redirect()->route('photo::photos.index');
         } else {
             session()->flash('app_error', 'Something is wrong while updating Photo');
         }

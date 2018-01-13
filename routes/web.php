@@ -1,7 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: digitaldreams
- * Date: 11/01/18
- * Time: 12:08
- */
+Route::group([
+    'prefix' => 'photo', 'as' => 'photo::',
+    'middleware' => ['web'],
+    'namespace' => '\Photo\Http\Controllers'], function () {
+    Route::resource('photos', 'PhotoController');
+    Route::resource('albums', 'AlbumController');
+});
