@@ -69,4 +69,14 @@ class Photo extends Model
     {
         $this->attributes['title'] = htmlspecialchars($value);
     }
+
+    public function getSrc()
+    {
+        return $this->src;
+    }
+
+    public function getLocationName()
+    {
+        return 'Your image Location';
+    }
 }

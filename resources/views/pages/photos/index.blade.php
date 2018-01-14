@@ -11,6 +11,9 @@
             <a href="{{route('photo::photos.create')}}"><span class="fa fa-plus"></span></a>
         </div>
     </div>
+    @foreach($photos as $photo)
+        @include('photo::cards.photo',['record'=>$photo])
+        @endforeach
     @include('photo::tables.photo')
     {!! $records->render() !!}
 @endSection
