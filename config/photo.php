@@ -1,6 +1,12 @@
 <?php
 return [
     /**
+     * Layout will be used
+     */
+    'layout' => 'permit::layouts.app',
+
+    'default' => '/storage/images/default.png',
+    /**
      * Local Storage Path.
      */
     'rootPath' => 'images',
@@ -41,5 +47,5 @@ return [
             'width' => 250
         ],
     ],
-
+    'googleMapApiKey' => env('GOOGLE_MAP_API_KEY')
 ];

@@ -72,7 +72,7 @@ class Photo extends Model
 
     public function getSrc()
     {
-        return $this->src;
+        return !empty($this->src) ? $this->src : config('photo.default');
     }
 
     public function getLocationName()

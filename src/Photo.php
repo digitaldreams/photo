@@ -65,6 +65,11 @@ class Photo
         return $this;
     }
 
+    /**
+     * @param string $size
+     * @return $this
+     * @throws \Exception
+     */
     public function resize($size = '')
     {
         $sizes = !empty($size) ? [$size] : config('photo.sizes', []);
@@ -77,6 +82,10 @@ class Photo
                 } catch (\Exception $e) {
                     continue;
                 }
+            }
+            if (config('photo.compressSize', false)) {
+                $resize = new Resize($url);
+                $resize->save();
             }
         }
         return $this;
