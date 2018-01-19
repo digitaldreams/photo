@@ -25,12 +25,9 @@ class Store extends FormRequest
     public function rules()
     {
         return [
-            'user_id' => 'nullable|numeric',
-            'caption' => 'nullable|max:191',
+            'caption' => 'required|max:191',
             'title' => 'nullable|max:191',
-            'mime_type' => 'nullable|max:100',
-            'src' => 'required|max:191',
-            'location_id' => 'nullable|exists:photo_locations,id|numeric',
+            'file' => 'image',
         ];
     }
 

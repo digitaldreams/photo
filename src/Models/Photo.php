@@ -77,6 +77,6 @@ class Photo extends Model
 
     public function getLocationName()
     {
-        return 'Your image Location';
+        return '';
     }
 }

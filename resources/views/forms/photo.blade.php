@@ -12,8 +12,8 @@
         <div class="col-sm-10">
             <div class="form-group {{ $errors->has('src') ? ' has-danger' : '' }}">
                 <label for="exampleFormControlFile1">Upload Your Image</label>
-                <input type="file" name="file" required="required" class="form-control-file"
-                       id="exampleFormControlFile1">
+                <input type="file" name="file" class="form-control-file"
+                       id="exampleFormControlFile1" required>
 
                 @if($errors->has('file'))
                     <div class="invalid-feedback">
@@ -29,7 +29,7 @@
     <div class="form-group {{ $errors->has('caption') ? ' has-danger' : '' }}">
         <label for="caption">Caption</label>
         <input type="text" class="form-control" name="caption" id="caption" value="{{old('caption',$model->caption)}}"
-               placeholder="" maxlength="191">
+               placeholder="" maxlength="191" required>
         @if($errors->has('caption'))
             <div class="invalid-feedback">
                 <strong>{{ $errors->first('caption') }}</strong>
