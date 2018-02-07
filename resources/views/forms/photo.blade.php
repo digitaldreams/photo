@@ -1,6 +1,7 @@
 <form action="{{$route or route('photo::photos.store')}}" method="POST">
     {{csrf_field()}}
     <input type="hidden" name="_method" value="{{$method or 'POST'}}"/>
+    <input type="hidden" name="place_id" value="{{$model->getLocationPlaceId()}}" id="api_place_id">
     <div class="row">
         <div class="col-sm-2">
             <div class="card">
@@ -52,7 +53,8 @@
     <div class="form-group {{ $errors->has('address') ? ' has-danger' : '' }}">
         <label for="location">Address</label>
         <input type="text" class="form-control" name="address" id="address"
-               value="<?php echo old('address', $model->getLocationName()) ?>" placeholder="e.g. 11th street,Dhaka,Bangladesh"
+               value="<?php echo old('address', $model->getLocationName()) ?>"
+               placeholder="e.g. 11th street,Dhaka,Bangladesh"
                maxlength="200">
 
         <ul class="list-group" id="locationDropdown">

@@ -77,6 +77,21 @@ class Photo extends Model
 
     public function getLocationName()
     {
-        return '';
+        try {
+            return $this->location->name;
+
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
+
+    public function getLocationPlaceId()
+    {
+        try {
+            return $this->location->place_id;
+
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 }

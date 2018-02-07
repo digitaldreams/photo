@@ -55,11 +55,8 @@ class PhotoController extends Controller
      */
     public function create(Create $request)
     {
-        $photo_locations = Location::all(['id']);
-
         return view('photo::pages.photos.create', [
-            'model' => new Photo,
-            "photo_locations" => $photo_locations,
+            'model' => new Photo
         ]);
     }
 
@@ -73,9 +70,7 @@ class PhotoController extends Controller
     {
         $model = new Photo;
         $model->fill($request->all());
-
         if ($model->save()) {
-
             session()->flash('app_message', 'Photo saved successfully');
             return redirect()->route('photo::photos.index');
         } else {
