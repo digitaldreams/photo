@@ -14,7 +14,7 @@
     <div class="card-footer bg-transparent">
         <div class="row">
             <div class="col-sm-8 p-0">
-                <i class="fa fa-map-marker"></i> {{$record->getLocationName()}}
+                <i class="fa fa-map-marker"></i> {{$record->getLocationAddress()}}
             </div>
             <div class="col-sm-4 text-right p-0">
                 <a class="card-link" href="{{route('photo::photos.edit',$record->id)}}">

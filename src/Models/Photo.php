@@ -129,7 +129,15 @@ class Photo extends Model
             return '';
         }
     }
+    public function getLocationAddress()
+    {
+        try {
+            return $this->location->address;
 
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
     public function getLocationPlaceId()
     {
         try {
