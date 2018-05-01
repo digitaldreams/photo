@@ -35,6 +35,15 @@ class Photo extends Model
     protected $dates = [];
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        $userModel = config('auth.providers.users.model');
+        return $this->belongsTo($userModel);
+    }
+
+    /**
      * photoLocation
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

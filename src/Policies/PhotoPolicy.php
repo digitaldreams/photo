@@ -2,10 +2,10 @@
 
 namespace Photo\Policies;
 
-use Photo\Models\Album;
+use Photo\Models\Photo;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class AlbumPolicy
+class PhotoPolicy
 {
     use HandlesAuthorization;
 
@@ -31,10 +31,10 @@ class AlbumPolicy
      * Determine whether the user can view the Album.
      *
      * @param  User $user
-     * @param  Album $album
+     * @param  Photo $photo
      * @return mixed
      */
-    public function view($user, Album $album)
+    public function view($user, Photo $photo)
     {
         return true;
     }
@@ -54,24 +54,24 @@ class AlbumPolicy
      * Determine whether the user can update the Album.
      *
      * @param User $user
-     * @param  Album $album
+     * @param  Photo $photo
      * @return mixed
      */
-    public function update($user, Album $album)
+    public function update($user, Photo $photo)
     {
-        return $user->id == $album->user_id;
+        return $user->id == $photo->user_id;
     }
 
     /**
      * Determine whether the user can delete the Album.
      *
      * @param User $user
-     * @param  Album $album
+     * @param  Photo $photo
      * @return mixed
      */
-    public function delete($user, Album $album)
+    public function delete($user, Photo $photo)
     {
-        return $user->id == $album->user_id;
+        return $user->id == $photo->user_id;
     }
 
 }

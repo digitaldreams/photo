@@ -9,7 +9,9 @@
 namespace Photo\Services;
 
 
+use GooglePlace\Services\Geocoding;
 use Photo\Models\Location;
+use GooglePlace\Services\Place;
 
 class LocationService
 {
@@ -26,6 +28,18 @@ class LocationService
     {
         $this->address = isset($data['address']) ? $data['address'] : false;
         $this->place_id = isset($data['place_id']) ? $data['place_id'] : false;
+    }
+
+    public function fetchPlaceDetails()
+    {
+        if (!empty($this->place_id)) {
+            $place = new Place(['placeid' => $this->place_id]);
+            $place->get();
+            print_r($place->address());
+        } elseif (!empty($this->address)) {
+            $geocoding = new Geocoding(['address' => $this->address]);
+            print_r($geocoding);
+        }
     }
 
     public function save()

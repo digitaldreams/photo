@@ -44,7 +44,6 @@ class PhotoController extends Controller
         return view('photo::pages.photos.show', [
             'record' => $photo,
         ]);
-
     }
 
     /**
@@ -89,7 +88,6 @@ class PhotoController extends Controller
     public function edit(Edit $request, Photo $photo)
     {
         $photo_locations = Location::all(['id']);
-
         return view('photo::pages.photos.edit', [
             'model' => $photo,
             "photo_locations" => $photo_locations,
@@ -107,9 +105,7 @@ class PhotoController extends Controller
     public function update(Update $request, Photo $photo)
     {
         $photo->fill($request->all());
-
         if ($photo->save()) {
-
             session()->flash('app_message', 'Photo successfully updated');
             return redirect()->route('photo::photos.index');
         } else {
@@ -133,7 +129,6 @@ class PhotoController extends Controller
         } else {
             session()->flash('app_error', 'Error occurred while deleting Photo');
         }
-
         return redirect()->back();
     }
 }

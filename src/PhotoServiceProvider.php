@@ -1,6 +1,7 @@
 <?php
 
 namespace Photo;
+
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -9,8 +10,6 @@ use Illuminate\Support\ServiceProvider;
  */
 class PhotoServiceProvider extends ServiceProvider
 {
-
-
     /**
      * Perform post-registration booting of services.
      *
@@ -21,8 +20,6 @@ class PhotoServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'photo');
-
-
     }
 
     /**
@@ -39,8 +36,6 @@ class PhotoServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/views' => resource_path('views/vendor/photo'),
         ], 'photo-views');
-
-
 
         $this->mergeConfigFrom(
             __DIR__ . '/../config/photo.php', 'photo'

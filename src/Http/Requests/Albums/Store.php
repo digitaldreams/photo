@@ -3,6 +3,7 @@
 namespace Photo\Http\Requests\Albums;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Photo\Models\Album;
 
 class Store extends FormRequest
 {
@@ -14,7 +15,7 @@ class Store extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        return auth()->check() && auth()->user()->can('create', Album::class);
     }
 
     /**

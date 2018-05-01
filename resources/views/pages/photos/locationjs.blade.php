@@ -8,8 +8,10 @@
             btn = jq(this);
             var service = new google.maps.places.AutocompleteService();
             //componentRestrictions: {country: 'bd'}
+            var options=[];
             service.getPlacePredictions({
                 input: queryString,
+                options
             }, function (data, status) {
                 var htmlSuggestion = '';
                 for (var i = 0; i < data.length; i++) {

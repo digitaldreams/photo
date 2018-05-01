@@ -14,7 +14,7 @@ class Edit extends FormRequest
      */
     public function authorize() 
     {
-        return true;
+        return auth()->check() && auth()->user()->can('update', $this->route('album'));
     }
 
     /**

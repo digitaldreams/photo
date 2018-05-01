@@ -14,7 +14,7 @@
             <div class="form-group {{ $errors->has('src') ? ' has-danger' : '' }}">
                 <label for="exampleFormControlFile1">Upload Your Image</label>
                 <input type="file" name="file" class="form-control-file"
-                       id="exampleFormControlFile1" required>
+                       id="exampleFormControlFile1" accept="image/x-png,image/gif,image/jpeg" required>
 
                 @if($errors->has('file'))
                     <div class="invalid-feedback">

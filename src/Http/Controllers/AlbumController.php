@@ -43,7 +43,6 @@ class AlbumController extends Controller
         return view('photo::pages.albums.show', [
             'record' => $album,
         ]);
-
     }
 
     /**
@@ -69,9 +68,7 @@ class AlbumController extends Controller
     {
         $model = new Album;
         $model->fill($request->all());
-
         if ($model->save()) {
-
             session()->flash('app_message', 'Album saved successfully');
             return redirect()->route('photo::albums.index');
         } else {
@@ -104,9 +101,7 @@ class AlbumController extends Controller
     public function update(Update $request, Album $album)
     {
         $album->fill($request->all());
-
         if ($album->save()) {
-
             session()->flash('app_message', 'Album successfully updated');
             return redirect()->route('photo::albums.index');
         } else {

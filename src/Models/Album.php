@@ -31,7 +31,16 @@ class Album extends Model
     protected $dates = [];
 
     /**
-     * albumphotos
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        $userModel = config('auth.providers.users.model');
+        return $this->belongsTo($userModel);
+    }
+
+    /**
+     * photos
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
