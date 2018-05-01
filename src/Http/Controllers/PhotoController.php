@@ -12,7 +12,8 @@ use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
 use Photo\Models\Photo;
 use Photo\Models\Location;
-
+use Photo\Photo as PhotoLib;
+use Photo\Services\PhotoService;
 
 /**
  * Description of PhotoController
@@ -64,12 +65,15 @@ class PhotoController extends Controller
      *
      * @param  Store $request
      * @return \Illuminate\Http\Response
+     * @throws \Exception
      */
     public function store(Store $request)
     {
         $model = new Photo;
         $model->fill($request->all());
-        if ($model->save()) {
+        $photoService = new PhotoService($model);
+
+        if ($photoService->save($request)) {
             session()->flash('app_message', 'Photo saved successfully');
             return redirect()->route('photo::photos.index');
         } else {
@@ -87,11 +91,8 @@ class PhotoController extends Controller
      */
     public function edit(Edit $request, Photo $photo)
     {
-        $photo_locations = Location::all(['id']);
         return view('photo::pages.photos.edit', [
-            'model' => $photo,
-            "photo_locations" => $photo_locations,
-
+            'model' => $photo
         ]);
     }
 
@@ -101,11 +102,14 @@ class PhotoController extends Controller
      * @param  Update $request
      * @param  Photo $photo
      * @return \Illuminate\Http\Response
+     * @throws \Exception
      */
     public function update(Update $request, Photo $photo)
     {
         $photo->fill($request->all());
-        if ($photo->save()) {
+        $photoService = new PhotoService($photo);
+
+        if ($photoService->save($request)) {
             session()->flash('app_message', 'Photo successfully updated');
             return redirect()->route('photo::photos.index');
         } else {

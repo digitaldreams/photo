@@ -84,7 +84,7 @@ class Resize
             if (!empty($path)) {
                 $this->path = rtrim($rootPath, "/") . "/" . $path;
                 if (!file_exists($this->path)) {
-                    mkdir($this->path);
+                    mkdir($this->path,0777,true);
                 }
             }
         } else {

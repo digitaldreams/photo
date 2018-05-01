@@ -9,7 +9,10 @@
 namespace Photo\Services;
 
 
+use Illuminate\Http\Request;
 use Photo\Models\Photo;
+use Photo\Models\Location;
+use Photo\Photo as PhotoLib;
 
 class PhotoService
 {
@@ -23,8 +26,28 @@ class PhotoService
         $this->photo = $photo;
     }
 
-    public function save(array $data)
+    /**
+     * @param Request $request
+     * @return Photo
+     * @throws \Exception
+     */
+    public function save(Request $request)
     {
-
+        $url = (new PhotoLib())->upload($request->file('file'))->resize()->getUrls();
+        if (!empty($url)) {
+            $this->photo->src = array_shift($url);
+        }
+        if ($request->has('place_api_data')) {
+            $data = json_decode($request->get('place_api_data'), true);
+            if (is_array($data)) {
+                $location = new Location();
+                $location->fill($data);
+                if ($location->save()) {
+                    $this->photo->location_id = $location->id;
+                }
+            }
+        }
+        $this->photo->save();
+        return $this->photo;
     }
 }

@@ -33,6 +33,8 @@ class Photo
      */
     protected $urls = [];
 
+    private $urlPrefix = '';
+
     /**
      * Photo constructor.
      */
@@ -110,6 +112,9 @@ class Photo
     private function makeRootPath()
     {
         if (in_array($this->driver, ['local', 'public'])) {
+            if ($this->driver == 'public') {
+                $this->urlPrefix = 'storage/';
+            }
             $rootPath = $this->getRootPath();
             $this->fullPath = rtrim($rootPath, "/") . "/" . $this->folder;
             if (!file_exists($this->fullPath)) {

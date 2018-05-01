@@ -3,7 +3,7 @@
 namespace Photo\Http\Requests\Photos;
 
 use Illuminate\Foundation\Http\FormRequest;
-
+use Photo\Models\Photo;
 class Store extends FormRequest
 {
 

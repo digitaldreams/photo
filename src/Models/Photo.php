@@ -26,13 +26,24 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment
      */
-    protected $guarded = ['id'];
+    protected $fillable = ['caption', 'title'];
 
 
     /**
      * Date time columns.
      */
     protected $dates = [];
+
+    public static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->user_id) && auth()->check()) {
+                $model->user_id = auth()->user()->id;
+            }
+            return true;
+        });
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
