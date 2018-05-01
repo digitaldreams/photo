@@ -43,6 +43,7 @@ class PhotoPolicy
      * Determine whether the user can create Album.
      *
      * @param  User $user
+     * @param Photo $photo
      * @return mixed
      */
     public function create($user)

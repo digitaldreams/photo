@@ -2,7 +2,12 @@
 
 namespace Photo;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Photo\Models\Album;
+use Photo\Policies\AlbumPolicy;
+use Photo\Policies\PhotoPolicy;
+use Photo\Models\Photo;
 
 /**
  * Class ServiceProvider
@@ -11,15 +16,27 @@ use Illuminate\Support\ServiceProvider;
 class PhotoServiceProvider extends ServiceProvider
 {
     /**
+     * The policy mappings for the application.
+     *
+     * @var array
+     */
+    protected $policies = [
+        Photo::class => PhotoPolicy::class,
+        Album::class => AlbumPolicy::class
+    ];
+
+    /**
      * Perform post-registration booting of services.
      *
      * @return void
      */
     public function boot()
     {
+        $this->registerPolicies();
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'photo');
+
     }
 
     /**
@@ -40,5 +57,17 @@ class PhotoServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__ . '/../config/photo.php', 'photo'
         );
+    }
+
+    /**
+     * Register the application's policies.
+     *
+     * @return void
+     */
+    public function registerPolicies()
+    {
+        foreach ($this->policies as $key => $value) {
+            Gate::policy($key, $value);
+        }
     }
 }
