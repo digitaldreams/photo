@@ -13,7 +13,7 @@
         <div class="col-sm-10">
             <div class="form-group ">
                 <label for="exampleFormControlFile1">Upload Your Image</label>
-                <input type="file" name="file" class="form-control-file {{ $errors->has('file') ? ' is-invalid' : '' }}"
+                <input type="file" onchange="readURL(this,'imagePreview')" name="file" class="form-control-file {{ $errors->has('file') ? ' is-invalid' : '' }}"
                        id="exampleFormControlFile1" accept="image/x-png,image/gif,image/jpeg">
 
                 @if($errors->has('file'))

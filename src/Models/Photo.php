@@ -107,6 +107,9 @@ class Photo extends Model
      */
     public function getFormat($size = 'thumbnail')
     {
+        if (empty($this->src)) {
+            return config('photo.default');
+        }
         $name = pathinfo($this->src);
         $size = config('photo.sizes.' . $size, false);
 
