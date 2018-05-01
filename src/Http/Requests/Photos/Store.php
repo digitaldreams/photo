@@ -4,6 +4,7 @@ namespace Photo\Http\Requests\Photos;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Photo\Models\Photo;
+
 class Store extends FormRequest
 {
 
@@ -27,7 +28,7 @@ class Store extends FormRequest
         return [
             'caption' => 'required|max:191',
             'title' => 'nullable|max:191',
-            'file' => 'image',
+            'file' => 'image|required',
         ];
     }
 

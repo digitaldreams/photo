@@ -6,7 +6,7 @@
         <div class="col-sm-2">
             <div class="card">
                 <div class="card-img-top">
-                    <img src="{{$model->getSrc()}}" class="img img-fluid" id="imagePreview">
+                    <img src="{{$model->getFormat()}}" class="img img-fluid" id="imagePreview">
                 </div>
             </div>
         </div>
@@ -14,7 +14,7 @@
             <div class="form-group ">
                 <label for="exampleFormControlFile1">Upload Your Image</label>
                 <input type="file" name="file" class="form-control-file {{ $errors->has('file') ? ' is-invalid' : '' }}"
-                       id="exampleFormControlFile1" accept="image/x-png,image/gif,image/jpeg" required>
+                       id="exampleFormControlFile1" accept="image/x-png,image/gif,image/jpeg">
 
                 @if($errors->has('file'))
                     <div class="invalid-feedback">

@@ -8,8 +8,12 @@
     <a href="{{route('photo::photos.create')}}"><span class="fa fa-plus"></span></a>
 @endsection
 @section('content')
-    @foreach($records as $photo)
-        @include('photo::cards.photo',['record'=>$photo])
-    @endforeach
+    <div class="row">
+        @foreach($records as $photo)
+            <div class="col-sm-4">
+                @include('photo::cards.photo',['record'=>$photo])
+            </div>
+        @endforeach
+    </div>
     {!! $records->render() !!}
 @endSection

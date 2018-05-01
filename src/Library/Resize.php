@@ -79,12 +79,12 @@ class Resize
         if (isset($sizes[$size])) {
             $this->width = isset($sizes[$size]['width']) ? $sizes[$size]['width'] : null;
             $this->height = isset($sizes[$size]['height']) ? $sizes[$size]['height'] : null;
-            $path = isset($sizes[$size]['path']) ? $sizes[$size]['path'] : null;
+            $path = isset($sizes[$size]['path']) ? config('photo.rootPath', 'photos') . '/' . $sizes[$size]['path'] : null;
 
             if (!empty($path)) {
                 $this->path = rtrim($rootPath, "/") . "/" . $path;
                 if (!file_exists($this->path)) {
-                    mkdir($this->path,0777,true);
+                    mkdir($this->path, 0777, true);
                 }
             }
         } else {

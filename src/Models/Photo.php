@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Photo extends Model
 {
-
     /**
      * Database table name
      */
@@ -27,12 +26,6 @@ class Photo extends Model
      * Protected columns from mass assignment
      */
     protected $fillable = ['caption', 'title'];
-
-
-    /**
-     * Date time columns.
-     */
-    protected $dates = [];
 
     public static function boot()
     {
@@ -93,6 +86,35 @@ class Photo extends Model
     public function getSrc()
     {
         return !empty($this->src) ? $this->src : config('photo.default');
+    }
+
+    /**
+     * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Routing\UrlGenerator|mixed|string
+     */
+    public function getUrl()
+    {
+        if (empty($this->src)) {
+            return config('photo.default');
+        }
+        $prefix = config('photo.prefix');
+        return url(rtrim($prefix . '/' . $this->src));
+    }
+
+    /**
+     * Get other sizes of the photo
+     * @param string $size key from photo.sizes
+     * @return string
+     */
+    public function getFormat($size = 'thumbnail')
+    {
+        $name = pathinfo($this->src);
+        $size = config('photo.sizes.' . $size, false);
+
+        if (!empty($name) && is_array($size) && isset($size['path'])) {
+            $prefix = config('photo.prefix');
+            return url($prefix . '/' . $name['dirname'] . '/' . $size['path'] . '/' . $name['basename']);
+        }
+        return $this->getUrl();
     }
 
     public function getLocationName()

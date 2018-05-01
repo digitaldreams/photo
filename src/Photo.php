@@ -40,7 +40,7 @@ class Photo
      */
     public function __construct()
     {
-        $this->folder = config('photo.uploadPath', 'photos');
+        $this->folder = config('photo.rootPath', 'photos');
         $this->driver = config('photo.driver', 'public');
 
         //Creating root folder if not exists

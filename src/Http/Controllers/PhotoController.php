@@ -30,7 +30,7 @@ class PhotoController extends Controller
      */
     public function index(Index $request)
     {
-        return view('photo::pages.photos.index', ['records' => Photo::paginate(10)]);
+        return view('photo::pages.photos.index', ['records' => Photo::paginate(6)]);
     }
 
     /**

@@ -12,6 +12,12 @@ return [
     'rootPath' => 'images',
 
     /**
+     * Url prefix that will be added to all photos.
+     * For example if you are using public driver then prefix will be storage
+     */
+    'prefix' => 'storage',
+
+    /**
      *
      */
     'driver' => 'public',
