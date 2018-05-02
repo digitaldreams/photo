@@ -25,7 +25,7 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment
      */
-    protected $fillable = ['caption', 'title'];
+    protected $fillable = ['caption', 'title', 'src'];
 
     public static function boot()
     {
@@ -129,6 +129,7 @@ class Photo extends Model
             return '';
         }
     }
+
     public function getLocationAddress()
     {
         try {
@@ -138,6 +139,7 @@ class Photo extends Model
             return '';
         }
     }
+
     public function getLocationPlaceId()
     {
         try {
@@ -146,5 +148,16 @@ class Photo extends Model
         } catch (\Exception $e) {
             return '';
         }
+    }
+
+    public function apiData()
+    {
+        return [
+            'url' => $this->getUrl(),
+            'thumbnail' => $this->getFormat(),
+            'caption' => $this->caption,
+            'title' => $this->title,
+            'location' => $this->getLocationAddress()
+        ];
     }
 }
