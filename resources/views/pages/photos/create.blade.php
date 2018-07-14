@@ -21,7 +21,7 @@
 @endSection
 @section('scripts')
     <script type="text/javascript"
-            src="http://maps.google.com/maps/api/js?key=<?php echo config('photo.googleMapApiKey') ?>&libraries=places">
+            src="https://maps.google.com/maps/api/js?key=<?php echo config('photo.googleMapApiKey') ?>&libraries=places">
     </script>
 
     @include('photo::pages.photos.locationjs')
