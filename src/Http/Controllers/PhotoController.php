@@ -56,7 +56,8 @@ class PhotoController extends Controller
     public function create(Create $request)
     {
         return view('photo::pages.photos.create', [
-            'model' => new Photo
+            'model' => new Photo,
+            'enableVoice'=>true,
         ]);
     }
 
@@ -92,7 +93,8 @@ class PhotoController extends Controller
     public function edit(Edit $request, Photo $photo)
     {
         return view('photo::pages.photos.edit', [
-            'model' => $photo
+            'model' => $photo,
+            'enableVoice'=>true,
         ]);
     }
 

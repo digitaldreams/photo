@@ -17,16 +17,20 @@
                 <i class="fa fa-map-marker"></i> {{$record->getLocationAddress()}}
             </div>
             <div class="col-sm-4 text-right p-0">
-                <a class="card-link" href="{{route('photo::photos.edit',$record->id)}}">
-                    <span class="fa fa-pencil"></span>
-                </a>
-                <form class="card-link" onsubmit="return confirm('Are you sure you want to delete?')"
-                      action="{{route('photo::photos.destroy',$record->id)}}" method="post" style="display: inline">
-                    {{csrf_field()}}
-                    {{method_field('DELETE')}}
-                    <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
-                                class="text-danger fa fa-remove"></i></button>
-                </form>
+                @can('update',$record)
+                    <a class="card-link" href="{{route('photo::photos.edit',$record->id)}}">
+                        <span class="fa fa-pencil"></span>
+                    </a>
+                @endcan
+                @can('delete',$record)
+                    <form class="card-link" onsubmit="return confirm('Are you sure you want to delete?')"
+                          action="{{route('photo::photos.destroy',$record->id)}}" method="post" style="display: inline">
+                        {{csrf_field()}}
+                        {{method_field('DELETE')}}
+                        <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
+                                    class="text-danger fa fa-remove"></i></button>
+                    </form>
+                @endcan
             </div>
         </div>
     </div>

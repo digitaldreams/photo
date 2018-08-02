@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(config('photo.layout'))
 @section('breadcrumb')
     <li class="breadcrumb-item">
         <a href="{{route('photo::photos.index')}}">Photos</a>

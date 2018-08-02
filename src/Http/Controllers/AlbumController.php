@@ -55,6 +55,7 @@ class AlbumController extends Controller
     {
         return view('photo::pages.albums.create', [
             'model' => new Album,
+            'enableVoice'=>true,
         ]);
     }
 

@@ -1,10 +1,10 @@
-@extends('layouts.app')
+@extends(config('photo.layout'))
 @section('breadcrumb')
     <li class="breadcrumb-item">
         <a href="{{route('photo::photos.index')}}">Photos</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{route('photo::photos.edit',$model->id)}}">{{$model->caption}}</a>
+        <a href="{{route('photo::photos.show',$model->id)}}">{{$model->caption}}</a>
     </li>
     <li class="breadcrumb-item">Edit</li>
 @endsection
