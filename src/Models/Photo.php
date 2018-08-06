@@ -88,6 +88,15 @@ class Photo extends Model
         return !empty($this->src) ? $this->src : config('photo.default');
     }
 
+    public function scopeQ($query, $keyword)
+    {
+        return $query->where(function ($q) use ($keyword) {
+            $q->orWhere('caption', 'LIKE', '%' . $keyword . '%')
+                ->orWhere('title', 'LIKE', '%' . $keyword . '%')
+                ->orWhere('src', 'LIKE', '%' . $keyword . '%');
+        });
+    }
+
     /**
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Routing\UrlGenerator|mixed|string
      */
@@ -150,13 +159,23 @@ class Photo extends Model
         }
     }
 
+    public function getCaption()
+    {
+        return !empty($this->caption) ? $this->caption : pathinfo($this->src, PATHINFO_BASENAME);
+    }
+
+    public function getTitle()
+    {
+        return !empty($this->title) ? $this->title : pathinfo($this->src, PATHINFO_BASENAME);
+    }
+
     public function apiData()
     {
         return [
             'url' => $this->getUrl(),
             'thumbnail' => $this->getFormat(),
-            'caption' => $this->caption,
-            'title' => $this->title,
+            'caption' => $this->getCaption(),
+            'title' => $this->getTitle(),
             'location' => $this->getLocationAddress()
         ];
     }

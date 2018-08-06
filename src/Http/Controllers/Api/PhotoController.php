@@ -24,7 +24,12 @@ class PhotoController extends Controller
     public function index(Index $index)
     {
         $data = [];
-        $photos = Photo::where('user_id', auth()->user()->id)->paginate(100);
+        $photos = Photo::where('user_id', auth()->user()->id);
+        $limit = $index->get('limit', 100);
+        if ($index->has('q')) {
+            $photos = $photos->q($index->get('q'));
+        }
+        $photos = $photos->paginate($limit);
         foreach ($photos as $photo) {
             $data[] = $photo->apiData();
         }
