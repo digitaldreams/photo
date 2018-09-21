@@ -25,7 +25,12 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment
      */
-    protected $fillable = ['caption', 'title', 'src'];
+    protected $fillable = ['caption', 'title', 'src', 'exif'];
+
+    /**
+     * @var array
+     */
+    protected $casts = ['exif' => 'array'];
 
     public static function boot()
     {
