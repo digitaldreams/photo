@@ -20,10 +20,12 @@ class PhotoService
      * @var Photo
      */
     protected $photo;
+    protected $folder;
 
     public function __construct(Photo $photo)
     {
         $this->photo = $photo;
+        $this->folder = config('photo.rootPath', 'photos');
     }
 
     /**
@@ -34,12 +36,13 @@ class PhotoService
     public function save(Request $request)
     {
         if ($request->hasFile('file')) {
-            $url = (new PhotoLib())->upload($request->file('file'))->resize()->getUrls();
+            $url = (new PhotoLib())->setFolder($this->folder)->upload($request->file('file'))->resize()->getUrls();
             if (!empty($url)) {
                 $this->photo->src = array_shift($url);
             }
-            if ($request->has('place_api_data')) {
-                $data = json_decode($request->get('place_api_data'), true);
+            $placeApiData = $request->get('place_api_data');
+            if (!empty($placeApiData)) {
+                $data = json_decode($placeApiData, true);
                 if (is_array($data)) {
                     $location = new Location();
                     $location->fill($data);
@@ -48,9 +51,23 @@ class PhotoService
                     }
                 }
             }
+            if (empty($this->photo->caption)) {
+                $this->photo->caption = $request->file('file')->getBasename();
+            }
+            if (empty($this->photo->title)) {
+                $this->photo->title = $request->file('file')->getBasename();
+            }
+
+            $this->photo->save();
         }
 
-        $this->photo->save();
+
         return $this->photo;
+    }
+
+    public function setFolder($folder)
+    {
+        $this->folder = $folder;
+        return $this;
     }
 }

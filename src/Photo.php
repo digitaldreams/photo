@@ -79,14 +79,14 @@ class Photo
         foreach ($absUrls as $url) {
             foreach ($sizes as $size) {
                 try {
-                    $resize = new Resize($url, $size);
+                    $resize = (new Resize($url, $size))->setFolder($this->folder);
                     $resize->save();
                 } catch (\Exception $e) {
                     continue;
                 }
             }
             if (config('photo.compressSize', false)) {
-                $resize = new Resize($url);
+                $resize = (new Resize($url))->setFolder($this->folder);
                 $resize->save();
             }
         }
@@ -152,5 +152,11 @@ class Photo
             $fullUrls[] = rtrim($rootPath, "/") . "/" . $url;
         }
         return $fullUrls;
+    }
+
+    public function setFolder($folder)
+    {
+        $this->folder = $folder;
+        return $this;
     }
 }

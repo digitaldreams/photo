@@ -23,6 +23,12 @@ class Resize
      */
     protected $path;
 
+    protected $folder;
+    /**
+     * @var
+     */
+    protected $thumbnailPath;
+
     /**
      * Resize constructor.
      * @param $filePath
@@ -52,6 +58,9 @@ class Resize
             $constraint->aspectRatio();
             $constraint->upsize();
         });
+        if (!file_exists($this->path)) {
+            $this->path = $this->getFullPath($this->folder) . '/' . $this->thumbnailPath;
+        }
         if (!empty($this->path)) {
             return $img->save($this->path . "/" . $this->getBaseName());
         }
@@ -73,24 +82,48 @@ class Resize
     private function setSize($size)
     {
         $sizes = config('photo.sizes');
-        $driver = config('photo.driver');
-        $rootPath = config('filesystems.disks.' . $driver . '.root');
 
         if (isset($sizes[$size])) {
             $this->width = isset($sizes[$size]['width']) ? $sizes[$size]['width'] : null;
             $this->height = isset($sizes[$size]['height']) ? $sizes[$size]['height'] : null;
-            $path = isset($sizes[$size]['path']) ? config('photo.rootPath', 'photos') . '/' . $sizes[$size]['path'] : null;
+            $this->thumbnailPath = $sizes[$size]['path'] ?? null;
 
-            if (!empty($path)) {
-                $this->path = rtrim($rootPath, "/") . "/" . $path;
-                if (!file_exists($this->path)) {
-                    mkdir($this->path, 0777, true);
-                }
-            }
         } else {
             $this->width = config('photo.maxWidth');
             $this->height = config('photo.maxHeight');
         }
         return $this;
+    }
+
+    public function setPath($path)
+    {
+        $this->path = $path;
+        return $this;
+    }
+
+    public function setFolder($folder)
+    {
+        $this->folder = $folder;
+        return $this;
+    }
+
+    /**
+     * @param string $folder
+     * @return string
+     */
+    protected function getFullPath($folder = '')
+    {
+        $path = '';
+        $driver = config('photo.driver');
+        $rootPath = config('filesystems.disks.' . $driver . '.root');
+        $folder = empty($folder) ? config('photo.rootPath', 'photos') : $folder;
+
+        if (!empty($folder)) {
+            $path = rtrim($rootPath, "/") . "/" . $folder;
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+        }
+        return $path;
     }
 }
