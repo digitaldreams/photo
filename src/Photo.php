@@ -11,6 +11,7 @@ namespace Photo;
 
 use Photo\Library\Resize;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Intervention\Image\Facades\Image as ImageLib;
 
 class Photo
 {
@@ -101,7 +102,11 @@ class Photo
     {
         if ($document->isValid()) {
             $fileName = uniqid(rand(1000, 99999)) . '.' . $document->getClientOriginalExtension();
-            return $document->storeAs($this->folder, $fileName, $this->driver);
+            $path = $document->storeAs($this->folder, $fileName, $this->driver);
+            $rootPath = $this->getRootPath();
+            $fullPath = rtrim($rootPath, "/") . "/" . $path;
+           $this->resizeOriginal($fullPath);
+            return $path;
         }
         return false;
     }
@@ -158,5 +163,24 @@ class Photo
     {
         $this->folder = $folder;
         return $this;
+    }
+
+    /**
+     * @param $path
+     * @return bool
+     */
+    protected function resizeOriginal($path)
+    {
+        if (config('photo.compressSize')) {
+            $width = config('photo.maxWidth');
+            $height = config('photo.maxHeight');
+            $img = ImageLib::make($path);
+            $img->fit($width, $height, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
+            return $img->save();
+        }
+        return false;
     }
 }

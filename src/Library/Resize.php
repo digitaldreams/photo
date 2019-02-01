@@ -53,7 +53,6 @@ class Resize
     public function save()
     {
         $img = ImageLib::make($this->filePath);
-
         $img->fit($this->width, $this->height, function ($constraint) {
             $constraint->aspectRatio();
             $constraint->upsize();

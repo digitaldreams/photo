@@ -30,13 +30,17 @@ class PhotoService
 
     /**
      * @param Request $request
+     * @param string $name
      * @return Photo
      * @throws \Exception
      */
-    public function save(Request $request)
+    public function save(Request $request, $name = 'file')
     {
-        if ($request->hasFile('file')) {
-            $url = (new PhotoLib())->setFolder($this->folder)->upload($request->file('file'))->resize()->getUrls();
+        if ($request->hasFile($name)) {
+            $url = (new PhotoLib())->setFolder($this->folder)
+                ->upload($request->file($name))
+                ->resize()
+                ->getUrls();
             if (!empty($url)) {
                 $this->photo->src = array_shift($url);
             }
