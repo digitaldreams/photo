@@ -1,6 +1,6 @@
-<form action="{{$route or route('photo::photos.store')}}" method="POST" enctype="multipart/form-data">
+<form action="{{$route ?? route('photo::photos.store')}}" method="POST" enctype="multipart/form-data">
     {{csrf_field()}}
-    <input type="hidden" name="_method" value="{{$method or 'POST'}}"/>
+    <input type="hidden" name="_method" value="{{$method ?? 'POST'}}"/>
     <input type="hidden" name="place_api_data" value="" id="place_api_data">
     <div class="row">
         <div class="col-sm-2">

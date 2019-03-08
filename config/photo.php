@@ -25,6 +25,12 @@ return [
      * Do you like to reduce image size?
      */
     'compressSize' => true,
+
+    /**
+     * Exif Data
+     */
+    'exif' => true,
+
     /**
      * Maximum weight of image. Leave blank or false if you do not like shrink your images
      */

@@ -8,12 +8,8 @@
 
 namespace Photo\Services;
 
-
-use GooglePlace\Services\Nearby;
-use GooglePlace\Services\TextSearch;
 use Photo\Models\Location;
 use Photo\Models\Photo;
-use PlaceApi\Place;
 
 class ExifDataService
 {
@@ -56,6 +52,7 @@ class ExifDataService
 
     public function toArray()
     {
+        return $this->data;
         return array_intersect_key($this->data, array_flip($this->fillable));
     }
 
@@ -63,22 +60,12 @@ class ExifDataService
     {
         $latLng = $this->getCoordinates();
         if ($latLng) {
-            $place = new Place(['where' => implode(",", $latLng), 'radius' => 2000]);
-            $locations = $place->nearBy();
-
-            if ($locations->count() > 0) {
-                $placeModel = $locations->first();
-                $locationModel = Location::firstOrNew(['place_id' => $placeModel->id()]);
-                $locationModel->locality = $placeModel->locality();
-                $locationModel->city = $placeModel->locality();
-                $locationModel->state = $placeModel->state();
-                $locationModel->country = $placeModel->country();
-                $locationModel->latitude = $latLng['latitude'] ?? null;
-                $locationModel->longitude = $latLng['longitude'] ?? null;
-                $locationModel->save();
-                $this->locationModel = $locationModel;
-                return $locationModel;
-            }
+            $locationModel = new Location();
+            $locationModel->latitude = $latLng['latitude'] ?? null;
+            $locationModel->longitude = $latLng['longitude'] ?? null;
+            $locationModel->save();
+            $this->locationModel = $locationModel;
+            return $locationModel;
         }
         return false;
     }

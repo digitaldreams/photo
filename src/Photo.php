@@ -9,6 +9,7 @@
 namespace Photo;
 
 
+use Illuminate\Support\Facades\Log;
 use Photo\Library\Resize;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Intervention\Image\Facades\Image as ImageLib;
@@ -78,17 +79,14 @@ class Photo
         $sizes = !empty($size) ? [$size] : config('photo.sizes', []);
         $absUrls = $this->getAbsoluteUrls();
         foreach ($absUrls as $url) {
-            foreach ($sizes as $size) {
+            foreach ($sizes as $key => $size) {
                 try {
-                    $resize = (new Resize($url, $size))->setFolder($this->folder);
+                    $resize = (new Resize($url, $key))->setFolder($this->folder);
                     $resize->save();
                 } catch (\Exception $e) {
+                    Log::error($e->getMessage() . ' on line ' . $e->getLine() . ' in ' . $e->getFile());
                     continue;
                 }
-            }
-            if (config('photo.compressSize', false)) {
-                $resize = (new Resize($url))->setFolder($this->folder);
-                $resize->save();
             }
         }
         return $this;
@@ -105,7 +103,7 @@ class Photo
             $path = $document->storeAs($this->folder, $fileName, $this->driver);
             $rootPath = $this->getRootPath();
             $fullPath = rtrim($rootPath, "/") . "/" . $path;
-           $this->resizeOriginal($fullPath);
+            $this->resizeOriginal($fullPath);
             return $path;
         }
         return false;
@@ -171,7 +169,7 @@ class Photo
      */
     protected function resizeOriginal($path)
     {
-        if (config('photo.compressSize')) {
+        if (config('photo.compressSize') && config('photo.exif') == false) {
             $width = config('photo.maxWidth');
             $height = config('photo.maxHeight');
             $img = ImageLib::make($path);

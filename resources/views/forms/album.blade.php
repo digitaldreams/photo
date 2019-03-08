@@ -1,6 +1,6 @@
-<form action="{{$route or route('photo::albums.store')}}" method="POST">
+<form action="{{$route ?? route('photo::albums.store')}}" method="POST">
     {{csrf_field()}}
-    <input type="hidden" name="_method" value="{{$method or 'POST'}}"/>
+    <input type="hidden" name="_method" value="{{$method ?? 'POST'}}"/>
     <div class="form-group {{ $errors->has('user_id') ? ' has-danger' : '' }}">
         <label for="user_id">User Id</label>
         <input type="text" class="form-control" name="user_id" id="user_id" value="{{old('user_id',$model->user_id)}}"
