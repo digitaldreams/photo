@@ -10,6 +10,7 @@ use Photo\Http\Requests\Photos\Index;
 use Photo\Http\Requests\Photos\Show;
 use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
+use Photo\Jobs\GetExifDataJob;
 use Photo\Models\Photo;
 use Photo\Models\Location;
 use Photo\Photo as PhotoLib;
@@ -57,7 +58,7 @@ class PhotoController extends Controller
     {
         return view('photo::pages.photos.create', [
             'model' => new Photo,
-            'enableVoice'=>true,
+            'enableVoice' => true,
         ]);
     }
 
@@ -75,6 +76,9 @@ class PhotoController extends Controller
         $photoService = new PhotoService($model);
 
         if ($photoService->save($request)) {
+            if (config('photo.exif')) {
+                dispatch(new GetExifDataJob($model));
+            }
             session()->flash('app_message', 'Photo saved successfully');
             return redirect()->route('photo::photos.index');
         } else {
@@ -94,7 +98,7 @@ class PhotoController extends Controller
     {
         return view('photo::pages.photos.edit', [
             'model' => $photo,
-            'enableVoice'=>true,
+            'enableVoice' => true,
         ]);
     }
 

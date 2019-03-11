@@ -61,6 +61,7 @@ class ExifDataService
         $latLng = $this->getCoordinates();
         if ($latLng) {
             $locationModel = new Location();
+            $locationModel->place_id = '';
             $locationModel->latitude = $latLng['latitude'] ?? null;
             $locationModel->longitude = $latLng['longitude'] ?? null;
             $locationModel->save();
