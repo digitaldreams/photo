@@ -27,6 +27,7 @@ class Photo extends Model
      */
     protected $fillable = ['caption', 'title', 'src', 'exif'];
 
+    protected $dates = ['captured_at'];
     /**
      * @var array
      */
