@@ -10,6 +10,7 @@ namespace Photo\Services;
 
 use Photo\Models\Location;
 use Photo\Models\Photo;
+use Photo\Services\HereReverseGeocoding;
 
 class ExifDataService
 {
@@ -60,8 +61,17 @@ class ExifDataService
     {
         $latLng = $this->getCoordinates();
         if ($latLng) {
-            $locationModel = new Location();
-            $locationModel->place_id = '';
+            $here = new HereReverseGeocoding($latLng['latitude'], $latLng['longitude']);
+            $data = $here->fetch()->toArray();
+            if (isset($data['place_id'])) {
+                $locationModel = Location::firstOrNew([
+                    'place_id' => $data['place_id']
+                ]);
+            } else {
+                return false;
+            }
+
+            $locationModel->fill($data);
             $locationModel->latitude = $latLng['latitude'] ?? null;
             $locationModel->longitude = $latLng['longitude'] ?? null;
             $locationModel->save();

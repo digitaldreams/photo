@@ -59,5 +59,14 @@ return [
             'width' => 250
         ],
     ],
-    'googleMapApiKey' => env('GOOGLE_MAP_API_KEY')
+    'googleMapApiKey' => env('GOOGLE_MAP_API_KEY'),
+
+    /**
+     * HERE PROJECT INFO.
+     * https://developer.here.com
+     */
+    'here' => [
+        'app_id' => env('HERE_APP_ID'),
+        'app_code' => env('HERE_APP_CODE')
+    ]
 ];

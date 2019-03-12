@@ -23,10 +23,21 @@ class Location extends Model
      * Database table name
      */
     protected $table = 'photo_locations';
+    
     /**
      * Protected columns from mass assignment
      */
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'name',
+        'place_id',
+        'address',
+        'locality',
+        'city',
+        'state',
+        'country',
+        'latitude',
+        'longitude'
+    ];
 
 
     /**
