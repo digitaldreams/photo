@@ -5,6 +5,19 @@
     </li>
     <li class="breadcrumb-item active">{{$record->caption}}</li>
 @endsection
+@section('tools')
+    <div class="form-group form-group-sm">
+        <div class="input-group">
+            <input type="text" class="form-control" value="{{$record->getUrl()}}" id="photoFullAddress">
+            <div class="input-group-btn">
+                <button class="btn btn-secondary" onclick="copyToClipboard(this)">Copy path</button>
+
+            </div>
+        </div>
+    </div>
+
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-sm-12">
@@ -76,7 +89,7 @@
                 document.getElementById('photoLocationMap'),
                 defaultLayers.normal.map,
                 {
-                    zoom: 10,
+                    zoom: 13,
                     center: {lat:{{$record->location->latitude}}, lng:{{$record->location->longitude}}}
                 });
             // Create a marker icon from an image URL:
@@ -97,4 +110,12 @@
             map.addObject(marker);
         </script>
     @endif
+    <script type="text/javascript">
+        function copyToClipboard(btn) {
+            var copyText = document.getElementById("photoFullAddress");
+            copyText.select();
+            document.execCommand("copy");
+            btn.innerText = "Copied";
+        }
+    </script>
 @endsection

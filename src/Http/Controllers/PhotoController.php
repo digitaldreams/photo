@@ -141,4 +141,16 @@ class PhotoController extends Controller
         }
         return redirect()->back();
     }
+
+    /**
+     * Rename Filename
+     *
+     * @param  Edit $request
+     * @param  Photo $photo
+     * @return \Illuminate\Http\Response
+     */
+    public function rename(Edit $request, Photo $photo)
+    {
+
+    }
 }
