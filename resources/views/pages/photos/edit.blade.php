@@ -8,6 +8,12 @@
     </li>
     <li class="breadcrumb-item">Edit</li>
 @endsection
+@section('header')
+<i class="fa fa-pencil"></i> {{!empty($model->caption)?$model->caption:$model->id}}
+@endsection
+@section('tools')
+    <a class="btn btn-secondary" href="{{route('photo::photos.create')}}"><i class="fa fa-plus"></i> Create New Photo</a>
+@endsection
 @section('content')
     <div class="row">
         <div class='col-md-12'>

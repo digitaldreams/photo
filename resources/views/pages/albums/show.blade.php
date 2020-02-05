@@ -11,7 +11,7 @@
     </li>
 @endsection
 @section('header')
-    <h3>{{$record->name}}</h3>
+{{$record->name}}
 @endsection
 @section('tools')
     <div class="btn-group btn-group-sm">

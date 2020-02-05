@@ -5,6 +5,10 @@
     </li>
     <li class="breadcrumb-item active">{{$record->caption}}</li>
 @endsection
+@section('header')
+
+@endsection
+
 @section('tools')
     <div class="form-group form-group-sm">
         <div class="input-group">

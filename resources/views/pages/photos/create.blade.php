@@ -7,7 +7,12 @@
         Create
     </li>
 @endsection
+@section('header')
+<i class="fa fa-image"></i> New Photo
+@endsection
+@section('tools')
 
+@endsection
 @section('content')
     <div class="row">
         <div class='col-md-12'>

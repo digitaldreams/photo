@@ -21,7 +21,7 @@
             <div class="col-sm-4 text-right p-0">
                 @can('update',$record)
                     <a class="card-link" href="{{route('photo::photos.edit',$record->id)}}">
-                        <span class="fa fa-pencil-alt"></span>
+                        <span class="fa fa-pencil"></span> Edit
                     </a>
                 @endcan
                 @can('delete',$record)
@@ -30,7 +30,8 @@
                         {{csrf_field()}}
                         {{method_field('DELETE')}}
                         <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
-                                    class="text-danger fa fa-times"></i></button>
+                                    class="text-danger fa fa-times"></i>Delete
+                        </button>
                     </form>
                 @endcan
             </div>

@@ -4,7 +4,7 @@ namespace Photo\Policies;
 
 use Photo\Models\Photo;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Permit\Models\User;
+use App\User;
 
 class PhotoPolicy
 {
@@ -14,9 +14,9 @@ class PhotoPolicy
      * @param User $user
      * @return bool
      */
-    public function before(User $user)
+    public function before($user)
     {
-        if ($user->isSeoManager() || $user->isAdmin()) {
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
             return true;
         }
     }

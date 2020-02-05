@@ -3,7 +3,7 @@ return [
     /**
      * Layout will be used
      */
-    'layout' => 'permit::layouts.app',
+    'layout' => 'photo::layouts.app',
 
     'default' => '/storage/images/default.png',
     /**

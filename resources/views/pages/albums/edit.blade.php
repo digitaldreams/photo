@@ -1,4 +1,10 @@
 @extends(config('photo.layout'))
+@section('header')
+
+@endsection
+@section('tools')
+
+@endsection
 @section('content')
     <div class="row">
         <div class='col-md-12'>
