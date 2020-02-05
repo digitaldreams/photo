@@ -1,2 +1,0 @@
-# photo
-Laravel Photo Manager

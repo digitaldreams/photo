@@ -1,17 +1,6 @@
-<form action="{{$route ?? route('photo::albums.store')}}" method="POST">
+<form action="{{$route ?? route('photo::albums.store')}}" method="POST" onsubmit="return disableBtn()">
     {{csrf_field()}}
     <input type="hidden" name="_method" value="{{$method ?? 'POST'}}"/>
-    <div class="form-group {{ $errors->has('user_id') ? ' has-danger' : '' }}">
-        <label for="user_id">User Id</label>
-        <input type="text" class="form-control" name="user_id" id="user_id" value="{{old('user_id',$model->user_id)}}"
-               placeholder="">
-        @if($errors->has('user_id'))
-            <div class="invalid-feedback">
-                <strong>{{ $errors->first('user_id') }}</strong>
-            </div>
-        @endif
-    </div>
-
     <div class="form-group {{ $errors->has('name') ? ' has-danger' : '' }}">
         <label for="name">Name</label>
         <input type="text" class="form-control" name="name" id="name" value="{{old('name',$model->name)}}"
@@ -33,7 +22,6 @@
             </div>
         @endif
     </div>
-
 
     <div class="form-group text-right ">
         <input type="reset" class="btn btn-default" value="Clear"/>

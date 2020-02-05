@@ -1,34 +1,31 @@
-<form action="{{$route ?? route('photo::photos.store')}}" method="POST" enctype="multipart/form-data">
+<form action="{{$route ?? route('photo::photos.store')}}" method="POST" enctype="multipart/form-data"
+      onsubmit="return disableBtn()">
     {{csrf_field()}}
     <input type="hidden" name="_method" value="{{$method ?? 'POST'}}"/>
-    <input type="hidden" name="place_api_data" value="" id="place_api_data">
-    <div class="row">
-        <div class="col-sm-2">
-            <div class="card">
-                <div class="card-img-top">
-                    <img src="{{$model->getFormat()}}" class="img img-fluid" id="imagePreview">
+    <div class="m-form__group form-group form-row">
+        <div class="col-md-10">
+            <label for="file" class="col-form-label">Image</label>
+            <input type="file" accept="image/*" class="form-control {{ $errors->has('file') ? ' is-invalid' : '' }}"
+                   name="file" id="file"
+                   onchange="checkSize(2097152,'file')"
+                   placeholder="">
+            @if($errors->has('file'))
+                <div class="invalid-feedback">
+                    <strong>{{ $errors->first('file') }}</strong>
                 </div>
-            </div>
+            @endif
+            <p class="help-block">You should either upload a custom image or Icon</p>
         </div>
-        <div class="col-sm-10">
-            <div class="form-group ">
-                <label for="exampleFormControlFile1">Upload Your Image</label>
-                <input type="file" onchange="readURL(this,'imagePreview')" name="file" class="form-control-file {{ $errors->has('file') ? ' is-invalid' : '' }}"
-                       id="exampleFormControlFile1" accept="image/x-png,image/gif,image/jpeg">
+        <div class="col-md-2">
+            <img height="80px" id="file_preview" src="{{$model->getFormat()}}">
+        </div>
 
-                @if($errors->has('file'))
-                    <div class="invalid-feedback">
-                        <strong>{{ $errors->first('file') }}</strong>
-                    </div>
-                @endif
-            </div>
-        </div>
     </div>
 
     <div class="form-group">
         <label for="caption">Caption</label>
         <input type="text" class="form-control {{ $errors->has('caption') ? ' is-invalid' : '' }}" name="caption"
-               id="caption" value="{{old('caption',$model->caption)}}"
+               id="photo_caption" value="{{old('caption',$model->caption)}}"
                placeholder="e.g. Sunset of sea beach" maxlength="191" required>
         @if($errors->has('caption'))
             <div class="invalid-feedback">
@@ -49,30 +46,15 @@
         @endif
     </div>
 
-    <div class="form-group ">
-        <label for="address">Address</label>
-        <div class="input-group">
-            <div class="input-group-addon">
-                <i class="fa fa-map-pin"></i>
-            </div>
-            <input type="text" class="form-control {{ $errors->has('address') ? ' is-invalid' : '' }}" name="address"
-                   id="address"
-                   value="<?php echo old('address', $model->getLocationName()) ?>"
-                   placeholder="e.g. 11th street,Dhaka,Bangladesh"
-                   maxlength="200">
-            <div class="input-group-addon">
-                <img src="https://developers.google.com/places/documentation/images/powered-by-google-on-white.png">
-            </div>
-        </div>
-
-        <ul class="list-group" id="locationDropdown">
-
-        </ul>
-        @if($errors->has('address'))
-            <div class="invalid-feedback">
-                <strong>{{ $errors->first('address') }}</strong>
-            </div>
-        @endif
+    <div class="form-group">
+        <label>Album</label>
+        <select class="form-control" name="album_ids[]" id="photo_album" multiple>
+            @if(isset($albums))
+                @foreach($albums as $album)
+                    <option value="{{$album->id}}" {{in_array($album->id,$allRelatedIds)?'selected':''}}>{{$album->name}}</option>
+                @endforeach
+            @endif
+        </select>
     </div>
 
     <div class="form-group text-right ">

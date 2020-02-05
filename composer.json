@@ -1,7 +1,7 @@
 {
   "name": "digitaldream/photo",
   "type": "library",
-  "description": "Image mnanager",
+  "description": "Image manager",
   "keywords": [],
   "homepage": "https://github.com/digitaldreams/photo",
   "license": "MIT",
@@ -14,13 +14,14 @@
     }
   ],
   "require": {
-    "php": ">=5.5.9",
-    "laravel/framework": ">=5.1.1"
+    "php": ">=7.0.0",
+    "laravel/framework": ">=5.5.0",
+    "digitaldream/googleplace": "1.*",
+    "intervention/image": "^2.5"
   },
-  "require-dev":{
-
+  "require-dev": {
   },
-  "suggest":{
+  "suggest": {
   },
   "autoload": {
     "psr-4": {
@@ -30,7 +31,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Photo\\ProtoServiceProvider"
+        "Photo\\PhotoServiceProvider"
       ],
       "aliases": {
       }

@@ -1,16 +1,20 @@
-@extends('layouts.app')
+@extends(config('photo.layout'))
+@section('breadcrumb')
+    <li class="breadcrumb-item">
+        <a href="{{route('photo::photos.index')}}">Photos</a>
+    </li>
+    <li class="breadcrumb-item">
+        Albums
+    </li>
+@endsection
+@section('header')
+    Photo Album
+@endsection
+@section('tools')
+    <a href="{{route('photo::albums.create')}}"><i class="fa fa-plus"></i> New Album</a>
+@endsection
 @section('content')
-    <div class="row">
-        <div class="col-sm-3">
-            <h4>photo_albums</h4>
-        </div>
-        <div class="col-sm-6">
 
-        </div>
-        <div class="col-sm-1">
-            <a href="{{route('photo::albums.create')}}"><span class="fa fa-plus"></span></a>
-        </div>
-    </div>
     @include('photo::tables.album')
     {!! $records->render() !!}
 @endSection

@@ -10,7 +10,9 @@ use Photo\Http\Requests\Photos\Index;
 use Photo\Http\Requests\Photos\Show;
 use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
+use Illuminate\Http\Request;
 use Photo\Jobs\GetExifDataJob;
+use Photo\Models\Album;
 use Photo\Models\Photo;
 use Photo\Models\Location;
 use Photo\Photo as PhotoLib;
@@ -26,19 +28,32 @@ class PhotoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  Index $request
+     * @param Index $request
      * @return \Illuminate\Http\Response
      */
     public function index(Index $request)
     {
-        return view('photo::pages.photos.index', ['records' => Photo::paginate(6)]);
+        $photos = new Photo();
+        $search = $request->get('search');
+        $folder = $request->get('folder');
+        if (!empty($search)) {
+            $search = pathinfo($search, PATHINFO_BASENAME);
+            $photos = $photos->where('src', 'LIKE', "%" . $search . '%');
+        }
+        if (!empty($folder)) {
+            $photos = $photos->where('src', 'LIKE', "%" . $folder . '%');
+
+        }
+        return view('photo::pages.photos.index', [
+            'records' => $photos->latest()->paginate(6)
+        ]);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  Show $request
-     * @param  Photo $photo
+     * @param Show $request
+     * @param Photo $photo
      * @return \Illuminate\Http\Response
      */
     public function show(Show $request, Photo $photo)
@@ -51,21 +66,22 @@ class PhotoController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  Create $request
+     * @param Create $request
      * @return \Illuminate\Http\Response
      */
     public function create(Create $request)
     {
         return view('photo::pages.photos.create', [
             'model' => new Photo,
-            'enableVoice' => true,
+            'allRelatedIds' => [$request->get('album_id')],
+            'albums' => Album::get(['name', 'id'])
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Store $request
+     * @param Store $request
      * @return \Illuminate\Http\Response
      * @throws \Exception
      */
@@ -74,15 +90,16 @@ class PhotoController extends Controller
         $model = new Photo;
         $model->fill($request->all());
         $photoService = new PhotoService($model);
-
-        if ($photoService->save($request)) {
-            if (config('photo.exif')) {
-                dispatch(new GetExifDataJob($model));
-            }
+        if (!$photoService->isValid($request)) {
+            return redirect()->back()->withInput($request->all())->with('app_error', 'Unsupported file type');
+        }
+     
+        if ($model = $photoService->save($request)) {
+            $model->albums()->sync($request->get('album_ids', []));
             session()->flash('app_message', 'Photo saved successfully');
             return redirect()->route('photo::photos.index');
         } else {
-            session()->flash('app_message', 'Something is wrong while saving Photo');
+            session()->flash('app_message', 'Oops something went wrong while saving your photo');
         }
         return redirect()->back();
     }
@@ -90,36 +107,39 @@ class PhotoController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  Edit $request
-     * @param  Photo $photo
+     * @param Edit $request
+     * @param Photo $photo
      * @return \Illuminate\Http\Response
      */
     public function edit(Edit $request, Photo $photo)
     {
         return view('photo::pages.photos.edit', [
             'model' => $photo,
-            'enableVoice' => true,
+            'albums' => Album::get(['name', 'id']),
+            'allRelatedIds' => $photo->albums()->allRelatedIds()->toArray(),
         ]);
     }
 
     /**
      * Update a existing resource in storage.
      *
-     * @param  Update $request
-     * @param  Photo $photo
+     * @param Update $request
+     * @param Photo $photo
      * @return \Illuminate\Http\Response
      * @throws \Exception
      */
     public function update(Update $request, Photo $photo)
     {
         $photo->fill($request->all());
+        $photo->save();
         $photoService = new PhotoService($photo);
 
-        if ($photoService->save($request)) {
+        if ($photo = $photoService->save($request)) {
+            $photo->albums()->sync($request->get('album_ids', []));
             session()->flash('app_message', 'Photo successfully updated');
             return redirect()->route('photo::photos.index');
         } else {
-            session()->flash('app_error', 'Something is wrong while updating Photo');
+            session()->flash('app_error', 'Oops something went wrong while updating your photo');
         }
         return redirect()->back();
     }
@@ -127,8 +147,8 @@ class PhotoController extends Controller
     /**
      * Delete a  resource from  storage.
      *
-     * @param  Destroy $request
-     * @param  Photo $photo
+     * @param Destroy $request
+     * @param Photo $photo
      * @return \Illuminate\Http\Response
      * @throws \Exception
      */
@@ -137,20 +157,22 @@ class PhotoController extends Controller
         if ($photo->delete()) {
             session()->flash('app_message', 'Photo successfully deleted');
         } else {
-            session()->flash('app_error', 'Error occurred while deleting Photo');
+            session()->flash('app_error', 'Error occurred while deleting your photo');
         }
-        return redirect()->back();
+        return redirect()->route('photo::photos.index');
     }
 
     /**
      * Rename Filename
      *
-     * @param  Edit $request
-     * @param  Photo $photo
+     * @param Edit $request
+     * @param Photo $photo
      * @return \Illuminate\Http\Response
      */
     public function rename(Edit $request, Photo $photo)
     {
 
     }
+
+
 }

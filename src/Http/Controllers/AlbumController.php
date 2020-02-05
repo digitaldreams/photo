@@ -73,7 +73,7 @@ class AlbumController extends Controller
             session()->flash('app_message', 'Album saved successfully');
             return redirect()->route('photo::albums.index');
         } else {
-            session()->flash('app_message', 'Something is wrong while saving Album');
+            session()->flash('app_message', 'Oops something went wrong while saving the Album');
         }
         return redirect()->back();
     }
@@ -106,7 +106,7 @@ class AlbumController extends Controller
             session()->flash('app_message', 'Album successfully updated');
             return redirect()->route('photo::albums.index');
         } else {
-            session()->flash('app_error', 'Something is wrong while updating Album');
+            session()->flash('app_error', 'Oops something went wrong while updating the Album');
         }
         return redirect()->back();
     }
@@ -124,7 +124,7 @@ class AlbumController extends Controller
         if ($album->delete()) {
             session()->flash('app_message', 'Album successfully deleted');
         } else {
-            session()->flash('app_error', 'Error occurred while deleting Album');
+            session()->flash('app_error', 'Error occurred while deleting the Album');
         }
         return redirect()->back();
     }

@@ -14,12 +14,14 @@
     <div class="card-footer bg-transparent">
         <div class="row">
             <div class="col-sm-8 p-0">
-                <i class="fa fa-map-marker"></i> {{$record->getLocationAddress()}}
+                @foreach($record->albums as $album)
+                    <a href="{{route('photo::albums.show',$album->id)}}">{{$album->name}}</a>
+                @endforeach
             </div>
             <div class="col-sm-4 text-right p-0">
                 @can('update',$record)
                     <a class="card-link" href="{{route('photo::photos.edit',$record->id)}}">
-                        <span class="fa fa-pencil"></span>
+                        <span class="fa fa-pencil-alt"></span>
                     </a>
                 @endcan
                 @can('delete',$record)
@@ -28,7 +30,7 @@
                         {{csrf_field()}}
                         {{method_field('DELETE')}}
                         <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
-                                    class="text-danger fa fa-remove"></i></button>
+                                    class="text-danger fa fa-times"></i></button>
                     </form>
                 @endcan
             </div>

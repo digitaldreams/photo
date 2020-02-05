@@ -19,10 +19,9 @@
         </div>
     </div>
 @endSection
-@section('scripts')
-    <script type="text/javascript"
-            src="https://maps.google.com/maps/api/js?key=<?php echo config('photo.googleMapApiKey') ?>&libraries=places">
-    </script>
+@section('script')
 
-    @include('photo::pages.photos.locationjs')
+    <script type="text/javascript">
+        $("#photo_album").select2();
+    </script>
 @endsection

@@ -28,7 +28,7 @@ class Store extends FormRequest
         return [
             'caption' => 'required|max:191',
             'title' => 'nullable|max:191',
-            'file' => 'image|required',
+            'file' => 'required|file|max:2048',
         ];
     }
 

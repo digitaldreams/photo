@@ -4,6 +4,7 @@ namespace Photo\Policies;
 
 use Photo\Models\Photo;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Permit\Models\User;
 
 class PhotoPolicy
 {
@@ -13,9 +14,11 @@ class PhotoPolicy
      * @param User $user
      * @return bool
      */
-    public function before($user)
+    public function before(User $user)
     {
-        //return true if user has super power
+        if ($user->isSeoManager() || $user->isAdmin()) {
+            return true;
+        }
     }
 
     /**
@@ -24,25 +27,25 @@ class PhotoPolicy
      */
     public function index($user)
     {
-        return true;
+        return false;
     }
 
     /**
      * Determine whether the user can view the Album.
      *
-     * @param  User $user
-     * @param  Photo $photo
+     * @param User $user
+     * @param Photo $photo
      * @return mixed
      */
     public function view($user, Photo $photo)
     {
-        return true;
+        return false;
     }
 
     /**
      * Determine whether the user can create Album.
      *
-     * @param  User $user
+     * @param User $user
      * @param Photo $photo
      * @return mixed
      */
@@ -55,7 +58,7 @@ class PhotoPolicy
      * Determine whether the user can update the Album.
      *
      * @param User $user
-     * @param  Photo $photo
+     * @param Photo $photo
      * @return mixed
      */
     public function update($user, Photo $photo)
@@ -67,7 +70,7 @@ class PhotoPolicy
      * Determine whether the user can delete the Album.
      *
      * @param User $user
-     * @param  Photo $photo
+     * @param Photo $photo
      * @return mixed
      */
     public function delete($user, Photo $photo)

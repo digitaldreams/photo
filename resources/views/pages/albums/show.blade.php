@@ -1,34 +1,42 @@
-@extends('layouts.app')
+@extends(config('photo.layout'))
+@section('breadcrumb')
+    <li class="breadcrumb-item">
+        <a href="{{route('photo::photos.index')}}">Photos</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="{{route('photo::albums.index')}}"> Albums</a>
+    </li>
+    <li class="breadcrumb-item">
+        {{$record->name}}
+    </li>
+@endsection
+@section('header')
+    <h3>{{$record->name}}</h3>
+@endsection
+@section('tools')
+    <div class="btn-group btn-group-sm">
+        <a class="btn btn-secondary" href="{{route('photo::photos.create',['album_id'=>$record->id])}}">
+            <span class="fa fa-plus"></span>
+        </a>
+        <a class="btn btn-secondary" href="{{route('photo::albums.edit',$record->id)}}">
+            <span class="fa fa-pencil-alt"></span>
+        </a>
+        <form onsubmit="return confirm('Are you sure you want to delete?')"
+              action="{{route('photo::albums.destroy',$record->id)}}" method="post" style="display: inline">
+            {{csrf_field()}}
+            {{method_field('DELETE')}}
+            <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
+                        class="text-danger fa fa-trash"></i></button>
+        </form>
+
+    </div>
+@endsection
 @section('content')
     <div class="row">
-        <div class="col-sm-8">
-            <h1>
-                {{$record->id}}
-            </h1>
-        </div>
-        <div class="col-sm-4 text-right">
-            <div class="btn-group btn-group-sm">
-
-                <a href="{{'photo_albums.create'}}">
-                    <span class="fa fa-plus"></span>
-                </a>
-                <a href="{{route('photo::albums.edit',$record->id)}}">
-                    <span class="fa fa-pencil"></span>
-                </a>
-                <form onsubmit="return confirm('Are you sure you want to delete?')"
-                      action="{{route('photo::albums.destroy',$record->id)}}" method="post" style="display: inline">
-                    {{csrf_field()}}
-                    {{method_field('DELETE')}}
-                    <button type="submit" class="btn btn-default cursor-pointer  btn-sm"><i
-                                class="text-danger fa fa-remove"></i></button>
-                </form>
-
+        @foreach($record->photos as $photo)
+            <div class="col-sm-4">
+                @include('photo::cards.photo',['record'=>$photo])
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-8">
-            @include('photo::cards.album')
-        </div>
+        @endforeach
     </div>
 @endSection

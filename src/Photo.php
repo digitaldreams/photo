@@ -9,10 +9,12 @@
 namespace Photo;
 
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Photo\Library\Resize;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Intervention\Image\Facades\Image as ImageLib;
+use Illuminate\Support\Str;
 
 class Photo
 {
@@ -36,6 +38,19 @@ class Photo
     protected $urls = [];
 
     private $urlPrefix = '';
+    protected $originalFilePath;
+
+    protected $crop = 'yes';
+
+    public static $mimeTypes = [
+        'image/svg+xml',
+        'image/jpg',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/bmp',
+        'image/webp'
+    ];
 
     /**
      * Photo constructor.
@@ -49,6 +64,12 @@ class Photo
         $this->makeRootPath();
     }
 
+    public function crop($crop = 'yes')
+    {
+        $this->crop = $crop;
+        return $this;
+    }
+
     /**
      * @param $files
      * @return Photo
@@ -59,7 +80,7 @@ class Photo
         if (is_array($files)) {
             foreach ($files as $file) {
                 if ($file instanceof UploadedFile) {
-                    $ret[] = $this->doUpload();
+                    $ret[] = $this->doUpload($file);
                 }
             }
         } else {
@@ -79,9 +100,12 @@ class Photo
         $sizes = !empty($size) ? [$size] : config('photo.sizes', []);
         $absUrls = $this->getAbsoluteUrls();
         foreach ($absUrls as $url) {
+            if (pathinfo($url, PATHINFO_EXTENSION) == 'svg') {
+                continue;
+            }
             foreach ($sizes as $key => $size) {
                 try {
-                    $resize = (new Resize($url, $key))->setFolder($this->folder);
+                    $resize = (new Resize($url, $key))->crop($this->crop)->setFolder($this->folder);
                     $resize->save();
                 } catch (\Exception $e) {
                     Log::error($e->getMessage() . ' on line ' . $e->getLine() . ' in ' . $e->getFile());
@@ -98,12 +122,16 @@ class Photo
      */
     protected function doUpload(UploadedFile $document)
     {
-        if ($document->isValid()) {
-            $fileName = uniqid(rand(1000, 99999)) . '.' . $document->getClientOriginalExtension();
+        if ($document->isValid() && in_array($document->getClientMimeType(), static::$mimeTypes)) {
+            $fileName = Str::slug(pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . rand(999, 9999) . '.' . $document->getClientOriginalExtension();
             $path = $document->storeAs($this->folder, $fileName, $this->driver);
             $rootPath = $this->getRootPath();
             $fullPath = rtrim($rootPath, "/") . "/" . $path;
-            $this->resizeOriginal($fullPath);
+            if ($this->crop == 'yes' && $document->getClientOriginalExtension() !== 'svg') {
+                $this->resizeOriginal($fullPath);
+            }
+            $this->convertToWebP($fullPath);
+
             return $path;
         }
         return false;
@@ -167,17 +195,51 @@ class Photo
      * @param $path
      * @return bool
      */
-    protected function resizeOriginal($path)
+    protected function resizeOriginal($path, $webp = true)
     {
         if (config('photo.compressSize') && config('photo.exif') == false) {
             $width = config('photo.maxWidth');
             $height = config('photo.maxHeight');
+
             $img = ImageLib::make($path);
-            $img->fit($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            $originalHeight = $img->height();
+            $originalWidth = $img->width();
+            $canvas = false;
+            if ($width > $originalWidth && $height > $originalHeight) {
+
+            } elseif ($width > $originalWidth) {
+                $width = null;
+                $canvas = true;
+            } elseif ($height > $originalHeight) {
+                $height = null;
+                $canvas = true;
+            }
+
+            if ($canvas) {
+                $img->resize($width, $height, function ($constraint) {
+                    //   $constraint->aspectRatio();
+                    //  $constraint->upsize();
+                });
+                $img->resizeCanvas(config('photo.maxWidth'), config('photo.maxHeight'));
+
+            }
             return $img->save();
+        }
+        return false;
+    }
+
+    /**
+     * @param $path
+     * @param int $quality
+     * @return bool
+     */
+    public static function convertToWebP($path, $quality = 80)
+    {
+        if (pathinfo($path, PATHINFO_EXTENSION) !== 'svg') {
+            $info = pathinfo($path);
+            $webP = $info['dirname'] . "/" . $info['filename'] . ".webp";
+            ImageLib::make($path)->save($webP, $quality, 'webp');
+            return true;
         }
         return false;
     }

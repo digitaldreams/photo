@@ -1,26 +1,10 @@
-@extends('layouts.app')
+@extends(config('photo.layout'))
+@section('header')
+    <h3 class="fa fa-images"> Create New Photo Album</h3>
+@endsection
+@section('tools')
+    <a href="{{route('photo::albums.create')}}"><i class="fa fa-plus"></i> New Album</a>
+@endsection
 @section('content')
-    <div class="row">
-        <div class='col-md-12'>
-            <div class='panel panel-default'>
-                <div class='panel-heading'>
-                    <div class="row">
-                        <div class="col-sm-8">
-                            <h4>
-                                Create photo_albums
-                            </h4>
-                        </div>
-                        <div class="col-sm-4 text-right">
-                            <a href="{{route('photo::albums.index')}}">
-                                <span class="fa fa-list"> photo_albums</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    @include('photo::forms.album')
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('photo::forms.album')
 @endSection

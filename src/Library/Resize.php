@@ -4,6 +4,7 @@ namespace Photo\Library;
 
 use Intervention\Image\Facades\Image as ImageLib;
 use Intervention\Image\Image;
+use Photo\Photo;
 use Storage;
 
 class Resize
@@ -29,6 +30,8 @@ class Resize
      */
     protected $thumbnailPath;
 
+    protected $crop = 'yes';
+
     /**
      * Resize constructor.
      * @param $filePath
@@ -45,6 +48,12 @@ class Resize
 
     }
 
+    public function crop($crop = 'yes')
+    {
+        $this->crop = $crop;
+        return $this;
+    }
+
     /**
      * Resize an image
      *
@@ -53,16 +62,40 @@ class Resize
     public function save()
     {
         $img = ImageLib::make($this->filePath);
-        $img->fit($this->width, $this->height, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
+        $originalHeight = $img->height();
+        $originalWidth = $img->width();
+        $width = $this->width;
+        $height = $this->height;
+        $canvas = false;
+        if ($width > $originalWidth && $this->height > $originalHeight) {
+
+        } elseif ($this->width > $originalWidth) {
+            $width = null;
+            $canvas = true;
+        } elseif ($height > $originalHeight) {
+            $height = null;
+            $canvas = true;
+        }
+        if ($this->crop == 'yes') {
+            $img->resize($width, $height, function ($constraint) {
+                //  $constraint->aspectRatio();
+                //  $constraint->upsize();
+            });
+            if ($canvas) {
+                $img->resizeCanvas($this->width, $this->height);
+            }
+        }
         if (!file_exists($this->path)) {
             $this->path = $this->getFullPath($this->folder) . '/' . $this->thumbnailPath;
         }
+
+
         if (!empty($this->path)) {
-            return $img->save($this->path . "/" . $this->getBaseName());
+            $ig = $img->save($this->path . "/" . $this->getBaseName());
+            Photo::convertToWebP($this->path . "/" . $this->getBaseName());
+            return $ig;
         }
+        Photo::convertToWebP($this->filePath);
         return $img->save();
     }
 
