@@ -37,7 +37,6 @@ class PhotoServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'photo');
-
     }
 
     /**
@@ -56,7 +55,8 @@ class PhotoServiceProvider extends ServiceProvider
         ], 'photo-views');
 
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/photo.php', 'photo'
+            __DIR__ . '/../config/photo.php',
+            'photo'
         );
     }
 

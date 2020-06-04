@@ -73,5 +73,4 @@ class AlbumPolicy
     {
         return $user->id == $album->user_id;
     }
-
 }

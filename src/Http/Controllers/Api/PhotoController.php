@@ -14,7 +14,6 @@ use Photo\Http\Requests\Api\Photos\Store;
 use Photo\Models\Photo;
 use Photo\Photo as PhotoLib;
 
-
 class PhotoController extends Controller
 {
     /**

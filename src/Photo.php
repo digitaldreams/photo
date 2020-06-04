@@ -8,7 +8,6 @@
 
 namespace Photo;
 
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Photo\Library\Resize;
@@ -206,7 +205,6 @@ class Photo
             $originalWidth = $img->width();
             $canvas = false;
             if ($width > $originalWidth && $height > $originalHeight) {
-
             } elseif ($width > $originalWidth) {
                 $width = null;
                 $canvas = true;
@@ -221,7 +219,6 @@ class Photo
                     //  $constraint->upsize();
                 });
                 $img->resizeCanvas(config('photo.maxWidth'), config('photo.maxHeight'));
-
             }
             return $img->save();
         }

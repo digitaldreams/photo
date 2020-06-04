@@ -4,7 +4,7 @@ namespace Photo\Http\Requests\Photos;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Edit extends FormRequest 
+class Edit extends FormRequest
 {
 
     /**
@@ -12,7 +12,7 @@ class Edit extends FormRequest
      *
      * @return bool
      */
-    public function authorize() 
+    public function authorize()
     {
         return auth()->check() && auth()->user()->can('update', $this->route('photo'));
     }
@@ -22,7 +22,7 @@ class Edit extends FormRequest
      *
      * @return array
      */
-    public function rules() 
+    public function rules()
     {
         return [
 
@@ -40,5 +40,4 @@ class Edit extends FormRequest
      
         ];
     }
-
 }

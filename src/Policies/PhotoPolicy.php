@@ -77,5 +77,4 @@ class PhotoPolicy
     {
         return $user->id == $photo->user_id;
     }
-
 }

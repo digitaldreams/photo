@@ -89,7 +89,6 @@ class ExifDataService
      */
     protected function toDecimal($deg, $min, $sec, $ref)
     {
-
         $float = function ($v) {
             return (count($v = explode('/', $v)) > 1) ? $v[0] / $v[1] : $v[0];
         };

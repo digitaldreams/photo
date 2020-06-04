@@ -10,7 +10,6 @@ namespace Photo\Http\Requests\Api\Photos;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-
 class Index extends FormRequest
 {
     /**

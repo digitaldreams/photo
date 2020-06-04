@@ -4,7 +4,7 @@ namespace Photo\Http\Requests\Albums;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class Index extends FormRequest 
+class Index extends FormRequest
 {
 
     /**
@@ -12,7 +12,7 @@ class Index extends FormRequest
      *
      * @return bool
      */
-    public function authorize() 
+    public function authorize()
     {
         return true;
     }
@@ -22,7 +22,7 @@ class Index extends FormRequest
      *
      * @return array
      */
-    public function rules() 
+    public function rules()
     {
         return [
 
@@ -40,5 +40,4 @@ class Index extends FormRequest
      
         ];
     }
-
 }

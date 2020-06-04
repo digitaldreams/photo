@@ -45,7 +45,6 @@ class Resize
         }
         $this->filePath = $filePath;
         $this->setSize($size);
-
     }
 
     public function crop($crop = 'yes')
@@ -68,7 +67,6 @@ class Resize
         $height = $this->height;
         $canvas = false;
         if ($width > $originalWidth && $this->height > $originalHeight) {
-
         } elseif ($this->width > $originalWidth) {
             $width = null;
             $canvas = true;
@@ -119,7 +117,6 @@ class Resize
             $this->width = isset($sizes[$size]['width']) ? $sizes[$size]['width'] : null;
             $this->height = isset($sizes[$size]['height']) ? $sizes[$size]['height'] : null;
             $this->thumbnailPath = $sizes[$size]['path'] ?? null;
-
         } else {
             $this->width = config('photo.maxWidth');
             $this->height = config('photo.maxHeight');

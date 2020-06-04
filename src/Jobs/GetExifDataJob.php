@@ -48,7 +48,6 @@ class GetExifDataJob implements ShouldQueue
             $this->photo->captured_at = $data['DateTime'] ?? null;
         }
         $this->photo->save();
-
     }
 
     /**

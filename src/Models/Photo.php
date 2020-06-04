@@ -187,7 +187,6 @@ class Photo extends Model
             $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
             if (file_exists(storage_path("app/public/" . $thumbnailPath))) {
                 return url($prefix . '/' . $thumbnailPath);
-
             } else {
                 return $this->getUrl();
             }
@@ -199,7 +198,6 @@ class Photo extends Model
     {
         try {
             return $this->location->name;
-
         } catch (\Exception $e) {
             return '';
         }
@@ -209,7 +207,6 @@ class Photo extends Model
     {
         try {
             return $this->location->address;
-
         } catch (\Exception $e) {
             return '';
         }
@@ -219,7 +216,6 @@ class Photo extends Model
     {
         try {
             return $this->location->place_id;
-
         } catch (\Exception $e) {
             return '';
         }
@@ -276,5 +272,4 @@ class Photo extends Model
         $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
         return storage_path("app/public/" . $thumbnailPath);
     }
-
 }

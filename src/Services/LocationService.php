@@ -8,7 +8,6 @@
 
 namespace Photo\Services;
 
-
 use GooglePlace\Services\Geocoding;
 use Photo\Models\Location;
 use GooglePlace\Services\Place;
@@ -44,6 +43,5 @@ class LocationService
 
     public function save()
     {
-
     }
 }

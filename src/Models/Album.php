@@ -64,6 +64,4 @@ class Album extends Model
     {
         $this->attributes['description'] = htmlspecialchars($value);
     }
-
-
 }

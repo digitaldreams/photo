@@ -8,7 +8,6 @@
 
 namespace Photo\Services;
 
-
 use Illuminate\Http\Request;
 use Photo\Models\Location;
 use Photo\Models\Photo;
@@ -37,7 +36,6 @@ class PhotoService
      */
     public function save(Request $request, $name = 'file')
     {
-
         if ($request->hasFile($name) || $request->get('imageID')) {
             if ($request->hasFile($name)) {
                 $url = (new PhotoLib())->setFolder($this->folder)

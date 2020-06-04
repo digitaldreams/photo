@@ -8,7 +8,6 @@
 
 namespace Photo\Services;
 
-
 use GuzzleHttp\Client;
 
 class HereReverseGeocoding

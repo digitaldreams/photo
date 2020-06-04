@@ -42,7 +42,6 @@ class PhotoController extends Controller
         }
         if (!empty($folder)) {
             $photos = $photos->where('src', 'LIKE', "%" . $folder . '%');
-
         }
         return view('photo::pages.photos.index', [
             'records' => $photos->latest()->paginate(6)
@@ -171,8 +170,5 @@ class PhotoController extends Controller
      */
     public function rename(Edit $request, Photo $photo)
     {
-
     }
-
-
 }

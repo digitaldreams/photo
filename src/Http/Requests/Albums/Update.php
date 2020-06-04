@@ -42,5 +42,4 @@ class Update extends FormRequest
 
         ];
     }
-
 }

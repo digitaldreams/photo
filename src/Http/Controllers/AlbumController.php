@@ -12,7 +12,6 @@ use Photo\Http\Requests\Albums\Store;
 use Photo\Http\Requests\Albums\Update;
 use Photo\Models\Album;
 
-
 /**
  * Description of AlbumController
  *
