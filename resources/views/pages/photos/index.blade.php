@@ -50,3 +50,29 @@
     </div>
     {!! $records->appends(['search'=>request('search')])->render() !!}
 @endSection
+@section('scripts')
+    <script type="text/javascript">
+        $("body").bind("paste", function (e) {
+            var pastedData = e.originalEvent.clipboardData.getData('text');
+
+            pasteUrl(pastedData, '{{route('photo::photos.downloadUrl')}}');
+        });
+
+        function pasteUrl(pastedData, url) {
+            pastedData = pastedData.split(/[?#]/)[0];
+            var ext = pastedData.split('.').pop();
+            var allowedExt = ["jpg", "jpeg", "png", 'gif','webp'];
+            if (allowedExt.indexOf(ext) !== -1) {
+                $.get(url, {'url': pastedData}).then(function (response) {
+                    if (response.success) {
+                        window.location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            } else {
+                alert(ext + ' extension are not allowed');
+            }
+        }
+    </script>
+@endsection
