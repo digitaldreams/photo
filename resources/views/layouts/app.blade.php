@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
           type="text/css"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.11/summernote.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet"/>
 
 @yield('css')
 
@@ -112,7 +112,8 @@
                     @yield('breadcrumb')
                 </ul>
             </div>
-            <div class="d-flex flex-wrap justify-content-between flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <div
+                class="d-flex flex-wrap justify-content-between flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
 
 
                 <h1 class="h2 text-left">
@@ -129,9 +130,9 @@
     </div>
 </div>
 <script
-        src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
+    src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous"></script>
 <script>window.jQuery || document.write('<script src="/docs/4.3/assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
@@ -150,6 +151,50 @@
             height: '300px'
         });
     });
+
+    function checkSize(max_img_size, id) {
+        var input = document.getElementById(id);
+        var allowedImageMimeType = [
+            'image/svg+xml',
+            'image/jpg',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/bmp',
+            'image/webp'
+        ];
+
+        if (input.files && input.files.length == 1) {
+            if (allowedImageMimeType.indexOf(input.files[0].type) == -1) {
+                alert('File Type Not allowed. Only jpg,jpeg,png,webp,svg allowed');
+                input.value = '';
+                return false;
+            }
+            if (input.files[0].size > max_img_size) {
+                var yourFileSize = (input.files[0].size / 1024 / 1024);
+                input.value = '';
+                alert("The file must be less than " + (max_img_size / 1024 / 1024) + "MB", "Your file size is " + yourFileSize.toFixed(2) + 'MB', "warning")
+                return false;
+            } else {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#' + id + '_preview').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        return true;
+    }
+
+    function disableBtn() {
+        formSubmitted = true;
+        $("input[type=submit]").prop('disabled', true).val('saving...');
+        setTimeout(function () {
+            $("input[type=submit]").removeAttr('disabled');
+        }, 5000);
+        return true;
+    }
 </script>
 </body>
 </html>

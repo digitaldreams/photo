@@ -30,7 +30,8 @@ class PhotoService
 
     /**
      * @param Request $request
-     * @param string $name
+     * @param string  $name
+     *
      * @return Photo
      * @throws \Exception
      */
@@ -61,10 +62,6 @@ class PhotoService
             if (empty($this->photo->caption)) {
                 $this->photo->caption = null;
             }
-            if (empty($this->photo->title)) {
-                $this->photo->title = null;
-            }
-
             $this->photo->save();
         }
 

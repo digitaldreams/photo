@@ -6,16 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * @property int $user_id user id
- * @property varchar $caption caption
- * @property varchar $title title
- * @property varchar $mime_type mime type
- * @property varchar $src src
- * @property int $location_id location id
- * @property timestamp $created_at created at
- * @property timestamp $updated_at updated at
- * @property PhotoLocation $photoLocation belongsTo
- * @property \Illuminate\Database\Eloquent\Collection $albumphoto belongsToMany
+ * @property int                                      $user_id       user id
+ * @property varchar                                  $caption       caption
+ * @property varchar                                  $title         title
+ * @property varchar                                  $mime_type     mime type
+ * @property varchar                                  $src           src
+ * @property int                                      $location_id   location id
+ * @property timestamp                                $created_at    created at
+ * @property timestamp                                $updated_at    updated at
+ * @property PhotoLocation                            $photoLocation belongsTo
+ * @property \Illuminate\Database\Eloquent\Collection $albumphoto    belongsToMany
  */
 class Photo extends Model
 {
@@ -29,7 +29,7 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment
      */
-    protected $fillable = ['caption', 'title', 'src', 'exif'];
+    protected $fillable = ['caption', 'src', 'exif'];
 
     protected $dates = ['captured_at'];
     /**
@@ -45,7 +45,7 @@ class Photo extends Model
                 $model->user_id = auth()->user()->id;
             }
             if (empty($model->status)) {
-                $model->status = static::STATUS_PENDING;
+                $model->status = static::STATUS_ACTIVE;
             }
             return true;
         });
@@ -83,22 +83,6 @@ class Photo extends Model
     public function albums()
     {
         return $this->belongsToMany(Album::class, 'album_photo');
-    }
-
-    /**
-     * caption column mutator.
-     */
-    public function setCaptionAttribute($value)
-    {
-        $this->attributes['caption'] = htmlspecialchars($value);
-    }
-
-    /**
-     * title column mutator.
-     */
-    public function setTitleAttribute($value)
-    {
-        $this->attributes['title'] = htmlspecialchars($value);
     }
 
     public function getSrc()
@@ -150,6 +134,7 @@ class Photo extends Model
 
     /**
      * @param string $size
+     *
      * @return bool|\Illuminate\Contracts\Routing\UrlGenerator|string
      */
     public function hasWebP($size = '')
@@ -171,7 +156,9 @@ class Photo extends Model
 
     /**
      * Get other sizes of the photo
+     *
      * @param string $size key from photo.sizes
+     *
      * @return string
      */
     public function getFormat($size = 'thumbnail')
@@ -238,7 +225,7 @@ class Photo extends Model
             'thumbnail' => $this->getFormat(),
             'caption' => $this->getCaption(),
             'title' => $this->getTitle(),
-            'location' => $this->getLocationAddress()
+            'location' => $this->getLocationAddress(),
         ];
     }
 

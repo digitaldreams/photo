@@ -1,4 +1,7 @@
 @extends(config('photo.layout'))
+@section('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.2/croppie.min.css">
+@endsection
 @section('breadcrumb')
     <li class="breadcrumb-item">
         <a href="{{route('photo::photos.index')}}">Photos</a>
@@ -121,5 +124,93 @@
             document.execCommand("copy");
             btn.innerText = "Copied";
         }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.2/croppie.js"></script>
+
+    <script type="text/javascript">
+        $("#photo_album").select2();
+
+        var resize = $('#upload-demo').croppie({
+            enableExif: true,
+            enableOrientation: true,
+            url: $("#profile-image").html(),
+            viewport: { // Default { width: 100, height: 100, type: 'square' }
+                width: {{config('photo.maxWidth')}},
+                height: {{config('photo.maxHeight')}},
+                type: 'square' //square
+            },
+            boundary: {
+                width: {{config('photo.maxWidth')}}+100,
+                height: {{config('photo.maxHeight')}}+100
+            },
+
+        });
+        $('#image').on('change', function () {
+            var reader = new FileReader();
+            var allowedImageMimeType = [
+                'image/svg+xml',
+                'image/jpg',
+                'image/jpeg',
+                'image/png',
+                'image/gif',
+                'image/bmp',
+                'image/webp'
+            ];
+            if (allowedImageMimeType.indexOf(this.files[0].type) == -1) {
+                alert('File Type Not allowed. Only jpg,jpeg,png,webp,svg allowed');
+                $(this).val('');
+                return false;
+            }
+            reader.onload = function (e) {
+                resize.croppie('bind', {
+                    url: e.target.result
+                }).then(function () {
+                    console.log('jQuery bind complete');
+                });
+            }
+            reader.readAsDataURL(this.files[0]);
+        });
+
+        $('#upload-image').on('click', function (ev) {
+            var formData = new FormData($('form#photoUploadForm')[0]);
+            resize.croppie('result', {
+                type: 'canvas',
+                size: {
+                    width: 1140,
+                    height: 475
+                }
+            }).then(function (img) {
+                $('.btn-upload-image').prop('disabled', true);
+                var dataURL = img;
+                if ($("#image").val()) {
+                    var blob = dataURItoBlob(dataURL);
+                    formData.append("file", blob, "filename.jpg");
+                }
+                /**
+                 $.ajax({
+                    url: "/businesses/save/slider-image",
+                    method: 'post',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (result) {
+                        if (result.success === true) {
+                            window.location.reload();
+                        } else {
+                            alert(result.message);
+                        }
+                        $('.btn-upload-image').prop('disabled', false);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        $('.btn-upload-image').prop('disabled', false);
+                    }
+                });
+                 */
+            });
+        });
+
     </script>
 @endsection

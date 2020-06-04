@@ -43,7 +43,7 @@
     <hr/>
     <div class="row">
         @foreach($records as $photo)
-            <div class="col-sm-4">
+            <div class="col-sm-3">
                 @include('photo::cards.photo',['record'=>$photo])
             </div>
         @endforeach

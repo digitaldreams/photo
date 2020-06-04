@@ -26,7 +26,6 @@ class Update extends FormRequest
     {
         return [
             'caption' => 'required|max:191',
-            'title' => 'nullable|max:191',
             'file' => 'image|nullable',
         ];
     }

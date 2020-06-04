@@ -29,7 +29,7 @@
     </div>
 @endSection
 
-@section('script')
+@section('scripts')
 
     <script type="text/javascript">
         $("#photo_album").select2();
