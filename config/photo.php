@@ -34,12 +34,12 @@ return [
     /**
      * Maximum weight of image. Leave blank or false if you do not like shrink your images
      */
-    'maxWidth' => 1024,
+    'maxWidth' => 800,
 
     /**
      * Maximum height of image. Leave blank or false if you do not like shrink your images
      */
-    'maxHeight' => 750,
+    'maxHeight' => 450,
 
     /**
      * How many size of your image you want.

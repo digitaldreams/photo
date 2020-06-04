@@ -9,7 +9,7 @@
     <li class="breadcrumb-item active">{{$record->caption}}</li>
 @endsection
 @section('header')
-
+    <h3 contenteditable="true" form="photoUploadForm">{{$record->caption}}</h3>
 @endsection
 
 @section('tools')
@@ -18,7 +18,6 @@
             <input type="text" class="form-control" value="{{$record->getUrl()}}" id="photoFullAddress">
             <div class="input-group-btn">
                 <button class="btn btn-secondary" onclick="copyToClipboard(this)">Copy path</button>
-
             </div>
         </div>
     </div>
@@ -26,11 +25,18 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-sm-12">
-            @include('photo::cards.photo',['fullSize'=>true])
+    <form method="post" id="photoUploadForm"
+          form="photoUploadForm" enctype="multipart/form-data">
+        {{csrf_field()}}
+        {{method_field('PUT')}}
+        <input type="hidden" name="caption" value="{{$record->caption}}">
+        <div id="upload-demo"></div>
+        <div class="form-group text-center">
+            <button class="btn btn-primary" id="upload-image">Resize Image</button>
         </div>
-    </div>
+    </form>
+
+
     <div class="row mb-5">
         @if($record->location)
             <div class="col-sm-8">
@@ -128,12 +134,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.2/croppie.js"></script>
 
     <script type="text/javascript">
-        $("#photo_album").select2();
 
         var resize = $('#upload-demo').croppie({
             enableExif: true,
             enableOrientation: true,
-            url: $("#profile-image").html(),
+            enableZoom: true,
+            enableResize: true,
+            enforceBoundary:false,
+            url: '{{$record->getUrl()}}',
             viewport: { // Default { width: 100, height: 100, type: 'square' }
                 width: {{config('photo.maxWidth')}},
                 height: {{config('photo.maxHeight')}},
@@ -145,50 +153,25 @@
             },
 
         });
-        $('#image').on('change', function () {
-            var reader = new FileReader();
-            var allowedImageMimeType = [
-                'image/svg+xml',
-                'image/jpg',
-                'image/jpeg',
-                'image/png',
-                'image/gif',
-                'image/bmp',
-                'image/webp'
-            ];
-            if (allowedImageMimeType.indexOf(this.files[0].type) == -1) {
-                alert('File Type Not allowed. Only jpg,jpeg,png,webp,svg allowed');
-                $(this).val('');
-                return false;
-            }
-            reader.onload = function (e) {
-                resize.croppie('bind', {
-                    url: e.target.result
-                }).then(function () {
-                    console.log('jQuery bind complete');
-                });
-            }
-            reader.readAsDataURL(this.files[0]);
-        });
 
         $('#upload-image').on('click', function (ev) {
+            ev.preventDefault();
+            console.log('WHAT');
             var formData = new FormData($('form#photoUploadForm')[0]);
             resize.croppie('result', {
                 type: 'canvas',
                 size: {
-                    width: 1140,
-                    height: 475
+                    width: {{config('photo.maxWidth')}},
+                    height: {{config('photo.maxHeight')}}
                 }
             }).then(function (img) {
                 $('.btn-upload-image').prop('disabled', true);
                 var dataURL = img;
-                if ($("#image").val()) {
-                    var blob = dataURItoBlob(dataURL);
-                    formData.append("file", blob, "filename.jpg");
-                }
-                /**
-                 $.ajax({
-                    url: "/businesses/save/slider-image",
+                var blob = dataURItoBlob(dataURL);
+                formData.append("file", blob, '{{pathinfo($record->src,PATHINFO_BASENAME)}}');
+
+                $.ajax({
+                    url: '{{route('photo::photos.update',$record->id)}}',
                     method: 'post',
                     data: formData,
                     processData: false,
@@ -197,20 +180,34 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (result) {
-                        if (result.success === true) {
-                            window.location.reload();
-                        } else {
-                            alert(result.message);
-                        }
+                        window.location.reload();
                         $('.btn-upload-image').prop('disabled', false);
                     },
                     error: function (xhr, ajaxOptions, thrownError) {
                         $('.btn-upload-image').prop('disabled', false);
                     }
                 });
-                 */
             });
         });
+
+        function dataURItoBlob(dataURI) {
+            // convert base64 to raw binary data held in a string
+            var byteString = atob(dataURI.split(',')[1]);
+
+            // separate out the mime component
+            var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+            // write the bytes of the string to an ArrayBuffer
+            var arrayBuffer = new ArrayBuffer(byteString.length);
+            var _ia = new Uint8Array(arrayBuffer);
+            for (var i = 0; i < byteString.length; i++) {
+                _ia[i] = byteString.charCodeAt(i);
+            }
+
+            var dataView = new DataView(arrayBuffer);
+            var blob = new Blob([dataView], {type: mimeString});
+            return blob;
+        }
 
     </script>
 @endsection

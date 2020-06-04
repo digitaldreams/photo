@@ -213,11 +213,6 @@ class Photo extends Model
         return !empty($this->caption) ? $this->caption : pathinfo($this->src, PATHINFO_BASENAME);
     }
 
-    public function getTitle()
-    {
-        return !empty($this->title) ? $this->title : pathinfo($this->src, PATHINFO_BASENAME);
-    }
-
     public function apiData()
     {
         return [
