@@ -50,7 +50,7 @@
                 @include('photo::cards.photo',['record'=>$photo])
             </div>
         @endforeach
-        <div class="col-sm-3" >
+        <div class="col-sm-3">
             <div class="card image-dropZone" style="min-height: 200px">
                 <div class="card-body text-center image-dropZone px-5">
                     <i class="fa fa-plus image-dropZone fa-5x"></i>
@@ -82,9 +82,7 @@
                     maxFiles: 1,
                     maxFilesize: 2,
                     addRemoveLinks: !0,
-                    accept: function (e, o) {
-                        "justinbieber.jpg" == e.name ? o("Naha, you don't.") : o()
-                    },
+                    acceptedFiles: 'image/*',
                     drop: function (e) {
                         var imageUrl = e.dataTransfer.getData('URL');
                         if (imageUrl.length > 30) {
@@ -101,7 +99,7 @@
                         }
                     },
                     complete: function (file) {
-                        console.log(file);
+                        window.location.reload();
                     },
                     error: function () {
                         alert('something went wrong please try again')
