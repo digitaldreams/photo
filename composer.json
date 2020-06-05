@@ -14,9 +14,9 @@
     }
   ],
   "require": {
-    "php": ">=7.0.0",
-    "laravel/framework": ">=5.5.0",
-    "digitaldream/googleplace": "1.*",
+    "php": ">=7.2.0",
+    "laravel/framework": ">=6.0",
+    "digitaldream/googleplace": ">=1.0",
     "intervention/image": "^2.5"
   },
   "require-dev": {
