@@ -1,14 +1,15 @@
-<div class="card card-default">
+<div class="card card-default" style="min-height: 320px">
     <a href="{{route('photo::photos.show',$record->id)}}">
         <img class="card-img-top" src="{{isset($fullSize)?$record->getUrl():$record->getFormat()}}"
-             alt="{{$record->caption}}" style="max-height: 300px" title="{{$record->title}}">
+             alt="{{$record->caption}}" title="{{$record->title}}">
     </a>
-    <div class="card-body">
+    <h6 class="card-title">
         <a href="{{route('photo::photos.show',$record->id)}}">
-            <h5 class="card-title"> {{$record->caption}}</h5>
+            {{$record->getCaption()}}
         </a>
+    </h6>
 
-    </div>
+
     <div class="card-footer bg-transparent">
         @foreach($record->albums as $album)
             <a class="badge badge-light" href="{{route('photo::albums.show',$album->id)}}">{{$album->name}}</a>

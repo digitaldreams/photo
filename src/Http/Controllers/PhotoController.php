@@ -44,7 +44,7 @@ class PhotoController extends Controller
             $photos = $photos->where('src', 'LIKE', "%" . $folder . '%');
         }
         return view('photo::pages.photos.index', [
-            'records' => $photos->latest()->paginate(6),
+            'records' => $photos->latest()->paginate(11),
         ]);
     }
 

@@ -46,11 +46,11 @@
     <hr/>
     <div class="row">
         @foreach($records as $photo)
-            <div class="col-sm-3">
+            <div class="col-sm-2">
                 @include('photo::cards.photo',['record'=>$photo])
             </div>
         @endforeach
-        <div class="col-sm-3">
+        <div class="col-sm-2">
             <div class="card image-dropZone" style="min-height: 200px">
                 <div class="card-body text-center image-dropZone px-5">
                     <i class="fa fa-plus image-dropZone fa-5x"></i>

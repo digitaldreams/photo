@@ -9,7 +9,7 @@
     <li class="breadcrumb-item active">{{$record->caption}}</li>
 @endsection
 @section('header')
-    <h3 contenteditable="true" form="photoUploadForm">{{$record->caption}}</h3>
+    <h3>{{$record->getCaption()}}</h3>
 @endsection
 
 @section('tools')
