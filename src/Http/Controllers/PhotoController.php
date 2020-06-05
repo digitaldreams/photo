@@ -217,6 +217,35 @@ class PhotoController extends Controller
     }
 
     /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
+     */
+    public function dropzone(Request $request)
+    {
+        if ($request->file('file')->isValid() && PhotoService::isValid($request, 'file')) {
+            $photo = new Photo();
+            config([
+                'photo.maxWidth' => 505,
+                'photo.maxHeight' => 426,
+            ]);
+            $model = (new PhotoService($photo))->setFolder('products')->save($request);
+
+
+            session()->flash('app_message', 'Photo saved');
+            return response()->json([
+                'file' => $model->getFormat(),
+                'success' => true,
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+    }
+
+    /**
      * Rename Filename
      *
      * @param Edit  $request
