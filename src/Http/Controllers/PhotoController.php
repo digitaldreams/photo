@@ -98,10 +98,10 @@ class PhotoController extends Controller
 
         if ($model = $photoService->save($request)) {
             $model->albums()->sync($request->get('album_ids', []));
-            session()->flash('app_message', 'Photo saved successfully');
+            session()->flash('message', 'Photo saved successfully');
             return redirect()->route('photo::photos.index');
         } else {
-            session()->flash('app_message', 'Oops something went wrong while saving your photo');
+            session()->flash('message', 'Oops something went wrong while saving your photo');
         }
         return redirect()->back();
     }
@@ -139,10 +139,10 @@ class PhotoController extends Controller
         $photoService = new PhotoService($photo);
         if ($photo = $photoService->save($request)) {
             $photo->albums()->sync($request->get('album_ids', []));
-            session()->flash('app_message', 'Photo successfully updated');
+            session()->flash('message', 'Photo successfully updated');
             return redirect()->route('photo::photos.index');
         } else {
-            session()->flash('app_error', 'Oops something went wrong while updating your photo');
+            session()->flash('error', 'Oops something went wrong while updating your photo');
         }
         return redirect()->back();
     }
@@ -159,9 +159,9 @@ class PhotoController extends Controller
     public function destroy(Destroy $request, Photo $photo)
     {
         if ($photo->delete()) {
-            session()->flash('app_message', 'Photo successfully deleted');
+            session()->flash('message', 'Photo successfully deleted');
         } else {
-            session()->flash('app_error', 'Error occurred while deleting your photo');
+            session()->flash('error', 'Error occurred while deleting your photo');
         }
         return redirect()->route('photo::photos.index');
     }
@@ -233,7 +233,7 @@ class PhotoController extends Controller
             $model = (new PhotoService($photo))->setFolder('products')->save($request);
 
 
-            session()->flash('app_message', 'Photo saved');
+            session()->flash('message', 'Photo saved');
             return response()->json([
                 'file' => $model->getFormat(),
                 'success' => true,

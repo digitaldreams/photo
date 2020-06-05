@@ -69,10 +69,10 @@ class AlbumController extends Controller
         $model = new Album;
         $model->fill($request->all());
         if ($model->save()) {
-            session()->flash('app_message', 'Album saved successfully');
+            session()->flash('message', 'Album saved successfully');
             return redirect()->route('photo::albums.index');
         } else {
-            session()->flash('app_message', 'Oops something went wrong while saving the Album');
+            session()->flash('message', 'Oops something went wrong while saving the Album');
         }
         return redirect()->back();
     }
@@ -102,10 +102,10 @@ class AlbumController extends Controller
     {
         $album->fill($request->all());
         if ($album->save()) {
-            session()->flash('app_message', 'Album successfully updated');
+            session()->flash('message', 'Album successfully updated');
             return redirect()->route('photo::albums.index');
         } else {
-            session()->flash('app_error', 'Oops something went wrong while updating the Album');
+            session()->flash('error', 'Oops something went wrong while updating the Album');
         }
         return redirect()->back();
     }
@@ -121,9 +121,9 @@ class AlbumController extends Controller
     public function destroy(Destroy $request, Album $album)
     {
         if ($album->delete()) {
-            session()->flash('app_message', 'Album successfully deleted');
+            session()->flash('message', 'Album successfully deleted');
         } else {
-            session()->flash('app_error', 'Error occurred while deleting the Album');
+            session()->flash('error', 'Error occurred while deleting the Album');
         }
         return redirect()->back();
     }

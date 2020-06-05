@@ -44,6 +44,16 @@
 </nav>
 
 <div class="container-fluid">
+
+    @if(session()->has('message'))
+        <div class="alert alert-success">
+            {{session()->get('message')}}
+        </div>
+    @elseif(session()->has('error'))
+        <div class="alert alert-warning">
+            {{session()->get('error')}}
+        </div>
+    @endif
     <div class="row">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
             <div class="sidebar-sticky">
