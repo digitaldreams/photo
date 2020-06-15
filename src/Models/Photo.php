@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int                                      $user_id       user id
- * @property varchar                                  $caption       caption
- * @property varchar                                  $title         title
- * @property varchar                                  $mime_type     mime type
- * @property varchar                                  $src           src
+ * @property string                                  $caption       caption
+ * @property string                                  $title         title
+ * @property string                                  $mime_type     mime type
+ * @property string                                  $src           src
  * @property int                                      $location_id   location id
- * @property timestamp                                $created_at    created at
- * @property timestamp                                $updated_at    updated at
- * @property PhotoLocation                            $photoLocation belongsTo
+ * @property \Carbon\Carbon                                $created_at    created at
+ * @property \Carbon\Carbon                                $updated_at    updated at
+ * @property \Photo\Models\Location                            $photoLocation belongsTo
  * @property \Illuminate\Database\Eloquent\Collection $albumphoto    belongsToMany
  */
 class Photo extends Model
@@ -37,6 +37,9 @@ class Photo extends Model
      */
     protected $casts = ['exif' => 'array'];
 
+    /**
+     *
+     */
     public static function boot()
     {
         parent::boot();
@@ -51,6 +54,9 @@ class Photo extends Model
         });
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     */
     public function photoable()
     {
         return $this->morphTo();
@@ -85,6 +91,9 @@ class Photo extends Model
         return $this->belongsToMany(Album::class, 'album_photo');
     }
 
+    /**
+     * @return \Illuminate\Config\Repository|mixed|\Photo\Models\varchar
+     */
     public function getSrc()
     {
         return !empty($this->src) ? $this->src : config('photo.default');
@@ -113,6 +122,11 @@ class Photo extends Model
         return url(rtrim($prefix . '/' . $this->src));
     }
 
+    /**
+     * @param string $size
+     *
+     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     */
     public function getWebP($size = '')
     {
         $info = pathinfo($this->src);
@@ -181,6 +195,9 @@ class Photo extends Model
         return $this->getUrl();
     }
 
+    /**
+     * @return string
+     */
     public function getLocationName()
     {
         try {
@@ -190,6 +207,9 @@ class Photo extends Model
         }
     }
 
+    /**
+     * @return string
+     */
     public function getLocationAddress()
     {
         try {
@@ -199,6 +219,9 @@ class Photo extends Model
         }
     }
 
+    /**
+     * @return string
+     */
     public function getLocationPlaceId()
     {
         try {
@@ -208,22 +231,32 @@ class Photo extends Model
         }
     }
 
+    /**
+     * @return mixed|\Photo\Models\varchar
+     */
     public function getCaption()
     {
         return !empty($this->caption) ? $this->caption : pathinfo($this->src, PATHINFO_BASENAME);
     }
 
+    /**
+     * @return array
+     */
     public function apiData()
     {
         return [
             'url' => $this->getUrl(),
             'thumbnail' => $this->getFormat(),
             'caption' => $this->getCaption(),
-            'title' => $this->getTitle(),
+            'title' => $this->getCaption(),
             'location' => $this->getLocationAddress(),
         ];
     }
 
+    /**
+     * @return bool|null
+     * @throws \Exception
+     */
     public function destroyAndRemove()
     {
         if (Storage::disk('public')->exists($this->src)) {
@@ -237,16 +270,27 @@ class Photo extends Model
         return $this->delete();
     }
 
+    /**
+     * @return bool
+     */
     public function isExists()
     {
         return Storage::disk('public')->exists($this->src);
     }
 
+    /**
+     * @return string
+     */
     public function getFullPath()
     {
         return storage_path('app/public/' . $this->src);
     }
 
+    /**
+     * @param string $size
+     *
+     * @return string
+     */
     public function getThumbnailPath($size = 'thumbnail')
     {
         $name = pathinfo($this->src);

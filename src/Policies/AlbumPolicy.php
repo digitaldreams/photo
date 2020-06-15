@@ -2,6 +2,7 @@
 
 namespace Photo\Policies;
 
+use App\User;
 use Photo\Models\Album;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -9,13 +10,16 @@ class AlbumPolicy
 {
     use HandlesAuthorization;
 
+
     /**
      * @param User $user
      * @return bool
      */
     public function before($user)
     {
-        //return true if user has super power
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+            return true;
+        }
     }
 
     /**
