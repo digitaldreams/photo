@@ -15,7 +15,7 @@ class CreatePhotoAlbumTable extends Migration
     {
         Schema::create('photo_albums', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('user_id')->unsigned()->nullable();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name', 150);
             $table->string('description')->nullable();
             $table->timestamps();

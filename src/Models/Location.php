@@ -5,15 +5,15 @@ namespace Photo\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property varchar $name name
- * @property varchar $place_id place id
- * @property varchar $address address
- * @property varchar $locality locality
- * @property varchar $city city
- * @property varchar $state state
- * @property varchar $country country
- * @property timestamp $created_at created at
- * @property timestamp $updated_at updated at
+ * @property string                                   $name       name
+ * @property string                                   $place_id   place id
+ * @property string                                   $address    address
+ * @property string                                   $locality   locality
+ * @property string                                   $city       city
+ * @property string                                   $state      state
+ * @property string                                   $country    country
+ * @property \Carbon\Carbon                           $created_at created at
+ * @property \Carbon\Carbon                           $updated_at updated at
  * @property \Illuminate\Database\Eloquent\Collection $photoPhoto hasMany
  */
 class Location extends Model
@@ -23,7 +23,7 @@ class Location extends Model
      * Database table name
      */
     protected $table = 'photo_locations';
-    
+
     /**
      * Protected columns from mass assignment
      */
@@ -36,7 +36,7 @@ class Location extends Model
         'state',
         'country',
         'latitude',
-        'longitude'
+        'longitude',
     ];
 
 

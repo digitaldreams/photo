@@ -7,13 +7,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Photo\Library\Resize;
 use Photo\Models\Photo;
-use Photo\Services\ImageDownload;
+use Photo\Services\ImageDownloadService;
 use Photo\Services\PhotoService;
 
 class DownloadController extends Controller
 {
-    public function __construct()
+    /**
+     * @var \Photo\Services\ImageDownloadService
+     */
+    protected ImageDownloadService $imageDownloadService;
+
+    /**
+     * DownloadController constructor.
+     *
+     * @param \Photo\Services\ImageDownloadService $imageDownloadService
+     */
+    public function __construct(ImageDownloadService $imageDownloadService)
     {
+        $this->imageDownloadService = $imageDownloadService;
     }
 
     /**
@@ -27,37 +38,25 @@ class DownloadController extends Controller
     {
         try {
             $url = $request->get('url');
-            $storagePath = storage_path('app/public/images');
-            $downloadImage = new ImageDownload($url, $storagePath);
-            if (!$downloadImage->exists()) {
-                return response()->json([
-                    'message' => 'File does not exists',
-                    'success' => false,
-                ]);
-            } else {
-                config([
-                    'photo.maxWidth' => 505,
-                    'photo.maxHeight' => 426,
-                ]);
+            $this->imageDownloadService->setImageUrl($url);
 
-                $path = $downloadImage->download();
-                $photo = new Photo();
-                $photo->caption = null;
-                $photo->src = 'images/' . pathinfo($path, PATHINFO_BASENAME);
-                $photo->save();
-                if (pathinfo($photo->src, PATHINFO_EXTENSION) !== 'svg') {
-                    if (!file_exists($storagePath . '/thumbnails')) {
-                        mkdir($storagePath . '/thumbnails');
-                    }
-                    $resize = (new Resize($path, 'thumbnail'))->setPath($storagePath . '/thumbnails');
-                    $resize->save();
+            $path = $this->imageDownloadService->download('images');
+            $photo = new Photo();
+            $photo->caption = null;
+            $photo->src = 'images/' . pathinfo($path, PATHINFO_BASENAME);
+            $photo->save();
+            if (pathinfo($photo->src, PATHINFO_EXTENSION) !== 'svg') {
+                if (!file_exists($storagePath . '/thumbnails')) {
+                    mkdir($storagePath . '/thumbnails');
                 }
-
-                return response()->json([
-                    'file' => $photo->getFormat(),
-                    'success' => true,
-                ]);
+                $resize = (new Resize($path, 'thumbnail'))->setPath($storagePath . '/thumbnails');
+                $resize->save();
             }
+
+            return response()->json([
+                'file' => $photo->getFormat(),
+                'success' => true,
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),

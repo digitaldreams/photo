@@ -5,12 +5,13 @@ namespace Photo;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Photo\Models\Album;
+use Photo\Models\Photo;
 use Photo\Policies\AlbumPolicy;
 use Photo\Policies\PhotoPolicy;
-use Photo\Models\Photo;
 
 /**
  * Class ServiceProvider
+ *
  * @package LaraCrud
  */
 class PhotoServiceProvider extends ServiceProvider
@@ -22,7 +23,7 @@ class PhotoServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Photo::class => PhotoPolicy::class,
-        Album::class => AlbumPolicy::class
+        Album::class => AlbumPolicy::class,
     ];
 
     /**
@@ -37,6 +38,7 @@ class PhotoServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'photo');
+        $this->loadFactoriesFrom(__DIR__ . '/../database/factories');
     }
 
     /**

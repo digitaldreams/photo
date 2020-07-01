@@ -14,9 +14,11 @@ class CreatePhotoLocationTable extends Migration
     public function up()
     {
         Schema::create('photo_locations', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id('id');
             $table->string('name')->nullable();
             $table->string('place_id')->unique();
+            $table->string('latitude')->nullable();
+            $table->string('longitude')->nullable();
             $table->string('address')->nullable();
             $table->string('locality')->nullable();
             $table->string('city')->nullable();

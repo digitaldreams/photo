@@ -5,12 +5,12 @@ namespace Photo\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property int $user_id user id
- * @property varchar $name name
- * @property varchar $description description
- * @property timestamp $created_at created at
- * @property timestamp $updated_at updated at
- * @property \Illuminate\Database\Eloquent\Collection $albumphoto belongsToMany
+ * @property int                                      $user_id     user id
+ * @property string                                  $name        name
+ * @property string                                  $description description
+ * @property \Carbon\Carbon                                $created_at  created at
+ * @property \Carbon\Carbon                                $updated_at  updated at
+ * @property \Illuminate\Database\Eloquent\Collection $albumphoto  belongsToMany
  */
 class Album extends Model
 {
@@ -22,7 +22,7 @@ class Album extends Model
     /**
      * Protected columns from mass assignment
      */
-    protected $guarded = ['id'];
+    protected $fillable = ['name', 'description'];
 
 
     /**
@@ -49,19 +49,4 @@ class Album extends Model
         return $this->belongsToMany(Photo::class, 'album_photo');
     }
 
-    /**
-     * name column mutator.
-     */
-    public function setNameAttribute($value)
-    {
-        $this->attributes['name'] = htmlspecialchars($value);
-    }
-
-    /**
-     * description column mutator.
-     */
-    public function setDescriptionAttribute($value)
-    {
-        $this->attributes['description'] = htmlspecialchars($value);
-    }
 }

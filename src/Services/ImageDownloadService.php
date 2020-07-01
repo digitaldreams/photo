@@ -6,7 +6,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Photo\Exceptions\ImageNotFoundException;
 
-class ImageDownload
+class ImageDownloadService
 {
     /**
      * @var string
@@ -104,7 +104,7 @@ class ImageDownload
      *
      * @param string $imageUrl
      *
-     * @return \Photo\Services\ImageDownload
+     * @return \Photo\Services\ImageDownloadService
      * @throws \Exception
      */
     public function setImageUrl(string $imageUrl): self
