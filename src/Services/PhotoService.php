@@ -10,6 +10,7 @@ namespace Photo\Services;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 
 class PhotoService
@@ -78,14 +79,16 @@ class PhotoService
      * @param string                        $path
      * @param \Illuminate\Http\UploadedFile $uploadedFile
      *
+     * @param string|null                   $fileName
+     *
      * @return \Photo\Services\PhotoService
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function store(string $path, UploadedFile $uploadedFile): PhotoService
+    public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null): PhotoService
     {
         $pathInfo = pathinfo($uploadedFile->hashName($path));
-        $destination = sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'jpeg');
+        $destination = !empty($fileName) ? $this->getUniquePath($path, $fileName) : sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'jpeg');
 
         $this->imageSource = $this->resizeAndConvert($uploadedFile, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'jpeg');
         $this->convertMaxDimensionToWebP($this->imageSource);
@@ -274,4 +277,35 @@ class PhotoService
         return $this->storage->url($this->imageSource);
     }
 
+    /**
+     * @param string $fileName
+     *
+     * @return \Illuminate\Support\Stringable
+     */
+    protected function sanitizeFileName(string $fileName)
+    {
+        return Str::of($fileName)
+            ->lower()
+            ->replaceMatches('/[^a-z0-9-\s]+/', '')
+            ->replaceMatches('/[\s-]+/', '-');
+    }
+
+    /**
+     * Generate caption based Unique file name.
+     *
+     * @param string $path
+     * @param string $fileName
+     * @param string $extension
+     *
+     * @return string
+     */
+    public function getUniquePath(string $path, string $fileName, $extension = 'jpeg')
+    {
+        $name = $this->sanitizeFileName($fileName);
+        $relativePath = $path . '/' . $name . '.' . $extension;
+        if (!$this->storage->exists($relativePath)) {
+            return $relativePath;
+        }
+        return $path . '/' . $name . '-' . uniqid() . '.' . $extension;
+    }
 }
