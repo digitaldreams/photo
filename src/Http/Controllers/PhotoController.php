@@ -21,6 +21,22 @@ use Photo\Services\PhotoService;
  */
 class PhotoController extends Controller
 {
+
+    /**
+     * @var \Photo\Services\PhotoService
+     */
+    protected PhotoService $photoService;
+
+    /**
+     * PhotoController constructor.
+     *
+     * @param \Photo\Services\PhotoService $photoService
+     */
+    public function __construct(PhotoService $photoService)
+    {
+        $this->photoService = $photoService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -90,14 +106,9 @@ class PhotoController extends Controller
     {
         $model = new Photo();
         $model->fill($request->all());
-        $photoService = new PhotoService($model);
-        if (!$photoService->isValid($request)) {
-            return redirect()->back()->withInput($request->all())->with('app_error', 'Unsupported file type');
-        }
 
-        if ($model = $photoService->save($request)) {
-            $model->albums()->sync($request->get('album_ids', []));
-            session()->flash('message', 'Photo saved successfully');
+        if ($model = $this->photoService->store('images', $request->file('file'))) {
+
 
             return redirect()->route('photo::photos.index');
         } else {

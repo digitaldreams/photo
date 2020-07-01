@@ -7,21 +7,17 @@ return [
     'layout' => 'photo::layouts.app',
 
     'default' => '/storage/images/default.png',
+
     /*
      * Local Storage Path.
      */
     'rootPath' => 'images',
 
     /*
-     * Url prefix that will be added to all photos.
-     * For example if you are using public driver then prefix will be storage
+     * either default or cloud
      */
-    'prefix' => 'storage',
+    'filesystem' => 'default',
 
-    /*
-     *
-     */
-    'driver' => 'public',
     /*
      * Do you like to reduce image size?
      */

@@ -8,93 +8,270 @@
 
 namespace Photo\Services;
 
-use Illuminate\Http\Request;
-use Photo\Models\Location;
-use Photo\Models\Photo;
-use Photo\Photo as PhotoLib;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Http\UploadedFile;
+use Intervention\Image\ImageManager;
 
 class PhotoService
 {
     /**
-     * @var Photo
+     * @var int
      */
-    protected $photo;
-    protected $folder;
+    protected int $quality = 80;
 
-    public function __construct(Photo $photo)
+    /**
+     * @var string
+     */
+    protected string $imageSource;
+
+    /**
+     * Dimensions.
+     *
+     * @var array [height,width]
+     */
+    protected array $dimensions = [];
+
+    /**
+     * @var array
+     */
+    protected array $maxDimension = [];
+
+    /**
+     * @var array
+     */
+    protected array $formats = ['jpeg', 'webp'];
+
+    /**
+     * @var array
+     */
+    protected array $convertedSizes = [];
+
+    /**
+     * @var \Illuminate\Contracts\Filesystem\Filesystem
+     */
+    private Filesystem $storage;
+
+    /**
+     * @var \Intervention\Image\ImageManager
+     */
+    protected ImageManager $image;
+
+    /**
+     * PhotoService constructor.
+     *
+     * @param \Illuminate\Contracts\Filesystem\Filesystem $filesystem
+     * @param \Intervention\Image\ImageManager            $imageManager
+     */
+    public function __construct(Filesystem $filesystem, ImageManager $imageManager)
     {
-        $this->photo = $photo;
-        $this->folder = config('photo.rootPath', 'photos');
+        $this->storage = $filesystem;
+        $this->image = $imageManager;
+
+        $this->maxDimension['height'] = config('photo.maxHeight', 450);
+        $this->maxDimension['width'] = config('photo.maxWidth', 800);
+
     }
 
     /**
-     * @param Request $request
-     * @param string  $name
+     * Convert, crop and finally upload image.
      *
-     * @return Photo
+     * @param string                        $path
+     * @param \Illuminate\Http\UploadedFile $uploadedFile
      *
-     * @throws \Exception
+     * @return \Photo\Services\PhotoService
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function save(Request $request, $name = 'file')
+    public function store(string $path, UploadedFile $uploadedFile): PhotoService
     {
-        if ($request->hasFile($name) || $request->get('imageID')) {
-            if ($request->hasFile($name)) {
-                $url = (new PhotoLib())->setFolder($this->folder)
-                    ->crop($request->get('crop', 'yes'))
-                    ->upload($request->file($name))
-                    ->resize()
-                    ->getUrls();
-                if (!empty($url)) {
-                    $this->photo->src = array_shift($url);
-                }
-                $placeApiData = $request->get('place_api_data');
-                if (!empty($placeApiData)) {
-                    $data = json_decode($placeApiData, true);
-                    if (is_array($data)) {
-                        $location = new Location();
-                        $location->fill($data);
-                        if ($location->save()) {
-                            $this->photo->location_id = $location->id;
-                        }
-                    }
-                }
-            }
-            if (empty($this->photo->caption)) {
-                $this->photo->caption = null;
-            }
-            $this->photo->save();
-        }
+        $pathInfo = pathinfo($uploadedFile->hashName($path));
+        $destination = sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'jpeg');
 
-        return $this->photo;
-    }
-
-    public static function isValid(Request $request, $name = 'file')
-    {
-        $valid = true;
-        $files = $request->file($name);
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                if ($file instanceof UploadedFile) {
-                    if (!in_array($file->getClientMimeType(), \Photo\Photo::$mimeTypes)) {
-                        $valid = false;
-                        break;
-                    }
-                }
-            }
-        } else {
-            if (!in_array($files->getClientMimeType(), \Photo\Photo::$mimeTypes)) {
-                $valid = false;
-            }
-        }
-
-        return $valid;
-    }
-
-    public function setFolder($folder)
-    {
-        $this->folder = $folder;
+        $this->imageSource = $this->resizeAndConvert($uploadedFile, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'jpeg');
+        $this->convertMaxDimensionToWebP($this->imageSource);
 
         return $this;
     }
+
+    /**
+     * Convert all defined dimensions into jpeg and webp.
+     *
+     * @param $source
+     *
+     * @return self
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function convert(?string $source = null): self
+    {
+        $source = $source ?: $this->imageSource;
+        foreach ($this->dimensions as $path => $dimension) {
+            $pathInfo = pathinfo($source);
+
+            foreach ($this->formats as $format) {
+                $destination = sprintf('%s/%s.%s', $pathInfo['dirname'] . '/' . $path, $pathInfo['filename'], $format);
+                $this->convertedSizes[$format][$path] = $this->resizeAndConvert($source, $destination, $dimension['width'], $dimension['height'], $format);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Crop image into a given width and height and finally save a format.
+     *
+     * @param string|UploadedFile $source
+     * @param                     $destination
+     * @param int                 $width
+     * @param int                 $height
+     * @param string              $format
+     *
+     * @return string
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function resizeAndConvert($source, string $destination, int $width, int $height, string $format): string
+    {
+        $imageStream = $this->image->make($this->getImageSource($source))
+            ->fit($width, $height, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })->encode($format, $this->quality)->stream();
+
+        $this->storage->put($destination, $imageStream, 'public');
+
+        return $destination;
+    }
+
+    /**
+     * store method will only resize and upload jpeg version but still we need to convert it webp format. This method will do this.
+     *
+     * @param string $path
+     *
+     * @return string
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function convertMaxDimensionToWebP(string $path): string
+    {
+        $pathInfo = pathinfo($path);
+        $destination = sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'webp');
+
+        return $this->resizeAndConvert($path, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'webp');
+    }
+
+    /**
+     * Get image stream.
+     *
+     * @param string|UploadedFile $source
+     *
+     * @return \Illuminate\Http\UploadedFile|resource
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    private function getImageSource($source)
+    {
+        if (is_string($source)) {
+            return $this->storage->readStream($source);
+        }
+        if ($source instanceof UploadedFile) {
+            return $source;
+        }
+        throw new \Exception('Source can be either a file path or UploadedFile Object.');
+    }
+
+    /**
+     * Set original image height and width.
+     *
+     * @param int $width
+     * @param int $height
+     *
+     * @return \Photo\Services\PhotoService
+     */
+    public function setMaxDimension(int $width, int $height): self
+    {
+        $this->maxDimension = [
+            'width' => $width,
+            'height' => $height,
+        ];
+        return $this;
+    }
+
+    /**
+     * Set a Dimension e.g. thumbnails 64px x 64px
+     *
+     * @param int    $width
+     * @param int    $height
+     * @param string $folder
+     *
+     * @return \Photo\Services\PhotoService
+     */
+    public function setDimension(int $width, int $height, string $folder): self
+    {
+        $this->dimensions[$folder] = [
+            'height' => $height,
+            'width' => $width,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Get list of all sizes.
+     *
+     * @return array
+     */
+    public function getSizes(): array
+    {
+        return $this->convertedSizes;
+    }
+
+    /**
+     * Get a specific image url based on size and format.
+     *
+     * @param        $size
+     * @param string $format
+     *
+     * @return mixed|null
+     */
+    public function getSize($size, $format = 'jpeg'): string
+    {
+        return $this->convertedSizes[$size][$format] ?? null;
+    }
+
+
+    /**
+     * Delete the original file.
+     *
+     * @param string $source
+     *
+     * @return self
+     */
+    public function deleteOriginal(string $source): self
+    {
+        $this->storage->delete($source);
+
+        return $this;
+    }
+
+    /**
+     * Get path of newly stored image.
+     *
+     * @return string
+     */
+    public function getStoredImagePath(): string
+    {
+        return $this->imageSource;
+    }
+
+    /**
+     * Get full image source url.
+     *
+     * @return mixed
+     */
+    public function getStoredImageUrl()
+    {
+        return $this->storage->url($this->imageSource);
+    }
+
 }
