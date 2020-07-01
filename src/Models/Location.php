@@ -20,12 +20,12 @@ class Location extends Model
 {
 
     /**
-     * Database table name
+     * Database table name.
      */
     protected $table = 'photo_locations';
 
     /**
-     * Protected columns from mass assignment
+     * Protected columns from mass assignment.
      */
     protected $fillable = [
         'name',
@@ -39,14 +39,13 @@ class Location extends Model
         'longitude',
     ];
 
-
     /**
      * Date time columns.
      */
     protected $dates = [];
 
     /**
-     * photoPhotos
+     * photoPhotos.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -57,6 +56,8 @@ class Location extends Model
 
     /**
      * name column mutator.
+     *
+     * @param mixed $value
      */
     public function setNameAttribute($value)
     {

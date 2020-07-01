@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 5/2/2018
- * Time: 9:44 AM
+ * Time: 9:44 AM.
  */
 
 namespace Photo\Http\Controllers\Api;
@@ -18,6 +18,7 @@ class PhotoController extends Controller
 {
     /**
      * @param Index $index
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Index $index)
@@ -32,12 +33,15 @@ class PhotoController extends Controller
         foreach ($photos as $photo) {
             $data[] = $photo->apiData();
         }
+
         return response()->json($data);
     }
 
     /**
      * @param Store $request
+     *
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function store(Store $request)
@@ -51,13 +55,14 @@ class PhotoController extends Controller
                 if (!empty($url)) {
                     $photo = new Photo([
                         'src' => array_shift($url),
-                        'caption' => $file->getClientOriginalName()
+                        'caption' => $file->getClientOriginalName(),
                     ]);
                     $photo->save();
                     $data[] = $photo->apiData();
                 }
             }
         }
+
         return response()->json($data);
     }
 }

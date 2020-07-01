@@ -5,7 +5,6 @@ namespace Photo\Library;
 use Intervention\Image\Facades\Image as ImageLib;
 use Intervention\Image\Image;
 use Photo\Photo;
-use Storage;
 
 class Resize
 {
@@ -34,11 +33,13 @@ class Resize
 
     /**
      * Resize constructor.
+     *
      * @param $filePath
      * @param string $size
+     *
      * @throws \Exception
      */
-    public function __construct($filePath, $size = "thumbnail")
+    public function __construct($filePath, $size = 'thumbnail')
     {
         if (!file_exists($filePath)) {
             throw new \Exception($filePath . ' does not exists');
@@ -50,13 +51,14 @@ class Resize
     public function crop($crop = 'yes')
     {
         $this->crop = $crop;
+
         return $this;
     }
 
     /**
-     * Resize an image
+     * Resize an image.
      *
-     * @return  Image
+     * @return Image
      */
     public function save()
     {
@@ -74,7 +76,7 @@ class Resize
             $height = null;
             $canvas = true;
         }
-        if ($this->crop == 'yes') {
+        if ('yes' == $this->crop) {
             $img->resize($width, $height, function ($constraint) {
                 //  $constraint->aspectRatio();
                 //  $constraint->upsize();
@@ -87,13 +89,14 @@ class Resize
             $this->path = $this->getFullPath($this->folder) . '/' . $this->thumbnailPath;
         }
 
-
         if (!empty($this->path)) {
-            $ig = $img->save($this->path . "/" . $this->getBaseName());
-            Photo::convertToWebP($this->path . "/" . $this->getBaseName());
+            $ig = $img->save($this->path . '/' . $this->getBaseName());
+            Photo::convertToWebP($this->path . '/' . $this->getBaseName());
+
             return $ig;
         }
         Photo::convertToWebP($this->filePath);
+
         return $img->save();
     }
 
@@ -107,6 +110,7 @@ class Resize
 
     /**
      * @param $size
+     *
      * @return $this
      */
     private function setSize($size)
@@ -121,23 +125,27 @@ class Resize
             $this->width = config('photo.maxWidth');
             $this->height = config('photo.maxHeight');
         }
+
         return $this;
     }
 
     public function setPath($path)
     {
         $this->path = $path;
+
         return $this;
     }
 
     public function setFolder($folder)
     {
         $this->folder = $folder;
+
         return $this;
     }
 
     /**
      * @param string $folder
+     *
      * @return string
      */
     protected function getFullPath($folder = '')
@@ -148,11 +156,12 @@ class Resize
         $folder = empty($folder) ? config('photo.rootPath', 'photos') : $folder;
 
         if (!empty($folder)) {
-            $path = rtrim($rootPath, "/") . "/" . $folder;
+            $path = rtrim($rootPath, '/') . '/' . $folder;
             if (!file_exists($path)) {
                 mkdir($path, 0777, true);
             }
         }
+
         return $path;
     }
 }

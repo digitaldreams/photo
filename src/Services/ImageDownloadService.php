@@ -32,6 +32,7 @@ class ImageDownloadService
      * @param string $path
      *
      * @return string
+     *
      * @throws \Photo\Exceptions\ImageNotFoundException
      */
     public function download(string $path)
@@ -60,12 +61,13 @@ class ImageDownloadService
 
     /**
      * @return bool|array
+     *
      * @throws \Photo\Exceptions\ImageNotFoundException
      */
     public function exists()
     {
         $file_headers = @get_headers($this->imageUrl, 1);
-        if (!$file_headers || $file_headers[0] == 'HTTP/1.1 404 Not Found' || $file_headers[0] == 'HTTP/1.1 403 Forbidden') {
+        if (!$file_headers || 'HTTP/1.1 404 Not Found' == $file_headers[0] || 'HTTP/1.1 403 Forbidden' == $file_headers[0]) {
             throw new ImageNotFoundException('Given image URL is not exists');
         } else {
             return $file_headers;
@@ -96,6 +98,7 @@ class ImageDownloadService
                 $extension = 'jpg';
                 break;
         }
+
         return $extension;
     }
 
@@ -105,6 +108,7 @@ class ImageDownloadService
      * @param string $imageUrl
      *
      * @return \Photo\Services\ImageDownloadService
+     *
      * @throws \Exception
      */
     public function setImageUrl(string $imageUrl): self
@@ -114,7 +118,7 @@ class ImageDownloadService
         } else {
             throw new \Exception('Invalid Image source');
         }
+
         return $this;
     }
-
 }

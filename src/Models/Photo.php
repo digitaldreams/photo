@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int                                      $user_id       user id
- * @property string                                  $caption       caption
- * @property string                                  $title         title
- * @property string                                  $mime_type     mime type
- * @property string                                  $src           src
+ * @property string                                   $caption       caption
+ * @property string                                   $title         title
+ * @property string                                   $mime_type     mime type
+ * @property string                                   $src           src
  * @property int                                      $location_id   location id
- * @property \Carbon\Carbon                                $created_at    created at
- * @property \Carbon\Carbon                                $updated_at    updated at
- * @property \Photo\Models\Location                            $photoLocation belongsTo
+ * @property \Carbon\Carbon                           $created_at    created at
+ * @property \Carbon\Carbon                           $updated_at    updated at
+ * @property \Photo\Models\Location                   $photoLocation belongsTo
  * @property \Illuminate\Database\Eloquent\Collection $albumphoto    belongsToMany
  */
 class Photo extends Model
@@ -23,11 +23,11 @@ class Photo extends Model
     const STATUS_INACTIVE = 'inactive';
     const STATUS_PENDING = 'pending';
     /**
-     * Database table name
+     * Database table name.
      */
     protected $table = 'photo_photos';
     /**
-     * Protected columns from mass assignment
+     * Protected columns from mass assignment.
      */
     protected $fillable = ['caption', 'src', 'exif'];
 
@@ -37,9 +37,6 @@ class Photo extends Model
      */
     protected $casts = ['exif' => 'array'];
 
-    /**
-     *
-     */
     public static function boot()
     {
         parent::boot();
@@ -50,6 +47,7 @@ class Photo extends Model
             if (empty($model->status)) {
                 $model->status = static::STATUS_ACTIVE;
             }
+
             return true;
         });
     }
@@ -68,11 +66,12 @@ class Photo extends Model
     public function user()
     {
         $userModel = config('auth.providers.users.model');
+
         return $this->belongsTo($userModel);
     }
 
     /**
-     * photoLocation
+     * photoLocation.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -82,7 +81,7 @@ class Photo extends Model
     }
 
     /**
-     * albumphotos
+     * albumphotos.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
@@ -110,6 +109,8 @@ class Photo extends Model
 
     /**
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Routing\UrlGenerator|mixed|string
+     *
+     * @param mixed $webP
      */
     public function getUrl($webP = false)
     {
@@ -130,11 +131,11 @@ class Photo extends Model
     public function getWebP($size = '')
     {
         $info = pathinfo($this->src);
-        if ($size == 'thumbnail') {
+        if ('thumbnail' == $size) {
             $size = config('photo.sizes.' . $size, false);
-            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . ".webp";
+            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . '.webp';
         } else {
-            $webP = $info['dirname'] . "/" . $info['filename'] . ".webp";
+            $webP = $info['dirname'] . '/' . $info['filename'] . '.webp';
         }
 
         $prefix = config('photo.prefix');
@@ -143,6 +144,7 @@ class Photo extends Model
         } else {
             $url = url(rtrim($prefix . '/' . $this->src));
         }
+
         return $url;
     }
 
@@ -156,20 +158,22 @@ class Photo extends Model
         $info = pathinfo($this->src);
         if ($size) {
             $size = config('photo.sizes.' . $size, false);
-            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . ".webp";
+            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . '.webp';
         } else {
-            $webP = $info['dirname'] . "/" . $info['filename'] . ".webp";
+            $webP = $info['dirname'] . '/' . $info['filename'] . '.webp';
         }
 
         if (file_exists(storage_path('app/public/' . $webP))) {
             $prefix = config('photo.prefix');
+
             return url(rtrim($prefix . '/' . $webP));
         }
+
         return false;
     }
 
     /**
-     * Get other sizes of the photo
+     * Get other sizes of the photo.
      *
      * @param string $size key from photo.sizes
      *
@@ -186,12 +190,13 @@ class Photo extends Model
         if (!empty($name) && is_array($size) && isset($size['path'])) {
             $prefix = config('photo.prefix');
             $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
-            if (file_exists(storage_path("app/public/" . $thumbnailPath))) {
+            if (file_exists(storage_path('app/public/' . $thumbnailPath))) {
                 return url($prefix . '/' . $thumbnailPath);
             } else {
                 return $this->getUrl();
             }
         }
+
         return $this->getUrl();
     }
 
@@ -255,6 +260,7 @@ class Photo extends Model
 
     /**
      * @return bool|null
+     *
      * @throws \Exception
      */
     public function destroyAndRemove()
@@ -267,6 +273,7 @@ class Photo extends Model
                 Storage::disk('public')->delete($thumbnails);
             }
         }
+
         return $this->delete();
     }
 
@@ -296,6 +303,7 @@ class Photo extends Model
         $name = pathinfo($this->src);
         $size = config('photo.sizes.' . $size, false);
         $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
-        return storage_path("app/public/" . $thumbnailPath);
+
+        return storage_path('app/public/' . $thumbnailPath);
     }
 }

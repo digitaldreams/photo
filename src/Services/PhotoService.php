@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 2/7/2018
- * Time: 10:49 PM
+ * Time: 10:49 PM.
  */
 
 namespace Photo\Services;
@@ -33,6 +33,7 @@ class PhotoService
      * @param string  $name
      *
      * @return Photo
+     *
      * @throws \Exception
      */
     public function save(Request $request, $name = 'file')
@@ -65,7 +66,6 @@ class PhotoService
             $this->photo->save();
         }
 
-
         return $this->photo;
     }
 
@@ -87,13 +87,14 @@ class PhotoService
                 $valid = false;
             }
         }
+
         return $valid;
     }
-
 
     public function setFolder($folder)
     {
         $this->folder = $folder;
+
         return $this;
     }
 }

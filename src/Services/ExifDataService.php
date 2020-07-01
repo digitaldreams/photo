@@ -3,14 +3,13 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 8/25/2018
- * Time: 10:46 PM
+ * Time: 10:46 PM.
  */
 
 namespace Photo\Services;
 
 use Photo\Models\Location;
 use Photo\Models\Photo;
-use Photo\Services\HereReverseGeocoding;
 
 class ExifDataService
 {
@@ -30,7 +29,7 @@ class ExifDataService
         'ExposureTime',
         'Flash',
         'ISOSpeedRatings',
-        'WhiteBalance'
+        'WhiteBalance',
     ];
 
     protected $photo;
@@ -43,6 +42,7 @@ class ExifDataService
 
     /**
      * ExifDataService constructor.
+     *
      * @param Photo $photo
      */
     public function __construct(Photo $photo)
@@ -54,6 +54,7 @@ class ExifDataService
     public function toArray()
     {
         return $this->data;
+
         return array_intersect_key($this->data, array_flip($this->fillable));
     }
 
@@ -65,7 +66,7 @@ class ExifDataService
             $data = $here->fetch()->toArray();
             if (isset($data['place_id'])) {
                 $locationModel = Location::firstOrNew([
-                    'place_id' => $data['place_id']
+                    'place_id' => $data['place_id'],
                 ]);
             } else {
                 return false;
@@ -76,16 +77,23 @@ class ExifDataService
             $locationModel->longitude = $latLng['longitude'] ?? null;
             $locationModel->save();
             $this->locationModel = $locationModel;
+
             return $locationModel;
         }
+
         return false;
     }
 
     /**
-     * Example coordinate values
+     * Example coordinate values.
      *
      * Latitude - 49/1, 4/1, 2881/100, N
      * Longitude - 121/1, 58/1, 4768/100, W
+     *
+     * @param mixed $deg
+     * @param mixed $min
+     * @param mixed $sec
+     * @param mixed $ref
      */
     protected function toDecimal($deg, $min, $sec, $ref)
     {
@@ -94,7 +102,8 @@ class ExifDataService
         };
 
         $d = $float($deg) + (($float($min) / 60) + ($float($sec) / 3600));
-        return ($ref == 'S' || $ref == 'W') ? $d *= -1 : $d;
+
+        return ('S' == $ref || 'W' == $ref) ? $d *= -1 : $d;
     }
 
     public function save()
@@ -111,8 +120,10 @@ class ExifDataService
                 $this->photo->taken_at = $data['DateTimeOriginal'] ?? null;
                 $this->photo->save();
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -120,10 +131,11 @@ class ExifDataService
     {
         $exif = $this->data;
 
-        $coord = (isset($exif['GPSLatitude'], $exif['GPSLongitude'])) ? array(
+        $coord = (isset($exif['GPSLatitude'], $exif['GPSLongitude'])) ? [
             'latitude' => sprintf('%.6f', $this->toDecimal($exif['GPSLatitude'][0], $exif['GPSLatitude'][1], $exif['GPSLatitude'][2], $exif['GPSLatitudeRef'])),
-            'longitude' => sprintf('%.6f', $this->toDecimal($exif['GPSLongitude'][0], $exif['GPSLongitude'][1], $exif['GPSLongitude'][2], $exif['GPSLongitudeRef']))
-        ) : null;
+            'longitude' => sprintf('%.6f', $this->toDecimal($exif['GPSLongitude'][0], $exif['GPSLongitude'][1], $exif['GPSLongitude'][2], $exif['GPSLongitudeRef'])),
+        ] : null;
+
         return $coord;
     }
 

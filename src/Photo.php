@@ -3,17 +3,16 @@
  * Created by PhpStorm.
  * User: digitaldreams
  * Date: 14/01/18
- * Time: 17:22
+ * Time: 17:22.
  */
 
 namespace Photo;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image as ImageLib;
 use Photo\Library\Resize;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Intervention\Image\Facades\Image as ImageLib;
-use Illuminate\Support\Str;
 
 class Photo
 {
@@ -48,7 +47,7 @@ class Photo
         'image/png',
         'image/gif',
         'image/bmp',
-        'image/webp'
+        'image/webp',
     ];
 
     /**
@@ -66,11 +65,13 @@ class Photo
     public function crop($crop = 'yes')
     {
         $this->crop = $crop;
+
         return $this;
     }
 
     /**
      * @param $files
+     *
      * @return Photo
      */
     public function upload($files)
@@ -86,12 +87,15 @@ class Photo
             $ret[] = $this->doUpload($files);
         }
         $this->urls = $ret;
+
         return $this;
     }
 
     /**
      * @param string $size
+     *
      * @return $this
+     *
      * @throws \Exception
      */
     public function resize($size = '')
@@ -99,7 +103,7 @@ class Photo
         $sizes = !empty($size) ? [$size] : config('photo.sizes', []);
         $absUrls = $this->getAbsoluteUrls();
         foreach ($absUrls as $url) {
-            if (pathinfo($url, PATHINFO_EXTENSION) == 'svg') {
+            if ('svg' == pathinfo($url, PATHINFO_EXTENSION)) {
                 continue;
             }
             foreach ($sizes as $key => $size) {
@@ -112,11 +116,13 @@ class Photo
                 }
             }
         }
+
         return $this;
     }
 
     /**
      * @param UploadedFile $document
+     *
      * @return bool|string
      */
     protected function doUpload(UploadedFile $document)
@@ -125,28 +131,26 @@ class Photo
             $fileName = Str::slug(pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . rand(999, 9999) . '.' . $document->getClientOriginalExtension();
             $path = $document->storeAs($this->folder, $fileName, $this->driver);
             $rootPath = $this->getRootPath();
-            $fullPath = rtrim($rootPath, "/") . "/" . $path;
-            if ($this->crop == 'yes' && $document->getClientOriginalExtension() !== 'svg') {
+            $fullPath = rtrim($rootPath, '/') . '/' . $path;
+            if ('yes' == $this->crop && 'svg' !== $document->getClientOriginalExtension()) {
                 $this->resizeOriginal($fullPath);
             }
             $this->convertToWebP($fullPath);
 
             return $path;
         }
+
         return false;
     }
 
-    /**
-     *
-     */
     private function makeRootPath()
     {
         if (in_array($this->driver, ['local', 'public'])) {
-            if ($this->driver == 'public') {
+            if ('public' == $this->driver) {
                 $this->urlPrefix = 'storage/';
             }
             $rootPath = $this->getRootPath();
-            $this->fullPath = rtrim($rootPath, "/") . "/" . $this->folder;
+            $this->fullPath = rtrim($rootPath, '/') . '/' . $this->folder;
             if (!file_exists($this->fullPath)) {
                 mkdir($this->fullPath);
             }
@@ -162,7 +166,8 @@ class Photo
     }
 
     /**
-     * Return Relative URL of the file
+     * Return Relative URL of the file.
+     *
      * @return array
      */
     public function getUrls()
@@ -179,24 +184,28 @@ class Photo
         $urls = $this->urls;
         $rootPath = $this->getRootPath();
         foreach ($urls as $url) {
-            $fullUrls[] = rtrim($rootPath, "/") . "/" . $url;
+            $fullUrls[] = rtrim($rootPath, '/') . '/' . $url;
         }
+
         return $fullUrls;
     }
 
     public function setFolder($folder)
     {
         $this->folder = $folder;
+
         return $this;
     }
 
     /**
      * @param $path
+     * @param mixed $webp
+     *
      * @return bool
      */
     protected function resizeOriginal($path, $webp = true)
     {
-        if (config('photo.compressSize') && config('photo.exif') == false) {
+        if (config('photo.compressSize') && false == config('photo.exif')) {
             $width = config('photo.maxWidth');
             $height = config('photo.maxHeight');
 
@@ -220,24 +229,29 @@ class Photo
                 });
                 $img->resizeCanvas(config('photo.maxWidth'), config('photo.maxHeight'));
             }
+
             return $img->save();
         }
+
         return false;
     }
 
     /**
      * @param $path
      * @param int $quality
+     *
      * @return bool
      */
     public static function convertToWebP($path, $quality = 80)
     {
-        if (pathinfo($path, PATHINFO_EXTENSION) !== 'svg') {
+        if ('svg' !== pathinfo($path, PATHINFO_EXTENSION)) {
             $info = pathinfo($path);
-            $webP = $info['dirname'] . "/" . $info['filename'] . ".webp";
+            $webP = $info['dirname'] . '/' . $info['filename'] . '.webp';
             ImageLib::make($path)->save($webP, $quality, 'webp');
+
             return true;
         }
+
         return false;
     }
 }

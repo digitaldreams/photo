@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -28,7 +27,7 @@ class DownloadController extends Controller
     }
 
     /**
-     * Download Image from image source URL. e.g. https://example.com/image.png
+     * Download Image from image source URL. e.g. https://example.com/image.png.
      *
      * @param \Illuminate\Http\Request $request
      *
@@ -45,7 +44,7 @@ class DownloadController extends Controller
             $photo->caption = null;
             $photo->src = 'images/' . pathinfo($path, PATHINFO_BASENAME);
             $photo->save();
-            if (pathinfo($photo->src, PATHINFO_EXTENSION) !== 'svg') {
+            if ('svg' !== pathinfo($photo->src, PATHINFO_EXTENSION)) {
                 if (!file_exists($storagePath . '/thumbnails')) {
                     mkdir($storagePath . '/thumbnails');
                 }
@@ -63,14 +62,13 @@ class DownloadController extends Controller
                 'success' => false,
             ]);
         }
-
-
     }
 
     /**
      * @param \Illuminate\Http\Request $request
      *
      * @return \Illuminate\Http\JsonResponse
+     *
      * @throws \Exception
      */
     public function dropzone(Request $request)
@@ -83,8 +81,8 @@ class DownloadController extends Controller
             ]);
             $model = (new PhotoService($photo))->setFolder('products')->save($request);
 
-
             session()->flash('message', 'Photo saved');
+
             return response()->json([
                 'file' => $model->getFormat(),
                 'success' => true,

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class Destroy extends FormRequest
 {
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -25,7 +24,6 @@ class Destroy extends FormRequest
     public function rules()
     {
         return [
-
         ];
     }
 
@@ -37,7 +35,6 @@ class Destroy extends FormRequest
     public function messages()
     {
         return [
-
         ];
     }
 }

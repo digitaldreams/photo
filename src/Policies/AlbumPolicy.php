@@ -3,16 +3,16 @@
 namespace Photo\Policies;
 
 use App\User;
-use Photo\Models\Album;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Photo\Models\Album;
 
 class AlbumPolicy
 {
     use HandlesAuthorization;
 
-
     /**
      * @param User $user
+     *
      * @return bool
      */
     public function before($user)
@@ -24,6 +24,7 @@ class AlbumPolicy
 
     /**
      * @param User $user
+     *
      * @return bool
      */
     public function index($user)
@@ -34,8 +35,9 @@ class AlbumPolicy
     /**
      * Determine whether the user can view the Album.
      *
-     * @param  User $user
-     * @param  Album $album
+     * @param User  $user
+     * @param Album $album
+     *
      * @return mixed
      */
     public function view($user, Album $album)
@@ -46,7 +48,8 @@ class AlbumPolicy
     /**
      * Determine whether the user can create Album.
      *
-     * @param  User $user
+     * @param User $user
+     *
      * @return mixed
      */
     public function create($user)
@@ -57,8 +60,9 @@ class AlbumPolicy
     /**
      * Determine whether the user can update the Album.
      *
-     * @param User $user
-     * @param  Album $album
+     * @param User  $user
+     * @param Album $album
+     *
      * @return mixed
      */
     public function update($user, Album $album)
@@ -69,8 +73,9 @@ class AlbumPolicy
     /**
      * Determine whether the user can delete the Album.
      *
-     * @param User $user
-     * @param  Album $album
+     * @param User  $user
+     * @param Album $album
+     *
      * @return mixed
      */
     public function delete($user, Album $album)

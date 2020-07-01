@@ -10,9 +10,7 @@ use Photo\Policies\AlbumPolicy;
 use Photo\Policies\PhotoPolicy;
 
 /**
- * Class ServiceProvider
- *
- * @package LaraCrud
+ * Class ServiceProvider.
  */
 class PhotoServiceProvider extends ServiceProvider
 {

@@ -3,7 +3,6 @@
 namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Photo\Http\Requests\Photos\Create;
 use Photo\Http\Requests\Photos\Destroy;
 use Photo\Http\Requests\Photos\Edit;
@@ -16,7 +15,7 @@ use Photo\Models\Photo;
 use Photo\Services\PhotoService;
 
 /**
- * Description of PhotoController
+ * Description of PhotoController.
  *
  * @author Tuhin Bepari <digitaldreams40@gmail.com>
  */
@@ -36,11 +35,12 @@ class PhotoController extends Controller
         $folder = $request->get('folder');
         if (!empty($search)) {
             $search = pathinfo($search, PATHINFO_BASENAME);
-            $photos = $photos->where('src', 'LIKE', "%" . $search . '%');
+            $photos = $photos->where('src', 'LIKE', '%' . $search . '%');
         }
         if (!empty($folder)) {
-            $photos = $photos->where('src', 'LIKE', "%" . $folder . '%');
+            $photos = $photos->where('src', 'LIKE', '%' . $folder . '%');
         }
+
         return view('photo::pages.photos.index', [
             'records' => $photos->latest()->paginate(11),
         ]);
@@ -71,7 +71,7 @@ class PhotoController extends Controller
     public function create(Create $request)
     {
         return view('photo::pages.photos.create', [
-            'model' => new Photo,
+            'model' => new Photo(),
             'allRelatedIds' => [$request->get('album_id')],
             'albums' => Album::get(['name', 'id']),
         ]);
@@ -83,11 +83,12 @@ class PhotoController extends Controller
      * @param Store $request
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Exception
      */
     public function store(Store $request)
     {
-        $model = new Photo;
+        $model = new Photo();
         $model->fill($request->all());
         $photoService = new PhotoService($model);
         if (!$photoService->isValid($request)) {
@@ -97,10 +98,12 @@ class PhotoController extends Controller
         if ($model = $photoService->save($request)) {
             $model->albums()->sync($request->get('album_ids', []));
             session()->flash('message', 'Photo saved successfully');
+
             return redirect()->route('photo::photos.index');
         } else {
             session()->flash('message', 'Oops something went wrong while saving your photo');
         }
+
         return redirect()->back();
     }
 
@@ -128,6 +131,7 @@ class PhotoController extends Controller
      * @param Photo  $photo
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Exception
      */
     public function update(Update $request, Photo $photo)
@@ -138,10 +142,12 @@ class PhotoController extends Controller
         if ($photo = $photoService->save($request)) {
             $photo->albums()->sync($request->get('album_ids', []));
             session()->flash('message', 'Photo successfully updated');
+
             return redirect()->route('photo::photos.index');
         } else {
             session()->flash('error', 'Oops something went wrong while updating your photo');
         }
+
         return redirect()->back();
     }
 
@@ -152,6 +158,7 @@ class PhotoController extends Controller
      * @param Photo   $photo
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Exception
      */
     public function destroy(Destroy $request, Photo $photo)
@@ -161,13 +168,12 @@ class PhotoController extends Controller
         } else {
             session()->flash('error', 'Error occurred while deleting your photo');
         }
+
         return redirect()->route('photo::photos.index');
     }
 
-
-
     /**
-     * Rename Filename
+     * Rename Filename.
      *
      * @param Edit  $request
      * @param Photo $photo

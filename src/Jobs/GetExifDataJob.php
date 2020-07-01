@@ -3,10 +3,10 @@
 namespace Photo\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Photo\Models\Photo;
 use Photo\Services\ExifDataService;
 
@@ -37,7 +37,7 @@ class GetExifDataJob implements ShouldQueue
      */
     public function handle()
     {
-        $fullPath = rtrim($this->getRootPath(), "/") . "/" . $this->photo->src;
+        $fullPath = rtrim($this->getRootPath(), '/') . '/' . $this->photo->src;
         $exifServie = new ExifDataService($this->photo);
         $data = $exifServie->toArray();
         if ($location = $exifServie->location()) {

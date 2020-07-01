@@ -13,7 +13,7 @@ use Photo\Http\Requests\Albums\Update;
 use Photo\Models\Album;
 
 /**
- * Description of AlbumController
+ * Description of AlbumController.
  *
  * @author Tuhin Bepari <digitaldreams40@gmail.com>
  */
@@ -22,7 +22,8 @@ class AlbumController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  Index $request
+     * @param Index $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function index(Index $request)
@@ -33,8 +34,9 @@ class AlbumController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  Show $request
-     * @param  Album $album
+     * @param Show  $request
+     * @param Album $album
+     *
      * @return \Illuminate\Http\Response
      */
     public function show(Show $request, Album $album)
@@ -47,41 +49,46 @@ class AlbumController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  Create $request
+     * @param Create $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function create(Create $request)
     {
         return view('photo::pages.albums.create', [
-            'model' => new Album,
-            'enableVoice'=>true,
+            'model' => new Album(),
+            'enableVoice' => true,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Store $request
+     * @param Store $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Store $request)
     {
-        $model = new Album;
+        $model = new Album();
         $model->fill($request->all());
         if ($model->save()) {
             session()->flash('message', 'Album saved successfully');
+
             return redirect()->route('photo::albums.index');
         } else {
             session()->flash('message', 'Oops something went wrong while saving the Album');
         }
+
         return redirect()->back();
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  Edit $request
-     * @param  Album $album
+     * @param Edit  $request
+     * @param Album $album
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit(Edit $request, Album $album)
@@ -94,8 +101,9 @@ class AlbumController extends Controller
     /**
      * Update a existing resource in storage.
      *
-     * @param  Update $request
-     * @param  Album $album
+     * @param Update $request
+     * @param Album  $album
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Update $request, Album $album)
@@ -103,19 +111,23 @@ class AlbumController extends Controller
         $album->fill($request->all());
         if ($album->save()) {
             session()->flash('message', 'Album successfully updated');
+
             return redirect()->route('photo::albums.index');
         } else {
             session()->flash('error', 'Oops something went wrong while updating the Album');
         }
+
         return redirect()->back();
     }
 
     /**
      * Delete a  resource from  storage.
      *
-     * @param  Destroy $request
-     * @param  Album $album
+     * @param Destroy $request
+     * @param Album   $album
+     *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Exception
      */
     public function destroy(Destroy $request, Album $album)
@@ -125,6 +137,7 @@ class AlbumController extends Controller
         } else {
             session()->flash('error', 'Error occurred while deleting the Album');
         }
+
         return redirect()->back();
     }
 }

@@ -3,14 +3,14 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 2/7/2018
- * Time: 10:53 PM
+ * Time: 10:53 PM.
  */
 
 namespace Photo\Services;
 
 use GooglePlace\Services\Geocoding;
-use Photo\Models\Location;
 use GooglePlace\Services\Place;
+use Photo\Models\Location;
 
 class LocationService
 {

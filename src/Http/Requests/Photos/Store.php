@@ -7,7 +7,6 @@ use Photo\Models\Photo;
 
 class Store extends FormRequest
 {
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -39,7 +38,6 @@ class Store extends FormRequest
     public function messages()
     {
         return [
-
         ];
     }
 }

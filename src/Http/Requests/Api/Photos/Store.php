@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 5/2/2018
- * Time: 9:47 AM
+ * Time: 9:47 AM.
  */
 
 namespace Photo\Http\Requests\Api\Photos;
@@ -43,7 +43,6 @@ class Store extends FormRequest
     public function messages()
     {
         return [
-
         ];
     }
 }

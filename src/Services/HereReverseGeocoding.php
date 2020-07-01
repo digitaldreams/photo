@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: Tuhin
  * Date: 3/12/2019
- * Time: 7:47 PM
+ * Time: 7:47 PM.
  */
 
 namespace Photo\Services;
@@ -27,6 +27,7 @@ class HereReverseGeocoding
 
     /**
      * HereReverseGeocoding constructor.
+     *
      * @param $lat
      * @param $lng
      */
@@ -45,10 +46,11 @@ class HereReverseGeocoding
             'maxresults' => 1,
             'gen' => 9,
             'app_id' => config('photo.here.app_id'),
-            'app_code' => config('photo.here.app_code')
+            'app_code' => config('photo.here.app_code'),
         ]]);
         $this->response = json_decode($response->getBody()->getContents(), true);
         $this->parse();
+
         return $this;
     }
 
@@ -72,6 +74,7 @@ class HereReverseGeocoding
             $this->data['state'] = $location['Address']['State'] ?? null;
             $this->data['country'] = $location['Address']['Country'] ?? null;
         }
+
         return $this->data;
     }
 
