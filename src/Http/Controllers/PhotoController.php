@@ -3,6 +3,7 @@
 namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Photo\Http\Requests\Photos\Create;
 use Photo\Http\Requests\Photos\Destroy;
 use Photo\Http\Requests\Photos\Edit;
@@ -10,9 +11,8 @@ use Photo\Http\Requests\Photos\Index;
 use Photo\Http\Requests\Photos\Show;
 use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
-use Photo\Models\Album;
 use Photo\Models\Photo;
-use Photo\Services\PhotoService;
+use Photo\Repositories\PhotoRepository;
 
 /**
  * Description of PhotoController.
@@ -23,18 +23,18 @@ class PhotoController extends Controller
 {
 
     /**
-     * @var \Photo\Services\PhotoService
+     * @var \Photo\Repositories\PhotoRepository
      */
-    protected PhotoService $photoService;
+    protected PhotoRepository $photoRepository;
 
     /**
      * PhotoController constructor.
      *
-     * @param \Photo\Services\PhotoService $photoService
+     * @param \Photo\Repositories\PhotoRepository $photoRepository
      */
-    public function __construct(PhotoService $photoService)
+    public function __construct(PhotoRepository $photoRepository)
     {
-        $this->photoService = $photoService;
+        $this->photoRepository = $photoRepository;
     }
 
     /**
@@ -88,8 +88,6 @@ class PhotoController extends Controller
     {
         return view('photo::pages.photos.create', [
             'model' => new Photo(),
-            'allRelatedIds' => [$request->get('album_id')],
-            'albums' => Album::get(['name', 'id']),
         ]);
     }
 
@@ -102,20 +100,12 @@ class PhotoController extends Controller
      *
      * @throws \Exception
      */
-    public function store(Store $request)
+    public function store(Store $request): RedirectResponse
     {
-        $model = new Photo();
-        $model->fill($request->all());
+        $this->photoRepository->create($request->file('file'), $request->get('caption'));
 
-        if ($model = $this->photoService->store('images', $request->file('file'))) {
+        return redirect()->route('photo::photos.index')->with('message', 'Image successfully uploaded.');
 
-
-            return redirect()->route('photo::photos.index');
-        } else {
-            session()->flash('message', 'Oops something went wrong while saving your photo');
-        }
-
-        return redirect()->back();
     }
 
     /**
@@ -130,8 +120,6 @@ class PhotoController extends Controller
     {
         return view('photo::pages.photos.edit', [
             'model' => $photo,
-            'albums' => Album::get(['name', 'id']),
-            'allRelatedIds' => $photo->albums()->allRelatedIds()->toArray(),
         ]);
     }
 
@@ -147,19 +135,9 @@ class PhotoController extends Controller
      */
     public function update(Update $request, Photo $photo)
     {
-        $photo->fill($request->all());
-        $photo->save();
-        $photoService = new PhotoService($photo);
-        if ($photo = $photoService->save($request)) {
-            $photo->albums()->sync($request->get('album_ids', []));
-            session()->flash('message', 'Photo successfully updated');
+        $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'));
 
-            return redirect()->route('photo::photos.index');
-        } else {
-            session()->flash('error', 'Oops something went wrong while updating your photo');
-        }
-
-        return redirect()->back();
+        return redirect()->route('photo::photos.show', $photo->id);
     }
 
     /**
@@ -174,24 +152,9 @@ class PhotoController extends Controller
      */
     public function destroy(Destroy $request, Photo $photo)
     {
-        if ($photo->delete()) {
-            session()->flash('message', 'Photo successfully deleted');
-        } else {
-            session()->flash('error', 'Error occurred while deleting your photo');
-        }
+        $this->photoRepository->delete($photo);
 
-        return redirect()->route('photo::photos.index');
+        return redirect()->route('photo::photos.index')->with('message', 'photo successfully deleted.');
     }
 
-    /**
-     * Rename Filename.
-     *
-     * @param Edit  $request
-     * @param Photo $photo
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function rename(Edit $request, Photo $photo)
-    {
-    }
 }
