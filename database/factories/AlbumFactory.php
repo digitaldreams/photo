@@ -8,6 +8,6 @@ use Photo\Models\Album;
 $factory->define(Album::class, function (Faker $faker) {
     return [
         'name' => $faker->word,
-        'description' => $faker->realText(),
+        'description' => $faker->sentence(),
     ];
 });

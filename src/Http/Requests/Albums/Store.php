@@ -25,20 +25,9 @@ class Store extends FormRequest
     public function rules()
     {
         return [
-            'user_id' => 'nullable|numeric',
             'name' => 'required|max:150',
             'description' => 'nullable|max:191',
         ];
     }
 
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array
-     */
-    public function messages()
-    {
-        return [
-        ];
-    }
 }

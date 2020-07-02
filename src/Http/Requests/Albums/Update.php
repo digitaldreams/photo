@@ -24,7 +24,6 @@ class Update extends FormRequest
     public function rules()
     {
         return [
-            'user_id' => 'nullable|numeric',
             'name' => 'required|max:150',
             'description' => 'nullable|max:191',
         ];

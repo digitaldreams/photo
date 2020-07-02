@@ -57,7 +57,6 @@ class AlbumController extends Controller
 
         return view('photo::pages.albums.create', [
             'model' => new Album(),
-            'enableVoice' => true,
         ]);
     }
 
@@ -72,15 +71,9 @@ class AlbumController extends Controller
     {
         $model = new Album();
         $model->fill($request->all());
-        if ($model->save()) {
-            session()->flash('message', 'Album saved successfully');
+        $model->save();
 
-            return redirect()->route('photo::albums.index');
-        } else {
-            session()->flash('message', 'Oops something went wrong while saving the Album');
-        }
-
-        return redirect()->back();
+        return redirect()->route('photo::albums.index')->with('message', 'Album saved successfully');
     }
 
     /**
