@@ -56,7 +56,7 @@ class ImageDownloadService
         $finalURL = $path . '/' . $filename;
         $this->storage->put($finalURL, $imageContent, 'public');
 
-        return $this->storage->url($finalURL);
+        return $finalURL;
     }
 
     /**
