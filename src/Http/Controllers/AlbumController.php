@@ -3,14 +3,10 @@
 namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Photo\Http\Requests\Albums\Create;
-use Photo\Http\Requests\Albums\Destroy;
-use Photo\Http\Requests\Albums\Edit;
-use Photo\Http\Requests\Albums\Index;
-use Photo\Http\Requests\Albums\Show;
 use Photo\Http\Requests\Albums\Store;
 use Photo\Http\Requests\Albums\Update;
 use Photo\Models\Album;
+use Photo\Models\Photo;
 
 /**
  * Description of AlbumController.
@@ -22,25 +18,28 @@ class AlbumController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Index $request
-     *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Index $request)
+    public function index()
     {
+        $this->authorize('viewAny', Album::class);
+
         return view('photo::pages.albums.index', ['records' => Album::paginate(10)]);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param Show  $request
      * @param Album $album
      *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Show $request, Album $album)
+    public function show(Album $album)
     {
+        $this->authorize('view', $album);
+
         return view('photo::pages.albums.show', [
             'record' => $album,
         ]);
@@ -49,12 +48,13 @@ class AlbumController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param Create $request
-     *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function create(Create $request)
+    public function create()
     {
+        $this->authorize('create', Photo::class);
+
         return view('photo::pages.albums.create', [
             'model' => new Album(),
             'enableVoice' => true,
@@ -86,13 +86,15 @@ class AlbumController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Edit  $request
      * @param Album $album
      *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function edit(Edit $request, Album $album)
+    public function edit(Album $album)
     {
+        $this->authorize('update', $album);
+
         return view('photo::pages.albums.edit', [
             'model' => $album,
         ]);
@@ -123,15 +125,16 @@ class AlbumController extends Controller
     /**
      * Delete a  resource from  storage.
      *
-     * @param Destroy $request
-     * @param Album   $album
+     * @param Album $album
      *
      * @return \Illuminate\Http\Response
      *
-     * @throws \Exception
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function destroy(Destroy $request, Album $album)
+    public function destroy(Album $album)
     {
+        $this->authorize('delete', $album);
+
         if ($album->delete()) {
             session()->flash('message', 'Album successfully deleted');
         } else {

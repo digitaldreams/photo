@@ -4,6 +4,7 @@
 namespace Photo\Repositories;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\UploadedFile;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
@@ -118,6 +119,25 @@ class PhotoRepository
             ->store(config('photo.rootPath', 'images'), $file, $caption)
             ->convert()
             ->getStoredImagePath();
+    }
+
+    /**
+     * Get photos by User
+     *
+     * @param \Illuminate\Foundation\Auth\User $user
+     * @param int                              $perPage
+     * @param string|null                      $search
+     *
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function index(User $user, int $perPage = 100, ?string $search = null)
+    {
+        return $this->photo->newQuery()
+            ->where('user_id', $user->id)
+            ->when($search, function ($query) use ($search) {
+                $query->q($search);
+            })->paginate($perPage);
+
     }
 
 }

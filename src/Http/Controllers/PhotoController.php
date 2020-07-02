@@ -4,11 +4,7 @@ namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Photo\Http\Requests\Photos\Create;
-use Photo\Http\Requests\Photos\Destroy;
-use Photo\Http\Requests\Photos\Edit;
-use Photo\Http\Requests\Photos\Index;
-use Photo\Http\Requests\Photos\Show;
+use Illuminate\Http\Request;
 use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
 use Photo\Models\Photo;
@@ -40,13 +36,16 @@ class PhotoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param Index $request
+     * @param \Illuminate\Http\Request $request
      *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Index $request)
+    public function index(Request $request)
     {
-        $photos = new Photo();
+        $this->authorize('index', Photo::class);
+
+        $photos = Photo::query();
         $search = $request->get('search');
         $folder = $request->get('folder');
         if (!empty($search)) {
@@ -65,13 +64,15 @@ class PhotoController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Show  $request
      * @param Photo $photo
      *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Show $request, Photo $photo)
+    public function show(Photo $photo)
     {
+        $this->authorize('view', $photo);
+
         return view('photo::pages.photos.show', [
             'record' => $photo,
         ]);
@@ -80,12 +81,13 @@ class PhotoController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param Create $request
-     *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function create(Create $request)
+    public function create()
     {
+        $this->authorize('create', Photo::class);
+
         return view('photo::pages.photos.create', [
             'model' => new Photo(),
         ]);
@@ -111,13 +113,14 @@ class PhotoController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Edit  $request
      * @param Photo $photo
      *
      * @return \Illuminate\Http\Response
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function edit(Edit $request, Photo $photo)
+    public function edit(Photo $photo)
     {
+        $this->authorize('update', $photo);
         return view('photo::pages.photos.edit', [
             'model' => $photo,
         ]);
@@ -143,15 +146,16 @@ class PhotoController extends Controller
     /**
      * Delete a  resource from  storage.
      *
-     * @param Destroy $request
-     * @param Photo   $photo
+     * @param Photo $photo
      *
      * @return \Illuminate\Http\Response
      *
-     * @throws \Exception
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function destroy(Destroy $request, Photo $photo)
+    public function destroy(Photo $photo)
     {
+        $this->authorize('delete', $photo);
+
         $this->photoRepository->delete($photo);
 
         return redirect()->route('photo::photos.index')->with('message', 'photo successfully deleted.');
