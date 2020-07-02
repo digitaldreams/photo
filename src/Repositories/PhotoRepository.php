@@ -55,6 +55,8 @@ class PhotoRepository
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
         $this->photo->save();
+
+        return $this->photo;
     }
 
     /**

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Tuhin
- * Date: 3/12/2019
- * Time: 7:47 PM.
- */
 
 namespace Photo\Services;
 

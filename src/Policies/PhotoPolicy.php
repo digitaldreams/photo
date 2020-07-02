@@ -27,9 +27,9 @@ class PhotoPolicy
      *
      * @return bool
      */
-    public function index($user)
+    public function viewAny($user)
     {
-        return false;
+        return true;
     }
 
     /**
@@ -42,7 +42,7 @@ class PhotoPolicy
      */
     public function view($user, Photo $photo)
     {
-        return false;
+        return $user->id === $photo->user_id;
     }
 
     /**

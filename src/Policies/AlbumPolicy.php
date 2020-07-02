@@ -27,7 +27,7 @@ class AlbumPolicy
      *
      * @return bool
      */
-    public function index($user)
+    public function viewAny($user)
     {
         return true;
     }
@@ -42,7 +42,7 @@ class AlbumPolicy
      */
     public function view($user, Album $album)
     {
-        return true;
+        return $user->id === $album->user_id;
     }
 
     /**
@@ -67,7 +67,7 @@ class AlbumPolicy
      */
     public function update($user, Album $album)
     {
-        return $user->id == $album->user_id;
+        return $user->id === $album->user_id;
     }
 
     /**
@@ -80,6 +80,6 @@ class AlbumPolicy
      */
     public function delete($user, Album $album)
     {
-        return $user->id == $album->user_id;
+        return $user->id === $album->user_id;
     }
 }

@@ -3,7 +3,6 @@
 namespace Photo\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int                                      $user_id       user id
@@ -22,10 +21,12 @@ class Photo extends Model
     const STATUS_ACTIVE = 'active';
     const STATUS_INACTIVE = 'inactive';
     const STATUS_PENDING = 'pending';
+
     /**
      * Database table name.
      */
     protected $table = 'photo_photos';
+
     /**
      * Protected columns from mass assignment.
      */
@@ -36,21 +37,6 @@ class Photo extends Model
      * @var array
      */
     protected $casts = ['exif' => 'array'];
-
-    public static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if (empty($model->user_id) && auth()->check()) {
-                $model->user_id = auth()->user()->id;
-            }
-            if (empty($model->status)) {
-                $model->status = static::STATUS_ACTIVE;
-            }
-
-            return true;
-        });
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
@@ -81,7 +67,7 @@ class Photo extends Model
     }
 
     /**
-     * albumphotos.
+     * Album.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
@@ -98,6 +84,12 @@ class Photo extends Model
         return !empty($this->src) ? $this->src : config('photo.default');
     }
 
+    /**
+     * @param $query
+     * @param $keyword
+     *
+     * @return mixed
+     */
     public function scopeQ($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
@@ -108,9 +100,10 @@ class Photo extends Model
     }
 
     /**
+     * @param mixed $webP
+     *
      * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Routing\UrlGenerator|mixed|string
      *
-     * @param mixed $webP
      */
     public function getUrl($webP = false)
     {
@@ -237,52 +230,11 @@ class Photo extends Model
     }
 
     /**
-     * @return mixed|\Photo\Models\varchar
+     * @return string
      */
-    public function getCaption()
+    public function getCaption(): string
     {
         return !empty($this->caption) ? $this->caption : pathinfo($this->src, PATHINFO_BASENAME);
-    }
-
-    /**
-     * @return array
-     */
-    public function apiData()
-    {
-        return [
-            'url' => $this->getUrl(),
-            'thumbnail' => $this->getFormat(),
-            'caption' => $this->getCaption(),
-            'title' => $this->getCaption(),
-            'location' => $this->getLocationAddress(),
-        ];
-    }
-
-    /**
-     * @return bool|null
-     *
-     * @throws \Exception
-     */
-    public function destroyAndRemove()
-    {
-        if (Storage::disk('public')->exists($this->src)) {
-            Storage::disk('public')->delete($this->src);
-            $name = pathinfo($this->src);
-            $thumbnails = $name['dirname'] . '/thumbnails/' . $name['basename'];
-            if (Storage::disk('public')->exists($thumbnails)) {
-                Storage::disk('public')->delete($thumbnails);
-            }
-        }
-
-        return $this->delete();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isExists()
-    {
-        return Storage::disk('public')->exists($this->src);
     }
 
     /**

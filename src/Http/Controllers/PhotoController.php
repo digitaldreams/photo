@@ -43,7 +43,7 @@ class PhotoController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('index', Photo::class);
+        $this->authorize('viewAny', Photo::class);
 
         $photos = Photo::query();
         $search = $request->get('search');

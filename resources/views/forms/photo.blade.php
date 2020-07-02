@@ -34,17 +34,6 @@
         @endif
     </div>
 
-    <div class="form-group">
-        <label>Album</label>
-        <select class="form-control" name="album_ids[]" id="photo_album" multiple>
-            @if(isset($albums))
-                @foreach($albums as $album)
-                    <option
-                        value="{{$album->id}}" {{in_array($album->id,$allRelatedIds)?'selected':''}}>{{$album->name}}</option>
-                @endforeach
-            @endif
-        </select>
-    </div>
 
     <div class="form-group text-right ">
         <input type="submit" class="btn btn-primary" value="Upload"/>

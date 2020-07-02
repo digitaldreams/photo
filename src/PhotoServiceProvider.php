@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Photo\Models\Album;
 use Photo\Models\Photo;
+use Photo\Observers\AlbumObserver;
+use Photo\Observers\PhotoObserver;
 use Photo\Policies\AlbumPolicy;
 use Photo\Policies\PhotoPolicy;
 
@@ -37,6 +39,9 @@ class PhotoServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'photo');
         $this->loadFactoriesFrom(__DIR__ . '/../database/factories');
+
+        Photo::observe(PhotoObserver::class);
+        Album::observe(AlbumObserver::class);
     }
 
     /**

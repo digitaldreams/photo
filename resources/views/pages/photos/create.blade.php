@@ -24,9 +24,4 @@
         </div>
     </div>
 @endSection
-@section('scripts')
 
-    <script type="text/javascript">
-        $("#photo_album").select2();
-    </script>
-@endsection
