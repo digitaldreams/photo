@@ -44,13 +44,14 @@ class PhotoRepository
      * Create a new Photo
      *
      * @param \Illuminate\Http\UploadedFile $file
-     * @param string|null                   $caption
+     * @param array                         $data
      *
      * @return \Photo\Models\Photo
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function create(UploadedFile $file, ?string $caption = null): Photo
+    public function create(UploadedFile $file, array $data = []): Photo
     {
+        $caption = $data['caption'] ?? null;
         $this->photo->src = $this->uploadAndGenerateThumbnails($file, $caption);
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
@@ -107,18 +108,20 @@ class PhotoRepository
     }
 
     /**
-     * @param $file
-     * @param $caption
+     * @param             $file
+     * @param             $caption
+     *
+     * @param string|null $crop
      *
      * @return mixed
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    private function uploadAndGenerateThumbnails($file, $caption)
+    private function uploadAndGenerateThumbnails($file, $caption, string $crop = null)
     {
         $thumbnail = config('photo.sizes.thumbnail');
 
         return $this->photoService->setDimension($thumbnail['width'], $thumbnail['height'], $thumbnail['path'])
-            ->store(config('photo.rootPath', 'images'), $file, $caption)
+            ->store(config('photo.rootPath', 'images'), $file, $caption, $crop)
             ->convert()
             ->getStoredImagePath();
     }

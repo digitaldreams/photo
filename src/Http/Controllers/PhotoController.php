@@ -108,7 +108,7 @@ class PhotoController extends Controller
      */
     public function store(Store $request): RedirectResponse
     {
-        $this->photoRepository->create($request->file('file'), $request->get('caption'));
+        $this->photoRepository->create($request->file('file'), $request->all());
 
         return redirect()->route('photo::photos.index')->with('message', 'Image successfully uploaded.');
 

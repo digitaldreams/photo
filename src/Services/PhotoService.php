@@ -40,7 +40,7 @@ class PhotoService
     /**
      * @var array
      */
-    protected array $formats = ['jpeg', 'webp'];
+    protected array $formats = ['webp'];
 
     /**
      * @var array
@@ -81,16 +81,21 @@ class PhotoService
      *
      * @param string|null                   $fileName
      *
+     * @param null                          $crop
+     *
      * @return \Photo\Services\PhotoService
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null): PhotoService
+    public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null, $crop = null): PhotoService
     {
-        $pathInfo = pathinfo($uploadedFile->hashName($path));
-        $destination = !empty($fileName) ? $this->getUniquePath($path, $fileName) : sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'jpeg');
+        $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName) . '.' . $uploadedFile->guessExtension() : $uploadedFile->hashName($path);
 
-        $this->imageSource = $this->resizeAndConvert($uploadedFile, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'jpeg');
+        if ($crop == 'yes') {
+            $this->imageSource = $this->resizeAndConvert($uploadedFile, $path . '/' . $uniqueFileName, $this->maxDimension['width'], $this->maxDimension['height'], $uploadedFile->guessExtension());
+        } else {
+            $this->imageSource = $this->storage->putFileAs($path, $uploadedFile, $uniqueFileName, 'public');
+        }
         $this->convertMaxDimensionToWebP($this->imageSource);
 
         return $this;
@@ -109,7 +114,9 @@ class PhotoService
     {
         $source = $source ?: $this->imageSource;
         foreach ($this->dimensions as $path => $dimension) {
+
             $pathInfo = pathinfo($source);
+            $this->formats[] = $pathInfo['extension'];
 
             foreach ($this->formats as $format) {
                 $destination = sprintf('%s/%s.%s', $pathInfo['dirname'] . '/' . $path, $pathInfo['filename'], $format);
@@ -124,7 +131,7 @@ class PhotoService
      * Crop image into a given width and height and finally save a format.
      *
      * @param string|UploadedFile $source
-     * @param                     $destination
+     * @param string              $destination
      * @param int                 $width
      * @param int                 $height
      * @param string              $format
@@ -299,13 +306,13 @@ class PhotoService
      *
      * @return string
      */
-    public function getUniquePath(string $path, string $fileName, $extension = 'jpeg')
+    public function getUniqueFileName(string $path, string $fileName, $extension = 'jpeg')
     {
         $name = $this->sanitizeFileName($fileName);
         $relativePath = $path . '/' . $name . '.' . $extension;
         if (!$this->storage->exists($relativePath)) {
-            return $relativePath;
+            return $name;
         }
-        return $path . '/' . $name . '-' . uniqid() . '.' . $extension;
+        return $name . '-' . uniqid();
     }
 }

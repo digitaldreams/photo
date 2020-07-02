@@ -5,7 +5,6 @@ namespace Photo\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Photo\Http\Requests\Api\Photos\Index;
 use Photo\Http\Requests\Api\Photos\Store;
 use Photo\Http\Resources\PhotoResource;
 use Photo\Repositories\PhotoRepository;

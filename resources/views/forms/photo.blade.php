@@ -14,7 +14,7 @@
                     <strong>{{ $errors->first('file') }}</strong>
                 </div>
             @endif
-            <p class="help-block">You should either upload a custom image or Icon</p>
+            <p class="help-block text-muted">Image size must be less than 2MB</p>
         </div>
         <div class="col-md-3">
             @if(!empty($model->id) && !empty($thumbs=$photoRender->getThumbnailUrls($model->src)))
@@ -25,7 +25,12 @@
         </div>
 
     </div>
-
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="crop" value="yes" checked>
+            Yes crop my image to {{config('photo.maxHeight')}}px Height and {{config('photo.maxWidth')}}px Width
+        </label>
+    </div>
     <div class="form-group">
         <label for="caption">Caption</label>
         <input type="text" class="form-control {{ $errors->has('caption') ? ' is-invalid' : '' }}" name="caption"

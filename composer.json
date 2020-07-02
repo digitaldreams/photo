@@ -16,7 +16,6 @@
   "require": {
     "php": ">=7.4.0",
     "laravel/framework": ">=7.0",
-    "digitaldream/googleplace": ">=1.0",
     "intervention/image": "^2.5"
   },
   "require-dev": {
