@@ -17,7 +17,11 @@
             <p class="help-block">You should either upload a custom image or Icon</p>
         </div>
         <div class="col-md-3">
-            <img height="120px" id="file_preview" src="{{$model->getFormat()}}">
+            @if(!empty($model->id) && !empty($thumbs=$photoRender->getThumbnailUrls($model->src)))
+                <img height="120px" id="file_preview" src="{{$thumbs[0]}}">
+            @else
+                <img height="120px" id="file_preview" src="{{config('photo.default')}}">
+            @endif
         </div>
 
     </div>

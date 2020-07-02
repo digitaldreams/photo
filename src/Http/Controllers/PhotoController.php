@@ -117,16 +117,19 @@ class PhotoController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Photo $photo
+     * @param Photo                              $photo
+     *
+     * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function edit(Photo $photo)
+    public function edit(Photo $photo, PhotoRenderService $photoRenderService)
     {
         $this->authorize('update', $photo);
         return view('photo::pages.photos.edit', [
             'model' => $photo,
+            'photoRender' => $photoRenderService,
         ]);
     }
 

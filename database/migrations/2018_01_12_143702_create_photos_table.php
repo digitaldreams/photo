@@ -18,7 +18,7 @@ class CreatePhotosTable extends Migration
             $table->integer('user_id')->unsigned()->nullable();
             $table->string('caption')->nullable();
             $table->string('mime_type', 100)->nullable();
-            $table->string('src');
+            $table->string('src')->unique();
 
             $table->enum('status', ['active', 'inactive', 'pending'])->default('active');
             $table->text('exif')->nullable();
@@ -26,7 +26,11 @@ class CreatePhotosTable extends Migration
             $table->dateTime('captured_at')->nullable();
 
             $table->foreignId('location_id')->nullable()->constrained('photo_locations', 'id')->onDelete('set null');
-            $table->morphs('photoable');
+
+            $table->string("photoable_type")->nullable();
+            $table->unsignedBigInteger("photoable_id")->nullable();
+
+            $table->index(["photoable_type", "photoable_id"]);
             $table->timestamps();
         });
     }

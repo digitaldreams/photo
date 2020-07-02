@@ -30,7 +30,7 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment.
      */
-    protected $fillable = ['caption', 'src', 'exif'];
+    protected $fillable = ['user_id', 'caption', 'src', 'exif'];
 
     protected $dates = ['captured_at'];
     /**

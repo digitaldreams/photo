@@ -14,7 +14,7 @@ class PhotoObserver
     public function creating(Photo $photo): void
     {
         if (empty($photo->user_id) && auth()->check()) {
-            $photo->user_id = auth()->user()->id;
+            $photo->user_id = auth()->id();
         }
         if (empty($photo->status)) {
             $photo->status = Photo::STATUS_ACTIVE;

@@ -4,6 +4,7 @@ namespace Photo\Policies;
 
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Log;
 use Photo\Models\Photo;
 
 class PhotoPolicy
@@ -42,7 +43,7 @@ class PhotoPolicy
      */
     public function view($user, Photo $photo)
     {
-        return $user->id === $photo->user_id;
+        return $user->id == $photo->user_id;
     }
 
     /**
