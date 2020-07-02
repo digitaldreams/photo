@@ -3,6 +3,7 @@
 namespace Photo\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Photo\Services\PhotoRenderService;
 
 class PhotoResource extends JsonResource
 {
@@ -16,8 +17,13 @@ class PhotoResource extends JsonResource
      */
     public function toArray($request)
     {
+        $photoRender = app(PhotoRenderService::class);
+
         return [
-            'src' => $this->getUrl(),
+            'id' => $this->id,
+            'user_id' => $this->id,
+            'urls' => $photoRender->getMainUrls($this->src),
+            'thumbnails' => $photoRender->getThumbnailUrls($this->src),
             'caption' => $this->caption,
         ];
     }

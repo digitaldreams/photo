@@ -87,14 +87,39 @@ class AlbumTest extends TestCase
         ]);
     }
 
-    public function a_user_can_see_details_of_his_own_album()
+    /**
+     * @test
+     */
+    public function a_user_can_see_details_of_his_own_album(): void
     {
+        $user = factory(User::class)->create();
 
+        $album = factory(Album::class)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)
+            ->followingRedirects()
+            ->from(route('photo::albums.index'))
+            ->get(route('photo::albums.show', $album->id));
+
+        $response->assertOk()->assertSee($album->name);
     }
 
-    public function a_user_cannot_see_details_of_others_album()
+    /**
+     * @test
+     */
+    public function a_user_cannot_see_details_of_others_album(): void
     {
+        $user = factory(User::class)->create();
+        $otherUser = factory(User::class)->create();
 
+        $album = factory(Album::class)->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($otherUser)
+            ->followingRedirects()
+            ->from(route('photo::albums.index'))
+            ->get(route('photo::albums.show', $album->id));
+
+        $response->assertForbidden();
     }
 
     /**
