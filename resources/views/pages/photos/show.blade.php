@@ -143,8 +143,8 @@
             enforceBoundary:false,
             url: '{{$record->getUrl()}}',
             viewport: { // Default { width: 100, height: 100, type: 'square' }
-                width: {{config('photo.maxWidth')}},
-                height: {{config('photo.maxHeight')}},
+                width: "{{config('photo.maxWidth')}}",
+                height: '{{config('photo.maxHeight')}}',
                 type: 'square' //square
             },
             boundary: {
