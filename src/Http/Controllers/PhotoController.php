@@ -9,6 +9,7 @@ use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
 use Photo\Models\Photo;
 use Photo\Repositories\PhotoRepository;
+use Photo\Services\PhotoRenderService;
 
 /**
  * Description of PhotoController.
@@ -36,12 +37,14 @@ class PhotoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param \Illuminate\Http\Request           $request
+     *
+     * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function index(Request $request)
+    public function index(Request $request, PhotoRenderService $photoRenderService)
     {
         $this->authorize('viewAny', Photo::class);
 
@@ -57,6 +60,7 @@ class PhotoController extends Controller
         }
 
         return view('photo::pages.photos.index', [
+            'photoRender' => $photoRenderService,
             'records' => $photos->latest()->paginate(11),
         ]);
     }

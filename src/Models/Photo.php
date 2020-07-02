@@ -77,14 +77,6 @@ class Photo extends Model
     }
 
     /**
-     * @return \Illuminate\Config\Repository|mixed|\Photo\Models\varchar
-     */
-    public function getSrc()
-    {
-        return !empty($this->src) ? $this->src : config('photo.default');
-    }
-
-    /**
      * @param $query
      * @param $keyword
      *
@@ -100,162 +92,13 @@ class Photo extends Model
     }
 
     /**
-     * @param mixed $webP
-     *
-     * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Routing\UrlGenerator|mixed|string
-     *
+     * @return mixed
      */
-    public function getUrl($webP = false)
+    public function getUrl()
     {
-        // dd($webP, $this->src, $this);
-        if (empty($this->src)) {
-            return config('photo.default');
-        }
-        $prefix = config('photo.prefix');
-
-        return url(rtrim($prefix . '/' . $this->src));
+        $default = config('photo.filesystem');
+        $storage = app('filesystem.' . $default);
+        return $storage->url($this->src);
     }
 
-    /**
-     * @param string $size
-     *
-     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
-     */
-    public function getWebP($size = '')
-    {
-        $info = pathinfo($this->src);
-        if ('thumbnail' == $size) {
-            $size = config('photo.sizes.' . $size, false);
-            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . '.webp';
-        } else {
-            $webP = $info['dirname'] . '/' . $info['filename'] . '.webp';
-        }
-
-        $prefix = config('photo.prefix');
-        if (file_exists(storage_path('app/public/' . $webP))) {
-            $url = url(rtrim($prefix . '/' . $webP));
-        } else {
-            $url = url(rtrim($prefix . '/' . $this->src));
-        }
-
-        return $url;
-    }
-
-    /**
-     * @param string $size
-     *
-     * @return bool|\Illuminate\Contracts\Routing\UrlGenerator|string
-     */
-    public function hasWebP($size = '')
-    {
-        $info = pathinfo($this->src);
-        if ($size) {
-            $size = config('photo.sizes.' . $size, false);
-            $webP = $info['dirname'] . '/' . $size['path'] . '/' . $info['filename'] . '.webp';
-        } else {
-            $webP = $info['dirname'] . '/' . $info['filename'] . '.webp';
-        }
-
-        if (file_exists(storage_path('app/public/' . $webP))) {
-            $prefix = config('photo.prefix');
-
-            return url(rtrim($prefix . '/' . $webP));
-        }
-
-        return false;
-    }
-
-    /**
-     * Get other sizes of the photo.
-     *
-     * @param string $size key from photo.sizes
-     *
-     * @return string
-     */
-    public function getFormat($size = 'thumbnail')
-    {
-        if (empty($this->src)) {
-            return config('photo.default');
-        }
-        $name = pathinfo($this->src);
-        $size = config('photo.sizes.' . $size, false);
-
-        if (!empty($name) && is_array($size) && isset($size['path'])) {
-            $prefix = config('photo.prefix');
-            $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
-            if (file_exists(storage_path('app/public/' . $thumbnailPath))) {
-                return url($prefix . '/' . $thumbnailPath);
-            } else {
-                return $this->getUrl();
-            }
-        }
-
-        return $this->getUrl();
-    }
-
-    /**
-     * @return string
-     */
-    public function getLocationName()
-    {
-        try {
-            return $this->location->name;
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getLocationAddress()
-    {
-        try {
-            return $this->location->address;
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getLocationPlaceId()
-    {
-        try {
-            return $this->location->place_id;
-        } catch (\Exception $e) {
-            return '';
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getCaption(): string
-    {
-        return !empty($this->caption) ? $this->caption : pathinfo($this->src, PATHINFO_BASENAME);
-    }
-
-    /**
-     * @return string
-     */
-    public function getFullPath()
-    {
-        return storage_path('app/public/' . $this->src);
-    }
-
-    /**
-     * @param string $size
-     *
-     * @return string
-     */
-    public function getThumbnailPath($size = 'thumbnail')
-    {
-        $name = pathinfo($this->src);
-        $size = config('photo.sizes.' . $size, false);
-        $thumbnailPath = $name['dirname'] . '/' . $size['path'] . '/' . $name['basename'];
-
-        return storage_path('app/public/' . $thumbnailPath);
-    }
 }

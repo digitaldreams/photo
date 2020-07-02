@@ -1,11 +1,10 @@
 <div class="card card-default" style="min-height: 320px">
     <a href="{{route('photo::photos.show',$record->id)}}">
-        <img class="card-img-top" src="{{isset($fullSize)?$record->getUrl():$record->getFormat()}}"
-             alt="{{$record->caption}}" title="{{$record->title}}">
+      {!! $photoRender->renderThumbnails($record) !!}
     </a>
     <h6 class="card-title">
         <a href="{{route('photo::photos.show',$record->id)}}">
-            {{$record->getCaption()}}
+            {{$record->caption}}
         </a>
     </h6>
 

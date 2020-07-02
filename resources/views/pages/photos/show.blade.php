@@ -9,13 +9,13 @@
     <li class="breadcrumb-item active">{{$record->caption}}</li>
 @endsection
 @section('header')
-    <h3>{{$record->getCaption()}}</h3>
+    <h3>{{$record->caption}}</h3>
 @endsection
 
 @section('tools')
     <div class="form-group form-group-sm">
         <div class="input-group">
-            <input type="text" class="form-control" value="{{$record->getUrl()}}" id="photoFullAddress">
+            <input type="text" class="form-control" value="{{$record->src}}" id="photoFullAddress">
             <div class="input-group-btn">
                 <button class="btn btn-secondary" onclick="copyToClipboard(this)">Copy path</button>
             </div>

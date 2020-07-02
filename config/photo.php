@@ -6,7 +6,7 @@ return [
      */
     'layout' => 'photo::layouts.app',
 
-    'default' => '/storage/images/default.png',
+    'default' => env('PHOTO_DEFAULT_IMAGE_URL', '/storage/images/default.png'),
 
     /*
      * Local Storage Path.
@@ -14,9 +14,9 @@ return [
     'rootPath' => 'images',
 
     /*
-     * either default or cloud
+     * either disk or cloud
      */
-    'filesystem' => 'default',
+    'filesystem' => 'disk',
 
     /*
      * Do you like to reduce image size?
@@ -31,12 +31,12 @@ return [
     /*
      * Maximum weight of image. Leave blank or false if you do not like shrink your images
      */
-    'maxWidth' => 800,
+    'maxWidth' => env('PHOTO_IMAGE_MAX_WIDTH', 800),
 
     /*
      * Maximum height of image. Leave blank or false if you do not like shrink your images
      */
-    'maxHeight' => 450,
+    'maxHeight' => env('PHOTO_IMAGE_MAX_HEIGHT', 450),
 
     /*
      * How many size of your image you want.

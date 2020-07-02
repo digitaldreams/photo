@@ -26,8 +26,7 @@ class CreatePhotosTable extends Migration
             $table->dateTime('captured_at')->nullable();
 
             $table->foreignId('location_id')->nullable()->constrained('photo_locations', 'id')->onDelete('set null');
-            $table->unsignedInteger('photoable_id')->nullable();
-            $table->string('photoable_type')->nullable();
+            $table->morphs('photoable');
             $table->timestamps();
         });
     }
