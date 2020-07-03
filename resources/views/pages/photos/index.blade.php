@@ -66,8 +66,11 @@
     <script type="text/javascript">
         $("body").bind("paste", function (e) {
             var pastedData = e.originalEvent.clipboardData.getData('text');
+            console.log(pastedData);
+            if (confirm('Are you sure you want to download image from '+ pastedData)) {
+                pasteUrl(pastedData, '{{route('photo::photos.downloadUrl')}}');
+            }
 
-            pasteUrl(pastedData, '{{route('photo::photos.downloadUrl')}}');
         });
         $(document).ready(function () {
             $(".image-dropZone").dropzone(

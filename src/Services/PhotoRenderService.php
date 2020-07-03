@@ -32,6 +32,11 @@ class PhotoRenderService
     }
 
     /**
+     * @var array
+     */
+    protected array $info = [];
+
+    /**
      * @param \Photo\Models\Photo $photo
      *
      * @return string
@@ -86,12 +91,21 @@ class PhotoRenderService
      */
     public function getMainUrls($source): array
     {
-        $sourceSets = [$this->storage->url($source)];
+        $mainUrl = $this->storage->url($source);
+        $sourceSets = [$mainUrl];
+        $info =[];
+        $info['size'] = round($this->storage->size($source) / 1000).' kb';
+        $this->info[$mainUrl] = $info;
+
         $pathInfo = pathinfo($source);
         $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
 
         if ($this->exists($webP)) {
-            $sourceSets[] = $this->storage->url($webP);
+            $sourceSets[] = $mainWebP = $this->storage->url($webP);
+            $info =[];
+            $info['size'] = round($this->storage->size($webP) / 1000).' kb';
+            $this->info[$mainWebP] = $info;
+
         }
         return $sourceSets;
     }
@@ -111,13 +125,17 @@ class PhotoRenderService
             $thumbPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
             Log::error($thumbPath);
             if ($this->exists($thumbPath)) {
-                $sourceSets[] = $this->storage->url($thumbPath);
+                $sourceSets[] = $thumbUrl = $this->storage->url($thumbPath);
+                $info = [];
+                $info['size'] = round($this->storage->size($thumbPath) / 1000).' kb';
+                $this->info[$thumbUrl] = $info;
             }
             if ($this->exists($thumbWebPPath)) {
-                $sourceSets[] = $this->storage->url($thumbWebPPath);
+                $sourceSets[] = $thumbWUrl = $this->storage->url($thumbWebPPath);
+                $info = [];
+                $info['size'] = round($this->storage->size($thumbWebPPath) / 1000).' kb';
+                $this->info[$thumbWUrl] = $info;
             }
-
-
         }
 
         return $sourceSets;
@@ -143,5 +161,19 @@ class PhotoRenderService
     protected function exists(string $source)
     {
         return $this->storage->exists($source);
+    }
+
+
+
+    /**
+     * @param string $source
+     *
+     * @return array
+     */
+    public function getImageDetailsInfo(string $source): array
+    {
+        $this->getMainUrls($source);
+        $this->getThumbnailUrls($source);
+        return $this->info;
     }
 }

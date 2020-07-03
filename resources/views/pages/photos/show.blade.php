@@ -14,7 +14,6 @@
 
 @section('tools')
 
-
 @endsection
 
 @section('content')
@@ -35,16 +34,19 @@
     <div class="card">
         <h3 class="card-header text-center">Image Sources</h3>
         <div class="card-body">
-            @foreach($photoRenderService->getUrls($record->src) as $key=>$url)
+            @foreach($photoRenderService->getImageDetailsInfo($record->src) as $url=>$info)
                 <div class="form-group form-group-sm">
                     <div class="input-group">
-                        <input type="text" class="form-control" value="{{$url}}" id="photoFullAddress_{{$key}}">
+                        <input type="text" class="form-control" value="{{$url}}" id="photoFullAddress_{{$loop->index}}">
                         <div class="input-group-btn">
                             <button class="btn btn-secondary"
-                                    onclick="copyToClipboard(this,'photoFullAddress_{{$key}}')">Copy path
+                                    onclick="copyToClipboard(this,'photoFullAddress_{{$loop->index}}')">Copy path
                             </button>
                         </div>
                     </div>
+                    @foreach($info as $name=>$value)
+                        {{$name}}:<span class="badge badge-light">{{$value}}</span>
+                    @endforeach
                 </div>
             @endforeach
         </div>
@@ -150,6 +152,5 @@
             var blob = new Blob([dataView], {type: mimeString});
             return blob;
         }
-
     </script>
 @endsection
