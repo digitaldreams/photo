@@ -68,17 +68,20 @@ class PhotoController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Photo $photo
+     * @param Photo                              $photo
+     *
+     * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function show(Photo $photo)
+    public function show(Photo $photo, PhotoRenderService $photoRenderService)
     {
         $this->authorize('view', $photo);
 
         return view('photo::pages.photos.show', [
             'record' => $photo,
+            'photoRenderService' => $photoRenderService,
         ]);
     }
 

@@ -124,6 +124,18 @@ class PhotoRenderService
     }
 
     /**
+     * Get all possible URLs of a given image.
+     *
+     * @param $source
+     *
+     * @return array
+     */
+    public function getUrls($source): array
+    {
+        return array_merge($this->getMainUrls($source), $this->getThumbnailUrls($source));
+    }
+
+    /**
      * @param string $source
      *
      * @return bool
@@ -132,15 +144,4 @@ class PhotoRenderService
     {
         return $this->storage->exists($source);
     }
-
-    /**
-     * @param array $sources
-     * @param array $thumbnails
-     */
-    protected function renderMain()
-    {
-
-    }
-
-
 }

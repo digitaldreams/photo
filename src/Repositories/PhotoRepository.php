@@ -73,8 +73,10 @@ class PhotoRepository
     public function update(Photo $photo, ?string $caption = null, ?UploadedFile $file = null): Photo
     {
         if ($file) {
+            $oldPhoto = $photo->src;
             $photo->src = $this->uploadAndGenerateThumbnails($file, $caption);
             $photo->mime_type = $this->storage->mimeType($photo->src);
+            $this->removeFiles($oldPhoto);
         }
 
         $photo->caption = $caption ?: $file->getClientOriginalName();
@@ -93,18 +95,42 @@ class PhotoRepository
      */
     public function delete(Photo $photo)
     {
-        if ($this->storage->exists($photo->src)) {
-            $this->storage->delete($photo->src);
-            $pathInfo = pathinfo($photo->src);
+        $this->removeFiles($photo->src);
+        return $photo->delete();
+    }
+
+    /**
+     * Remove all associated images of a given image from the disk.
+     *
+     * @param string $source
+     *
+     * @return \Photo\Repositories\PhotoRepository
+     */
+    public function removeFiles(string $source): self
+    {
+        if ($this->storage->exists($source)) {
+            $this->storage->delete($source);
+            $pathInfo = pathinfo($source);
+
+            $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+            if ($this->storage->exists($webP)) {
+                $this->storage->delete($webP);
+            }
 
             foreach (config('photo.sizes', []) as $name => $info) {
-                $thumbnails = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
-                if ($this->storage->exists($thumbnails)) {
-                    $this->storage->delete($thumbnails);
+
+                $thumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
+                if ($this->storage->exists($thumbnail)) {
+                    $this->storage->delete($thumbnail);
+                }
+
+                $webPthumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
+                if ($this->storage->exists($webPthumbnail)) {
+                    $this->storage->delete($webPthumbnail);
                 }
             }
         }
-        return $photo->delete();
+        return $this;
     }
 
     /**

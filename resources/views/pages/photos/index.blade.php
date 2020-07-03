@@ -83,13 +83,16 @@
                     maxFilesize: 2,
                     addRemoveLinks: !0,
                     acceptedFiles: 'image/*',
+                    params: {
+                        caption: Date.now()
+                    },
                     drop: function (e) {
                         var imageUrl = e.dataTransfer.getData('URL');
+                        console.log(e.dataTransfer);
                         if (imageUrl.length > 30) {
                             var url = '{{route('photo::photos.downloadUrl')}}';
                             pasteUrl(imageUrl, url);
                         }
-
                     },
                     success: function (file, response) {
                         if (response.success) {
@@ -99,7 +102,7 @@
                         }
                     },
                     complete: function (file) {
-                        window.location.reload();
+                        //  window.location.reload();
                     },
                     error: function () {
                         alert('something went wrong please try again')

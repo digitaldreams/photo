@@ -13,14 +13,7 @@
 @endsection
 
 @section('tools')
-    <div class="form-group form-group-sm">
-        <div class="input-group">
-            <input type="text" class="form-control" value="{{$record->src}}" id="photoFullAddress">
-            <div class="input-group-btn">
-                <button class="btn btn-secondary" onclick="copyToClipboard(this)">Copy path</button>
-            </div>
-        </div>
-    </div>
+
 
 @endsection
 
@@ -29,13 +22,33 @@
           form="photoUploadForm" enctype="multipart/form-data">
         {{csrf_field()}}
         {{method_field('PUT')}}
-        <input type="hidden" name="caption" value="{{$record->caption}}">
+        <div class="form-group text-center">
+            <input type="text" class="form-control" name="caption" id="caption" value="{{$record->caption}}"
+                   placeholder="e.g. Photo from Bandarban tour" required>
+        </div>
         <div id="upload-demo"></div>
         <div class="form-group text-center">
             <button class="btn btn-primary" id="upload-image">Resize Image</button>
         </div>
     </form>
-
+    <hr/>
+    <div class="card">
+        <h3 class="card-header text-center">Image Sources</h3>
+        <div class="card-body">
+            @foreach($photoRenderService->getUrls($record->src) as $key=>$url)
+                <div class="form-group form-group-sm">
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="{{$url}}" id="photoFullAddress_{{$key}}">
+                        <div class="input-group-btn">
+                            <button class="btn btn-secondary"
+                                    onclick="copyToClipboard(this,'photoFullAddress_{{$key}}')">Copy path
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
 
     <div class="row mb-5">
         @if($record->location)
@@ -124,8 +137,8 @@
         </script>
     @endif
     <script type="text/javascript">
-        function copyToClipboard(btn) {
-            var copyText = document.getElementById("photoFullAddress");
+        function copyToClipboard(btn, inputId) {
+            var copyText = document.getElementById(inputId);
             copyText.select();
             document.execCommand("copy");
             btn.innerText = "Copied";
@@ -140,7 +153,7 @@
             enableOrientation: true,
             enableZoom: true,
             enableResize: true,
-            enforceBoundary:false,
+            enforceBoundary: false,
             url: '{{$record->getUrl()}}',
             viewport: { // Default { width: 100, height: 100, type: 'square' }
                 width: "{{config('photo.maxWidth')}}",
@@ -156,7 +169,11 @@
 
         $('#upload-image').on('click', function (ev) {
             ev.preventDefault();
-            console.log('WHAT');
+            var caption = $("#caption").val();
+            if (caption.length < 1) {
+                $("#caption").focus();
+                return
+            }
             var formData = new FormData($('form#photoUploadForm')[0]);
             resize.croppie('result', {
                 type: 'canvas',
