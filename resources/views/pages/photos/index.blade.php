@@ -19,100 +19,55 @@
     </div>
 @endsection
 @section('content')
-    <div class="row">
-        <div class="col-md-6">
-            <form>
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-append">
-                            <select name="folder" class="form-control">
-                                <option>All</option>
 
-                            </select>
-                        </div>
-                        <input class="form-control" type="text" name="search" value="{{request('search')}}"
-                               placeholder="image name or url e.g. image.jpg or businesses/images/abc_pluming.jog">
-                        <div class="input-group-btn">
-                            <button class="btn btn-primary">Search</button>
+    <section id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+        <div class="row">
+            <div class="col-md-6">
+                <form>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <select name="folder" class="form-control">
+                                    <option>All</option>
+
+                                </select>
+                            </div>
+                            <input class="form-control" type="text" name="search" value="{{request('search')}}"
+                                   placeholder="image name or url e.g. image.jpg or businesses/images/abc_pluming.jog">
+                            <div class="input-group-btn">
+                                <button class="btn btn-primary">Search</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
-        <div class="col-md-6">
-            {!! $records->appends(['search'=>request('search')])->links() !!}
-        </div>
-    </div>
-    <hr/>
-    <div class="row">
-        @foreach($records as $photo)
-            <div class="col-sm-2">
-                @include('photo::cards.photo',['record'=>$photo])
+                </form>
             </div>
-        @endforeach
-        <div class="col-sm-2">
-            <div class="card image-dropZone" style="min-height: 200px">
-                <div class="card-body text-center image-dropZone px-5">
-                    <i class="fa fa-plus image-dropZone fa-5x"></i>
-                </div>
-                <h5 class="card-title text-center image-dropZone"> Dropzone </h5>
+            <div class="col-md-6">
+                {!! $records->appends(['search'=>request('search')])->links() !!}
             </div>
         </div>
-    </div>
-    {!! $records->appends(['search'=>request('search')])->render() !!}
+        <hr/>
+        <div class="row">
+            @foreach($records as $photo)
+                <div class="col-sm-2">
+                    @include('photo::cards.photo',['record'=>$photo])
+                </div>
+            @endforeach
+            
+        </div>
+        {!! $records->appends(['search'=>request('search')])->render() !!}
+    </section>
 @endSection
 @section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.1/dropzone.min.js"></script>
     <script type="text/javascript">
         $("body").bind("paste", function (e) {
             var pastedData = e.originalEvent.clipboardData.getData('text');
-            console.log(pastedData);
-            if (confirm('Are you sure you want to download image from '+ pastedData)) {
+
+            if (confirm('Are you sure you want to download image from ' + pastedData)) {
                 pasteUrl(pastedData, '{{route('photo::photos.downloadUrl')}}');
             }
 
         });
-        $(document).ready(function () {
-            $(".image-dropZone").dropzone(
-                {
-                    url: function () {
-                        return '{{route('photo::photos.dropzone')}}'
-                    },
-                    headers: {
-                        'X-CSRF-TOKEN': '{{csrf_token()}}'
-                    },
-                    paramName: "file",
-                    maxFiles: 1,
-                    maxFilesize: 2,
-                    addRemoveLinks: !0,
-                    acceptedFiles: 'image/*',
-                    params: {
-                        caption: Date.now()
-                    },
-                    drop: function (e) {
-                        var imageUrl = e.dataTransfer.getData('URL');
-                        console.log(e.dataTransfer);
-                        if (imageUrl.length > 30) {
-                            var url = '{{route('photo::photos.downloadUrl')}}';
-                            pasteUrl(imageUrl, url);
-                        }
-                    },
-                    success: function (file, response) {
-                        if (response.success) {
-                            window.location.reload();
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    complete: function (file) {
-                        //  window.location.reload();
-                    },
-                    error: function () {
-                        alert('something went wrong please try again')
-                    },
-                }
-            );
-        });
+
 
         function pasteUrl(pastedData, url) {
             pastedData = pastedData.split(/[?#]/)[0];
@@ -121,7 +76,7 @@
             if (allowedExt.indexOf(ext) !== -1) {
                 $.get(url, {'url': pastedData}).then(function (response) {
                     if (response.success) {
-                        window.location.reload();
+                        window.location.href = response.url;
                     } else {
                         alert(response.message);
                     }
@@ -129,6 +84,27 @@
             } else {
                 alert(ext + ' extension are not allowed');
             }
+        }
+
+        function dropHandler(ev) {
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+
+            if (ev.dataTransfer.items) {
+                var imageUrl = ev.dataTransfer.getData('text/html');
+                var rex = /src="?([^"\s]+)"?\s*/;
+                var url, res;
+                url = rex.exec(imageUrl);
+                if (url.length > 0) {
+                    if (confirm('Are you sure you want to download image from ' + url[1])) {
+                        pasteUrl(url[1], '{{route('photo::photos.downloadUrl')}}');
+                    }
+                }
+            }
+        }
+
+        function dragOverHandler(ev) {
+            ev.preventDefault();
         }
     </script>
 @endsection

@@ -68,6 +68,7 @@ class DownloadController extends Controller
             return response()->json([
                 'file' => $photo->getUrl(),
                 'success' => true,
+                'url' => route('photo::photos.show', $photo->id),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -95,6 +96,7 @@ class DownloadController extends Controller
             return response()->json([
                 'file' => $model->getUrl(),
                 'success' => true,
+                'url' => route('photo::photos.show', $model->id),
             ]);
         } else {
             return response()->json([

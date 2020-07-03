@@ -17,6 +17,9 @@
 @endsection
 
 @section('content')
+    <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+        <p>Drag one or more files to this Drop Zone ...</p>
+    </div>
     <form method="post" id="photoUploadForm"
           form="photoUploadForm" enctype="multipart/form-data">
         {{csrf_field()}}
@@ -151,6 +154,23 @@
             var dataView = new DataView(arrayBuffer);
             var blob = new Blob([dataView], {type: mimeString});
             return blob;
+        }
+
+        function dropHandler(ev) {
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+
+            if (ev.dataTransfer.items) {
+                var imageUrl = ev.dataTransfer.getData('text/html');
+                var rex = /src="?([^"\s]+)"?\s*/;
+                var url, res;
+                url = rex.exec(imageUrl);
+                alert(url[1]);
+            }
+        }
+        function dragOverHandler(ev) {
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
         }
     </script>
 @endsection
