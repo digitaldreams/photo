@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int                                      $location_id   location id
  * @property \Carbon\Carbon                           $created_at    created at
  * @property \Carbon\Carbon                           $updated_at    updated at
- * @property \Photo\Models\Location                   $photoLocation belongsTo
  * @property \Illuminate\Database\Eloquent\Collection $albumphoto    belongsToMany
  */
 class Photo extends Model
@@ -54,16 +53,6 @@ class Photo extends Model
         $userModel = config('auth.providers.users.model');
 
         return $this->belongsTo($userModel);
-    }
-
-    /**
-     * photoLocation.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function location()
-    {
-        return $this->belongsTo(Location::class, 'location_id');
     }
 
     /**

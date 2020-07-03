@@ -1,18 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Tuhin
- * Date: 8/25/2018
- * Time: 10:46 PM.
- */
 
 namespace Photo\Services;
 
-use Photo\Models\Location;
 use Photo\Models\Photo;
 
 class ExifDataService
 {
+    /**
+     * @var array
+     */
     protected $fillable = [
         'FileDateTime',
         'DateTimeOriginal',
@@ -31,14 +27,15 @@ class ExifDataService
         'ISOSpeedRatings',
         'WhiteBalance',
     ];
-
+    /**
+     * @var \Photo\Models\Photo
+     */
     protected $photo;
-    protected $data = [];
 
     /**
-     * @var Location
+     * @var array
      */
-    protected $locationModel;
+    protected $data = [];
 
     /**
      * ExifDataService constructor.
@@ -51,37 +48,12 @@ class ExifDataService
         $this->data = exif_read_data(storage_path('app/public/' . $this->photo->getSrc()));
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
-        return $this->data;
-
         return array_intersect_key($this->data, array_flip($this->fillable));
-    }
-
-    public function location()
-    {
-        $latLng = $this->getCoordinates();
-        if ($latLng) {
-            $here = new HereReverseGeocoding($latLng['latitude'], $latLng['longitude']);
-            $data = $here->fetch()->toArray();
-            if (isset($data['place_id'])) {
-                $locationModel = Location::firstOrNew([
-                    'place_id' => $data['place_id'],
-                ]);
-            } else {
-                return false;
-            }
-
-            $locationModel->fill($data);
-            $locationModel->latitude = $latLng['latitude'] ?? null;
-            $locationModel->longitude = $latLng['longitude'] ?? null;
-            $locationModel->save();
-            $this->locationModel = $locationModel;
-
-            return $locationModel;
-        }
-
-        return false;
     }
 
     /**
@@ -94,6 +66,8 @@ class ExifDataService
      * @param mixed $min
      * @param mixed $sec
      * @param mixed $ref
+     *
+     * @return float|int
      */
     protected function toDecimal($deg, $min, $sec, $ref)
     {
@@ -106,14 +80,12 @@ class ExifDataService
         return ('S' == $ref || 'W' == $ref) ? $d *= -1 : $d;
     }
 
+    /**
+     * @return bool
+     */
     public function save()
     {
         if (is_array($this->data)) {
-            $locationModel = $this->location();
-            if ($locationModel) {
-                $this->photo->location_id = $locationModel->id;
-                $this->photo->save();
-            }
             $data = $this->toArray();
             if (is_array($data)) {
                 $this->photo->exif = $data;
@@ -127,6 +99,9 @@ class ExifDataService
         return false;
     }
 
+    /**
+     * @return array|null
+     */
     public function getCoordinates()
     {
         $exif = $this->data;
@@ -139,8 +114,11 @@ class ExifDataService
         return $coord;
     }
 
+    /**
+     * @return \Illuminate\Support\Collection
+     */
     public function getRawData()
     {
-        return $this->data;
+        return collect($this->data);
     }
 }
