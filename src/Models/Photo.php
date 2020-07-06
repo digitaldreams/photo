@@ -3,6 +3,7 @@
 namespace Photo\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Photo\Services\PhotoRenderService;
 
 /**
  * @property int                                      $user_id       user id
@@ -89,5 +90,34 @@ class Photo extends Model
         $storage = app('filesystem.' . $default);
         return $storage->url($this->src);
     }
+
+    /**
+     * @return mixed
+     */
+    public function render(): string
+    {
+        $photoRender = app(PhotoRenderService::class);
+        return $photoRender->render($this);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function renderThumbnails(): string
+    {
+        $photoRender = app(PhotoRenderService::class);
+        return $photoRender->renderThumbnails($this);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUrls(): array
+    {
+        $photoRender = app(PhotoRenderService::class);
+        return $photoRender->getUrls($this);
+    }
+
+
 
 }
