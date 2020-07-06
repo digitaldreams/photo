@@ -28,16 +28,15 @@
                         class="text-danger fa fa-times"></i>Delete
                 </button>
             </form>
-            <a class="btn btn-light" href="{{route('photo::photos.download',$record->id)}}"><i class="fa fa-download"></i> Download</a>
+            <a class="btn btn-light" href="{{route('photo::photos.download',$record->id)}}"><i
+                    class="fa fa-download"></i> Download</a>
         @endcan
 
     </div>
 @endsection
 
 @section('content')
-    <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
-        <p>Drag one or more files to this Drop Zone ...</p>
-    </div>
+
     <form method="post" id="photoUploadForm"
           form="photoUploadForm" enctype="multipart/form-data">
         {{csrf_field()}}
@@ -72,13 +71,26 @@
             @endforeach
         </div>
     </div>
-
+<hr/>
     <div class="row mb-5">
         @if(!empty($record->exif))
             <div class="col-sm-4">
                 @include('photo::pages.photos.exif_data_table')
             </div>
         @endif
+            <div class="col-sm-8">
+                <div class="card ">
+                    <div class="card-header">
+                        Html Code <button class="btn btn-link"
+                                     onclick="copyToClipboard(this,'htmlCodeForPicture')"><i class="fa fa-copy"></i> Copy Html
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" rows="6" id="htmlCodeForPicture">{{ $photoRenderService->render($record)}}</textarea>
+                    </div>
+                </div>
+            </div>
+
     </div>
 @endSection
 
@@ -186,6 +198,7 @@
                 alert(url[1]);
             }
         }
+
         function dragOverHandler(ev) {
             // Prevent default behavior (Prevent file from being opened)
             ev.preventDefault();
