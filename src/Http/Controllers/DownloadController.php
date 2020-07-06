@@ -3,6 +3,7 @@
 namespace Photo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Photo\Http\Requests\Photos\Download;
 use Photo\Http\Requests\Photos\Dropzone;
 use Photo\Models\Photo;
@@ -27,18 +28,26 @@ class DownloadController extends Controller
      */
     protected PhotoRepository $photoRepository;
 
+
+    /**
+     * @var \Illuminate\Contracts\Filesystem\Filesystem
+     */
+    private Filesystem $storage;
+
     /**
      * DownloadController constructor.
      *
-     * @param \Photo\Services\ImageDownloadService $imageDownloadService
-     * @param \Photo\Services\PhotoService         $photoService
-     * @param \Photo\Repositories\PhotoRepository  $photoRepository
+     * @param \Photo\Services\ImageDownloadService        $imageDownloadService
+     * @param \Photo\Services\PhotoService                $photoService
+     * @param \Photo\Repositories\PhotoRepository         $photoRepository
+     * @param \Illuminate\Contracts\Filesystem\Filesystem $storage
      */
-    public function __construct(ImageDownloadService $imageDownloadService, PhotoService $photoService, PhotoRepository $photoRepository)
+    public function __construct(ImageDownloadService $imageDownloadService, PhotoService $photoService, PhotoRepository $photoRepository, Filesystem $storage)
     {
         $this->imageDownloadService = $imageDownloadService;
         $this->photoService = $photoService;
         $this->photoRepository = $photoRepository;
+        $this->storage = $storage;
     }
 
     /**
@@ -103,5 +112,20 @@ class DownloadController extends Controller
                 'success' => false,
             ]);
         }
+    }
+
+    /**
+     * Download image to user device.
+     *
+     * @param \Photo\Models\Photo $photo
+     *
+     * @return mixed
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function download(Photo $photo)
+    {
+        $this->authorize('update', $photo);
+
+        return $this->storage->download($photo->src);
     }
 }

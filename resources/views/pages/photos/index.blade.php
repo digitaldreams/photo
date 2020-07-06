@@ -12,6 +12,7 @@
 
 @endsection
 @section('tools')
+    <span id="downloading-status"></span>
     <div class="btn-group">
         <a class="btn btn-secondary" href="{{route('photo::photos.create')}}"><span class="fa fa-plus"></span>
             Create New Photo
@@ -74,6 +75,7 @@
             var ext = pastedData.split('.').pop();
             var allowedExt = ["jpg", "jpeg", "png", 'gif', 'webp'];
             if (allowedExt.indexOf(ext) !== -1) {
+                $("#downloading-status").text('Downloading....');
                 $.get(url, {'url': pastedData}).then(function (response) {
                     if (response.success) {
                         window.location.href = response.url;

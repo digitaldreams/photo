@@ -1,6 +1,6 @@
 <div class="card card-default" style="min-height: 320px">
     <a href="{{route('photo::photos.show',$record->id)}}">
-      {!! $photoRender->renderThumbnails($record) !!}
+        {!! $photoRender->renderThumbnails($record) !!}
     </a>
     <h6 class="card-title">
         <a href="{{route('photo::photos.show',$record->id)}}">
@@ -28,7 +28,10 @@
                             class="text-danger fa fa-times"></i>Delete
                     </button>
                 </form>
+                <a class="btn btn-light" href="{{route('photo::photos.download',$record->id)}}"><i
+                        class="fa fa-download"></i> Download</a>
             @endcan
+
         </div>
 
     </div>
