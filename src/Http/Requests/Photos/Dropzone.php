@@ -28,5 +28,4 @@ class Dropzone extends FormRequest
             'file' => 'required|image|max:2048',
         ];
     }
-
 }

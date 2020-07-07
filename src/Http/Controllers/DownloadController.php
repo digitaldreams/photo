@@ -28,7 +28,6 @@ class DownloadController extends Controller
      */
     protected PhotoRepository $photoRepository;
 
-
     /**
      * @var \Illuminate\Contracts\Filesystem\Filesystem
      */
@@ -75,9 +74,9 @@ class DownloadController extends Controller
             $this->photoService->convert($path);
 
             return response()->json([
-                'file' => $photo->getUrl(),
+                'file'    => $photo->getUrl(),
                 'success' => true,
-                'url' => route('photo::photos.show', $photo->id),
+                'url'     => route('photo::photos.show', $photo->id),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -90,22 +89,21 @@ class DownloadController extends Controller
     /**
      * @param \Photo\Http\Requests\Photos\Dropzone $request
      *
-     * @return \Illuminate\Http\JsonResponse
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function dropzone(Dropzone $request)
     {
         if ($request->file('file')->isValid()) {
-
             $model = $this->photoRepository->create($request->file('file'));
 
             session()->flash('message', 'Photo saved');
 
             return response()->json([
-                'file' => $model->getUrl(),
+                'file'    => $model->getUrl(),
                 'success' => true,
-                'url' => route('photo::photos.show', $model->id),
+                'url'     => route('photo::photos.show', $model->id),
             ]);
         } else {
             return response()->json([
@@ -119,8 +117,9 @@ class DownloadController extends Controller
      *
      * @param \Photo\Models\Photo $photo
      *
-     * @return mixed
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return mixed
      */
     public function download(Photo $photo)
     {

@@ -7,8 +7,8 @@ use Photo\Models\Photo;
 
 $factory->define(Photo::class, function (Faker $faker) {
     return [
-        'src' => $faker->imageUrl(),
-        'caption' => $faker->realText(),
+        'src'         => $faker->imageUrl(),
+        'caption'     => $faker->realText(),
         'captured_at' => $faker->dateTime,
     ];
 });

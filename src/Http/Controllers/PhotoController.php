@@ -18,7 +18,6 @@ use Photo\Services\PhotoRenderService;
  */
 class PhotoController extends Controller
 {
-
     /**
      * @var \Photo\Repositories\PhotoRepository
      */
@@ -38,11 +37,11 @@ class PhotoController extends Controller
      * Display a listing of the resource.
      *
      * @param \Illuminate\Http\Request           $request
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
-     * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request, PhotoRenderService $photoRenderService)
     {
@@ -56,12 +55,12 @@ class PhotoController extends Controller
             $photos = $photos->q($search);
         }
         if (!empty($folder)) {
-            $photos = $photos->where('src', 'LIKE', '%' . $folder . '%');
+            $photos = $photos->where('src', 'LIKE', '%'.$folder.'%');
         }
 
         return view('photo::pages.photos.index', [
             'photoRender' => $photoRenderService,
-            'records' => $photos->latest()->paginate(11),
+            'records'     => $photos->latest()->paginate(11),
         ]);
     }
 
@@ -69,18 +68,18 @@ class PhotoController extends Controller
      * Display the specified resource.
      *
      * @param Photo                              $photo
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
-     * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return \Illuminate\Http\Response
      */
     public function show(Photo $photo, PhotoRenderService $photoRenderService)
     {
         $this->authorize('view', $photo);
 
         return view('photo::pages.photos.show', [
-            'record' => $photo,
+            'record'             => $photo,
             'photoRenderService' => $photoRenderService,
         ]);
     }
@@ -88,8 +87,9 @@ class PhotoController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return \Illuminate\Http\Response
      */
     public function create()
     {
@@ -105,9 +105,9 @@ class PhotoController extends Controller
      *
      * @param Store $request
      *
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Exception
+     *
+     * @return \Illuminate\Http\Response
      */
     public function store(Store $request): RedirectResponse
     {
@@ -121,17 +121,18 @@ class PhotoController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param Photo                              $photo
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
-     * @return \Illuminate\Http\Response
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return \Illuminate\Http\Response
      */
     public function edit(Photo $photo, PhotoRenderService $photoRenderService)
     {
         $this->authorize('update', $photo);
+
         return view('photo::pages.photos.edit', [
-            'model' => $photo,
+            'model'       => $photo,
             'photoRender' => $photoRenderService,
         ]);
     }
@@ -142,9 +143,9 @@ class PhotoController extends Controller
      * @param Update $request
      * @param Photo  $photo
      *
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Exception
+     *
+     * @return \Illuminate\Http\Response
      */
     public function update(Update $request, Photo $photo)
     {
@@ -158,9 +159,9 @@ class PhotoController extends Controller
      *
      * @param Photo $photo
      *
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Photo $photo)
     {
@@ -170,5 +171,4 @@ class PhotoController extends Controller
 
         return redirect()->route('photo::photos.index')->with('message', 'photo successfully deleted.');
     }
-
 }

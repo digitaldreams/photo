@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Photo\Services;
-
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Log;
@@ -10,7 +8,6 @@ use Photo\Models\Photo;
 
 class PhotoRenderService
 {
-
     /**
      * @var \Illuminate\Contracts\Filesystem\Filesystem
      */
@@ -46,15 +43,15 @@ class PhotoRenderService
         $tag = '<picture>';
         $mainUrls = $this->getMainUrls($photo->src);
         if (isset($mainUrls[1])) {
-            $tag .= '<source media="(min-width::992px)" srcset="' . $mainUrls[1] . '">';
+            $tag .= '<source media="(min-width::992px)" srcset="'.$mainUrls[1].'">';
         }
         $thumbs = $this->getThumbnailUrls($photo->src);
 
         foreach ($thumbs as $thumb) {
-            $tag .= '<source media="(min-width::576px)" srcset="' . $thumb . '">';
+            $tag .= '<source media="(min-width::576px)" srcset="'.$thumb.'">';
         }
 
-        $tag .= '<img src="' . $mainUrls[0] . '" alt="' . $photo->caption . '" class="img img-responsive">';
+        $tag .= '<img src="'.$mainUrls[0].'" alt="'.$photo->caption.'" class="img img-responsive">';
         $tag .= '</picture>';
 
         return $tag;
@@ -70,15 +67,16 @@ class PhotoRenderService
         $tag = '<picture>';
         $thumbs = $this->getThumbnailUrls($photo->src);
         if (empty($thumbs)) {
-            $tag .= '<img src="' . config('photo.default') . '" alt="Our Default Image source" class="card-img-top  img img-responsive">';
+            $tag .= '<img src="'.config('photo.default').'" alt="Our Default Image source" class="card-img-top  img img-responsive">';
             $tag .= '</picture>';
+
             return $tag;
         }
         if (isset($thumbs[1])) {
-            $tag .= '<source srcset="' . $thumbs[1] . '">';
+            $tag .= '<source srcset="'.$thumbs[1].'">';
         }
 
-        $tag .= '<img src="' . $thumbs[0] . '" alt="' . $photo->caption . '" class="card-img-top img img-responsive">';
+        $tag .= '<img src="'.$thumbs[0].'" alt="'.$photo->caption.'" class="card-img-top img img-responsive">';
         $tag .= '</picture>';
 
         return $tag;
@@ -93,20 +91,20 @@ class PhotoRenderService
     {
         $mainUrl = $this->storage->url($source);
         $sourceSets = [$mainUrl];
-        $info =[];
+        $info = [];
         $info['size'] = round($this->storage->size($source) / 1000).' kb';
         $this->info[$mainUrl] = $info;
 
         $pathInfo = pathinfo($source);
-        $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+        $webP = $pathInfo['dirname'].'/'.$pathInfo['filename'].'.webp';
 
         if ($this->exists($webP)) {
             $sourceSets[] = $mainWebP = $this->storage->url($webP);
-            $info =[];
+            $info = [];
             $info['size'] = round($this->storage->size($webP) / 1000).' kb';
             $this->info[$mainWebP] = $info;
-
         }
+
         return $sourceSets;
     }
 
@@ -121,8 +119,8 @@ class PhotoRenderService
         $pathInfo = pathinfo($source);
 
         foreach (config('photo.sizes', []) as $name => $info) {
-            $thumbWebPPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
-            $thumbPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
+            $thumbWebPPath = $pathInfo['dirname'].'/'.$info['path'].'/'.$pathInfo['filename'].'.webp';
+            $thumbPath = $pathInfo['dirname'].'/'.$info['path'].'/'.$pathInfo['basename'];
             Log::error($thumbPath);
             if ($this->exists($thumbPath)) {
                 $sourceSets[] = $thumbUrl = $this->storage->url($thumbPath);
@@ -163,8 +161,6 @@ class PhotoRenderService
         return $this->storage->exists($source);
     }
 
-
-
     /**
      * @param string $source
      *
@@ -174,6 +170,7 @@ class PhotoRenderService
     {
         $this->getMainUrls($source);
         $this->getThumbnailUrls($source);
+
         return $this->info;
     }
 }
