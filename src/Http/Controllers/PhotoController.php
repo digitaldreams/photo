@@ -53,7 +53,7 @@ class PhotoController extends Controller
         $folder = $request->get('folder');
         if (!empty($search)) {
             $search = pathinfo($search, PATHINFO_BASENAME);
-            $photos = $photos->where('src', 'LIKE', '%' . $search . '%');
+            $photos = $photos->q($search);
         }
         if (!empty($folder)) {
             $photos = $photos->where('src', 'LIKE', '%' . $folder . '%');

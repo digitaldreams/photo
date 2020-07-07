@@ -76,7 +76,6 @@ class Photo extends Model
     {
         return $query->where(function ($q) use ($keyword) {
             $q->orWhere('caption', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('title', 'LIKE', '%' . $keyword . '%')
                 ->orWhere('src', 'LIKE', '%' . $keyword . '%');
         });
     }

@@ -29,8 +29,7 @@
                         <div class="input-group">
                             <div class="input-group-append">
                                 <select name="folder" class="form-control">
-                                    <option>All</option>
-
+                                    <option value="">All</option>
                                 </select>
                             </div>
                             <input class="form-control" type="text" name="search" value="{{request('search')}}"

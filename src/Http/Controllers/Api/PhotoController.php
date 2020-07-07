@@ -51,7 +51,7 @@ class PhotoController extends Controller
      */
     public function store(Store $request): PhotoResource
     {
-        $model = $this->photoRepository->create($request->file('file'), $request->get('caption'));
+        $model = $this->photoRepository->create($request->file('file'), $request->all());
 
         return new PhotoResource($model);
     }
