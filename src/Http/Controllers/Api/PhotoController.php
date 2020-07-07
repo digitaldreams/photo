@@ -27,7 +27,7 @@ class PhotoController extends Controller
     }
 
     /**
-     * Get List of Photos
+     * Get List of Photos.
      *
      * @param \Illuminate\Http\Request $index
      *
@@ -41,13 +41,13 @@ class PhotoController extends Controller
     }
 
     /**
-     * Store a Photo
+     * Store a Photo.
      *
      * @param Store $request
      *
-     * @return \Photo\Http\Resources\PhotoResource
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Photo\Http\Resources\PhotoResource
      */
     public function store(Store $request): PhotoResource
     {

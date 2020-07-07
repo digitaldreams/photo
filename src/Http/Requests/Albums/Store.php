@@ -25,9 +25,8 @@ class Store extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|max:150',
+            'name'        => 'required|max:150',
             'description' => 'nullable|max:191',
         ];
     }
-
 }

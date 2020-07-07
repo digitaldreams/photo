@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Tests\Feature;
 
 use App\User;
@@ -19,7 +18,6 @@ class PhotoApiTest extends TestCase
      */
     public function a_user_can_see_list_of_photos(): void
     {
-
         $user = factory(User::class)->create();
         $photos = factory(Photo::class, 5)->create(['user_id' => $user->id]);
         $response = $this->actingAs($user)->getJson(route('photo::api.photos.index'));
@@ -37,7 +35,7 @@ class PhotoApiTest extends TestCase
         $user = factory(User::class)->create();
 
         $response = $this->actingAs($user)->postJson(route('photo::api.photos.store'), [
-            'file' => $file,
+            'file'    => $file,
             'caption' => 'This is a testing photo',
         ]);
         $response->assertCreated();
@@ -47,6 +45,4 @@ class PhotoApiTest extends TestCase
         ]);
         $storage->assertExists('images/this-is-a-testing-photo.jpeg');
     }
-
-
 }

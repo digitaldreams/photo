@@ -7,7 +7,7 @@ use Photo\Models\Photo;
 class PhotoObserver
 {
     /**
-     * Handling the "creating" event of Photo
+     * Handling the "creating" event of Photo.
      *
      * @param \Photo\Models\Photo $photo
      */

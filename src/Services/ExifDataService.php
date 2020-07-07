@@ -45,7 +45,7 @@ class ExifDataService
     public function __construct(Photo $photo)
     {
         $this->photo = $photo;
-        $this->data = exif_read_data(storage_path('app/public/' . $this->photo->getSrc()));
+        $this->data = exif_read_data(storage_path('app/public/'.$this->photo->getSrc()));
     }
 
     /**
@@ -107,7 +107,7 @@ class ExifDataService
         $exif = $this->data;
 
         $coord = (isset($exif['GPSLatitude'], $exif['GPSLongitude'])) ? [
-            'latitude' => sprintf('%.6f', $this->toDecimal($exif['GPSLatitude'][0], $exif['GPSLatitude'][1], $exif['GPSLatitude'][2], $exif['GPSLatitudeRef'])),
+            'latitude'  => sprintf('%.6f', $this->toDecimal($exif['GPSLatitude'][0], $exif['GPSLatitude'][1], $exif['GPSLatitude'][2], $exif['GPSLatitudeRef'])),
             'longitude' => sprintf('%.6f', $this->toDecimal($exif['GPSLongitude'][0], $exif['GPSLongitude'][1], $exif['GPSLongitude'][2], $exif['GPSLongitudeRef'])),
         ] : null;
 

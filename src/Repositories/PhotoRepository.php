@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Photo\Repositories;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -41,13 +40,14 @@ class PhotoRepository
     }
 
     /**
-     * Create a new Photo
+     * Create a new Photo.
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @param array                         $data
      *
-     * @return \Photo\Models\Photo
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Photo\Models\Photo
      */
     public function create(UploadedFile $file, array $data = []): Photo
     {
@@ -67,8 +67,9 @@ class PhotoRepository
      * @param \Photo\Models\Photo           $photo
      * @param string|null                   $caption
      *
-     * @return \Photo\Models\Photo
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Photo\Models\Photo
      */
     public function update(Photo $photo, ?string $caption = null, ?UploadedFile $file = null): Photo
     {
@@ -90,12 +91,14 @@ class PhotoRepository
      *
      * @param \Photo\Models\Photo $photo
      *
-     * @return bool|null
      * @throws \Exception
+     *
+     * @return bool|null
      */
     public function delete(Photo $photo)
     {
         $this->removeFiles($photo->src);
+
         return $photo->delete();
     }
 
@@ -112,35 +115,35 @@ class PhotoRepository
             $this->storage->delete($source);
             $pathInfo = pathinfo($source);
 
-            $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+            $webP = $pathInfo['dirname'].'/'.$pathInfo['filename'].'.webp';
             if ($this->storage->exists($webP)) {
                 $this->storage->delete($webP);
             }
 
             foreach (config('photo.sizes', []) as $name => $info) {
-
-                $thumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
+                $thumbnail = $pathInfo['dirname'].'/'.$info['path'].'/'.$pathInfo['basename'];
                 if ($this->storage->exists($thumbnail)) {
                     $this->storage->delete($thumbnail);
                 }
 
-                $webPthumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
+                $webPthumbnail = $pathInfo['dirname'].'/'.$info['path'].'/'.$pathInfo['filename'].'.webp';
                 if ($this->storage->exists($webPthumbnail)) {
                     $this->storage->delete($webPthumbnail);
                 }
             }
         }
+
         return $this;
     }
 
     /**
      * @param             $file
      * @param             $caption
-     *
      * @param string|null $crop
      *
-     * @return mixed
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return mixed
      */
     private function uploadAndGenerateThumbnails($file, $caption, string $crop = null)
     {
@@ -153,7 +156,7 @@ class PhotoRepository
     }
 
     /**
-     * Get photos by User
+     * Get photos by User.
      *
      * @param \Illuminate\Foundation\Auth\User $user
      * @param int                              $perPage
@@ -168,7 +171,5 @@ class PhotoRepository
             ->when($search, function ($query) use ($search) {
                 $query->q($search);
             })->paginate($perPage);
-
     }
-
 }

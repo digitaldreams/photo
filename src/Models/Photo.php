@@ -75,8 +75,8 @@ class Photo extends Model
     public function scopeQ($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
-            $q->orWhere('caption', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('src', 'LIKE', '%' . $keyword . '%');
+            $q->orWhere('caption', 'LIKE', '%'.$keyword.'%')
+                ->orWhere('src', 'LIKE', '%'.$keyword.'%');
         });
     }
 
@@ -86,7 +86,8 @@ class Photo extends Model
     public function getUrl()
     {
         $default = config('photo.filesystem');
-        $storage = app('filesystem.' . $default);
+        $storage = app('filesystem.'.$default);
+
         return $storage->url($this->src);
     }
 
@@ -96,6 +97,7 @@ class Photo extends Model
     public function render(): string
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->render($this);
     }
 
@@ -105,6 +107,7 @@ class Photo extends Model
     public function renderThumbnails(): string
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->renderThumbnails($this);
     }
 
@@ -114,9 +117,7 @@ class Photo extends Model
     public function getUrls(): array
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->getUrls($this);
     }
-
-
-
 }

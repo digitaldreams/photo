@@ -4,7 +4,6 @@ namespace Photo\Policies;
 
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Support\Facades\Log;
 use Photo\Models\Photo;
 
 class PhotoPolicy

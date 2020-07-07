@@ -7,7 +7,7 @@ use Photo\Models\Album;
 class AlbumObserver
 {
     /**
-     * Handling the "creating" event of Photo
+     * Handling the "creating" event of Photo.
      *
      * @param \Photo\Models\Album $album
      */

@@ -31,9 +31,9 @@ class ImageDownloadService
     /**
      * @param string $path
      *
-     * @return string
-     *
      * @throws \Photo\Exceptions\ImageNotFoundException
+     *
+     * @return string
      */
     public function download(string $path)
     {
@@ -51,18 +51,18 @@ class ImageDownloadService
             $this->storage->makeDirectory($path);
         }
         $originalFilename = pathinfo($this->imageUrl, PATHINFO_BASENAME);
-        $filename = $this->storage->exists($path . '/' . $originalFilename) ? Str::random(32) . '.' . $this->getExtension($contentType) : $originalFilename;
+        $filename = $this->storage->exists($path.'/'.$originalFilename) ? Str::random(32).'.'.$this->getExtension($contentType) : $originalFilename;
 
-        $finalURL = $path . '/' . $filename;
+        $finalURL = $path.'/'.$filename;
         $this->storage->put($finalURL, $imageContent, 'public');
 
         return $finalURL;
     }
 
     /**
-     * @return bool|array
-     *
      * @throws \Photo\Exceptions\ImageNotFoundException
+     *
+     * @return bool|array
      */
     public function exists()
     {
@@ -107,9 +107,9 @@ class ImageDownloadService
      *
      * @param string $imageUrl
      *
-     * @return \Photo\Services\ImageDownloadService
-     *
      * @throws \Exception
+     *
+     * @return \Photo\Services\ImageDownloadService
      */
     public function setImageUrl(string $imageUrl): self
     {

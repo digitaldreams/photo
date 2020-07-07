@@ -70,7 +70,6 @@ class PhotoService
 
         $this->maxDimension['height'] = config('photo.maxHeight', 450);
         $this->maxDimension['width'] = config('photo.maxWidth', 800);
-
     }
 
     /**
@@ -78,21 +77,19 @@ class PhotoService
      *
      * @param string                        $path
      * @param \Illuminate\Http\UploadedFile $uploadedFile
-     *
      * @param string|null                   $fileName
-     *
      * @param null                          $crop
      *
-     * @return \Photo\Services\PhotoService
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Photo\Services\PhotoService
      */
-    public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null, $crop = null): PhotoService
+    public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null, $crop = null): self
     {
-        $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName) . '.' . $uploadedFile->guessExtension() : $uploadedFile->hashName($path);
+        $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName).'.'.$uploadedFile->guessExtension() : $uploadedFile->hashName($path);
 
         if ($crop == 'yes') {
-            $this->imageSource = $this->resizeAndConvert($uploadedFile, $path . '/' . $uniqueFileName, $this->maxDimension['width'], $this->maxDimension['height'], $uploadedFile->guessExtension());
+            $this->imageSource = $this->resizeAndConvert($uploadedFile, $path.'/'.$uniqueFileName, $this->maxDimension['width'], $this->maxDimension['height'], $uploadedFile->guessExtension());
         } else {
             $this->imageSource = $this->storage->putFileAs($path, $uploadedFile, $uniqueFileName, 'public');
         }
@@ -106,20 +103,19 @@ class PhotoService
      *
      * @param $source
      *
-     * @return self
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return self
      */
     public function convert(?string $source = null): self
     {
         $source = $source ?: $this->imageSource;
         foreach ($this->dimensions as $path => $dimension) {
-
             $pathInfo = pathinfo($source);
             $this->formats[] = $pathInfo['extension'];
 
             foreach ($this->formats as $format) {
-                $destination = sprintf('%s/%s.%s', $pathInfo['dirname'] . '/' . $path, $pathInfo['filename'], $format);
+                $destination = sprintf('%s/%s.%s', $pathInfo['dirname'].'/'.$path, $pathInfo['filename'], $format);
                 $this->convertedSizes[$format][$path] = $this->resizeAndConvert($source, $destination, $dimension['width'], $dimension['height'], $format);
             }
         }
@@ -136,9 +132,9 @@ class PhotoService
      * @param int                 $height
      * @param string              $format
      *
-     * @return string
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return string
      */
     public function resizeAndConvert($source, string $destination, int $width, int $height, string $format): string
     {
@@ -158,9 +154,9 @@ class PhotoService
      *
      * @param string $path
      *
-     * @return string
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return string
      */
     public function convertMaxDimensionToWebP(string $path): string
     {
@@ -175,9 +171,9 @@ class PhotoService
      *
      * @param string|UploadedFile $source
      *
-     * @return \Illuminate\Http\UploadedFile|resource
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Illuminate\Http\UploadedFile|resource
      */
     private function getImageSource($source)
     {
@@ -187,6 +183,7 @@ class PhotoService
         if ($source instanceof UploadedFile) {
             return $source;
         }
+
         throw new \Exception('Source can be either a file path or UploadedFile Object.');
     }
 
@@ -201,14 +198,15 @@ class PhotoService
     public function setMaxDimension(int $width, int $height): self
     {
         $this->maxDimension = [
-            'width' => $width,
+            'width'  => $width,
             'height' => $height,
         ];
+
         return $this;
     }
 
     /**
-     * Set a Dimension e.g. thumbnails 64px x 64px
+     * Set a Dimension e.g. thumbnails 64px x 64px.
      *
      * @param int    $width
      * @param int    $height
@@ -220,7 +218,7 @@ class PhotoService
     {
         $this->dimensions[$folder] = [
             'height' => $height,
-            'width' => $width,
+            'width'  => $width,
         ];
 
         return $this;
@@ -248,7 +246,6 @@ class PhotoService
     {
         return $this->convertedSizes[$size][$format] ?? null;
     }
-
 
     /**
      * Delete the original file.
@@ -309,10 +306,11 @@ class PhotoService
     public function getUniqueFileName(string $path, string $fileName, $extension = 'jpeg')
     {
         $name = $this->sanitizeFileName($fileName);
-        $relativePath = $path . '/' . $name . '.' . $extension;
+        $relativePath = $path.'/'.$name.'.'.$extension;
         if (!$this->storage->exists($relativePath)) {
             return $name;
         }
-        return $name . '-' . uniqid();
+
+        return $name.'-'.uniqid();
     }
 }
