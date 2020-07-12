@@ -38,10 +38,10 @@ class PhotoController extends Controller
      * Display a listing of the resource.
      *
      * @param \Illuminate\Http\Request           $request
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(Request $request, PhotoRenderService $photoRenderService)
@@ -69,10 +69,10 @@ class PhotoController extends Controller
      * Display the specified resource.
      *
      * @param Photo                              $photo
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(Photo $photo, PhotoRenderService $photoRenderService)
@@ -89,6 +89,7 @@ class PhotoController extends Controller
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function create()
@@ -121,15 +122,16 @@ class PhotoController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param Photo                              $photo
-     *
      * @param \Photo\Services\PhotoRenderService $photoRenderService
      *
      * @return \Illuminate\Http\Response
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function edit(Photo $photo, PhotoRenderService $photoRenderService)
     {
         $this->authorize('update', $photo);
+
         return view('photo::pages.photos.edit', [
             'model' => $photo,
             'photoRender' => $photoRenderService,
@@ -170,5 +172,4 @@ class PhotoController extends Controller
 
         return redirect()->route('photo::photos.index')->with('message', 'photo successfully deleted.');
     }
-
 }

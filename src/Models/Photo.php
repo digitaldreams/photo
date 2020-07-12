@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Photo\Services\PhotoRenderService;
 
 /**
- * @property int                                      $user_id       user id
- * @property string                                   $caption       caption
- * @property string                                   $title         title
- * @property string                                   $mime_type     mime type
- * @property string                                   $src           src
- * @property int                                      $location_id   location id
- * @property \Carbon\Carbon                           $created_at    created at
- * @property \Carbon\Carbon                           $updated_at    updated at
- * @property \Illuminate\Database\Eloquent\Collection $albumphoto    belongsToMany
+ * @property int                                      $user_id     user id
+ * @property string                                   $caption     caption
+ * @property string                                   $title       title
+ * @property string                                   $mime_type   mime type
+ * @property string                                   $src         src
+ * @property int                                      $location_id location id
+ * @property \Carbon\Carbon                           $created_at  created at
+ * @property \Carbon\Carbon                           $updated_at  updated at
+ * @property \Illuminate\Database\Eloquent\Collection $albumphoto  belongsToMany
  */
 class Photo extends Model
 {
@@ -87,6 +87,7 @@ class Photo extends Model
     {
         $default = config('photo.filesystem');
         $storage = app('filesystem.' . $default);
+
         return $storage->url($this->src);
     }
 
@@ -96,6 +97,7 @@ class Photo extends Model
     public function render(): string
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->render($this);
     }
 
@@ -105,6 +107,7 @@ class Photo extends Model
     public function renderThumbnails(): string
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->renderThumbnails($this);
     }
 
@@ -114,9 +117,7 @@ class Photo extends Model
     public function getUrls(): array
     {
         $photoRender = app(PhotoRenderService::class);
+
         return $photoRender->getUrls($this);
     }
-
-
-
 }

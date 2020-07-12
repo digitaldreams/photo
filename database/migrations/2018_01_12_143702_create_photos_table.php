@@ -25,10 +25,10 @@ class CreatePhotosTable extends Migration
             $table->dateTime('taken_at')->nullable();
             $table->dateTime('captured_at')->nullable();
 
-            $table->string("photoable_type")->nullable();
-            $table->unsignedBigInteger("photoable_id")->nullable();
+            $table->string('photoable_type')->nullable();
+            $table->unsignedBigInteger('photoable_id')->nullable();
 
-            $table->index(["photoable_type", "photoable_id"]);
+            $table->index(['photoable_type', 'photoable_id']);
             $table->timestamps();
         });
     }

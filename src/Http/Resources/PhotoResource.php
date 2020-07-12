@@ -7,7 +7,6 @@ use Photo\Services\PhotoRenderService;
 
 class PhotoResource extends JsonResource
 {
-
     /**
      * Transform the resource into an array.
      *

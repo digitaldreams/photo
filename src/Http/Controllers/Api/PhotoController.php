@@ -27,7 +27,7 @@ class PhotoController extends Controller
     }
 
     /**
-     * Get List of Photos
+     * Get List of Photos.
      *
      * @param \Illuminate\Http\Request $index
      *
@@ -41,7 +41,7 @@ class PhotoController extends Controller
     }
 
     /**
-     * Store a Photo
+     * Store a Photo.
      *
      * @param Store $request
      *

@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Photo\Services;
-
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Log;
@@ -72,6 +70,7 @@ class PhotoRenderService
         if (empty($thumbs)) {
             $tag .= '<img src="' . config('photo.default') . '" alt="Our Default Image source" class="card-img-top  img img-responsive">';
             $tag .= '</picture>';
+
             return $tag;
         }
         if (isset($thumbs[1])) {
@@ -93,8 +92,8 @@ class PhotoRenderService
     {
         $mainUrl = $this->storage->url($source);
         $sourceSets = [$mainUrl];
-        $info =[];
-        $info['size'] = round($this->storage->size($source) / 1000).' kb';
+        $info = [];
+        $info['size'] = round($this->storage->size($source) / 1000) . ' kb';
         $this->info[$mainUrl] = $info;
 
         $pathInfo = pathinfo($source);
@@ -102,11 +101,11 @@ class PhotoRenderService
 
         if ($this->exists($webP)) {
             $sourceSets[] = $mainWebP = $this->storage->url($webP);
-            $info =[];
-            $info['size'] = round($this->storage->size($webP) / 1000).' kb';
+            $info = [];
+            $info['size'] = round($this->storage->size($webP) / 1000) . ' kb';
             $this->info[$mainWebP] = $info;
-
         }
+
         return $sourceSets;
     }
 
@@ -127,13 +126,13 @@ class PhotoRenderService
             if ($this->exists($thumbPath)) {
                 $sourceSets[] = $thumbUrl = $this->storage->url($thumbPath);
                 $info = [];
-                $info['size'] = round($this->storage->size($thumbPath) / 1000).' kb';
+                $info['size'] = round($this->storage->size($thumbPath) / 1000) . ' kb';
                 $this->info[$thumbUrl] = $info;
             }
             if ($this->exists($thumbWebPPath)) {
                 $sourceSets[] = $thumbWUrl = $this->storage->url($thumbWebPPath);
                 $info = [];
-                $info['size'] = round($this->storage->size($thumbWebPPath) / 1000).' kb';
+                $info['size'] = round($this->storage->size($thumbWebPPath) / 1000) . ' kb';
                 $this->info[$thumbWUrl] = $info;
             }
         }
@@ -163,8 +162,6 @@ class PhotoRenderService
         return $this->storage->exists($source);
     }
 
-
-
     /**
      * @param string $source
      *
@@ -174,6 +171,7 @@ class PhotoRenderService
     {
         $this->getMainUrls($source);
         $this->getThumbnailUrls($source);
+
         return $this->info;
     }
 }

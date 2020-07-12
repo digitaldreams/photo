@@ -159,5 +159,4 @@ class AlbumTest extends TestCase
 
         $response->assertForbidden();
     }
-
 }

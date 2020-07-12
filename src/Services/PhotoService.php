@@ -70,7 +70,6 @@ class PhotoService
 
         $this->maxDimension['height'] = config('photo.maxHeight', 450);
         $this->maxDimension['width'] = config('photo.maxWidth', 800);
-
     }
 
     /**
@@ -78,9 +77,7 @@ class PhotoService
      *
      * @param string                        $path
      * @param \Illuminate\Http\UploadedFile $uploadedFile
-     *
      * @param string|null                   $fileName
-     *
      * @param null                          $crop
      *
      * @return \Photo\Services\PhotoService
@@ -91,7 +88,7 @@ class PhotoService
     {
         $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName) . '.' . $uploadedFile->guessExtension() : $uploadedFile->hashName($path);
 
-        if ($crop == 'yes') {
+        if ('yes' == $crop) {
             $this->imageSource = $this->resizeAndConvert($uploadedFile, $path . '/' . $uniqueFileName, $this->maxDimension['width'], $this->maxDimension['height'], $uploadedFile->guessExtension());
         } else {
             $this->imageSource = $this->storage->putFileAs($path, $uploadedFile, $uniqueFileName, 'public');
@@ -114,7 +111,6 @@ class PhotoService
     {
         $source = $source ?: $this->imageSource;
         foreach ($this->dimensions as $path => $dimension) {
-
             $pathInfo = pathinfo($source);
             $this->formats[] = $pathInfo['extension'];
 
@@ -204,11 +200,12 @@ class PhotoService
             'width' => $width,
             'height' => $height,
         ];
+
         return $this;
     }
 
     /**
-     * Set a Dimension e.g. thumbnails 64px x 64px
+     * Set a Dimension e.g. thumbnails 64px x 64px.
      *
      * @param int    $width
      * @param int    $height
@@ -248,7 +245,6 @@ class PhotoService
     {
         return $this->convertedSizes[$size][$format] ?? null;
     }
-
 
     /**
      * Delete the original file.
@@ -313,6 +309,7 @@ class PhotoService
         if (!$this->storage->exists($relativePath)) {
             return $name;
         }
+
         return $name . '-' . uniqid();
     }
 }

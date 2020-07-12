@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Photo\Repositories;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -41,12 +40,13 @@ class PhotoRepository
     }
 
     /**
-     * Create a new Photo
+     * Create a new Photo.
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @param array                         $data
      *
      * @return \Photo\Models\Photo
+     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function create(UploadedFile $file, array $data = []): Photo
@@ -68,6 +68,7 @@ class PhotoRepository
      * @param string|null                   $caption
      *
      * @return \Photo\Models\Photo
+     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function update(Photo $photo, ?string $caption = null, ?UploadedFile $file = null): Photo
@@ -91,11 +92,13 @@ class PhotoRepository
      * @param \Photo\Models\Photo $photo
      *
      * @return bool|null
+     *
      * @throws \Exception
      */
     public function delete(Photo $photo)
     {
         $this->removeFiles($photo->src);
+
         return $photo->delete();
     }
 
@@ -118,7 +121,6 @@ class PhotoRepository
             }
 
             foreach (config('photo.sizes', []) as $name => $info) {
-
                 $thumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
                 if ($this->storage->exists($thumbnail)) {
                     $this->storage->delete($thumbnail);
@@ -130,16 +132,17 @@ class PhotoRepository
                 }
             }
         }
+
         return $this;
     }
 
     /**
      * @param             $file
      * @param             $caption
-     *
      * @param string|null $crop
      *
      * @return mixed
+     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     private function uploadAndGenerateThumbnails($file, $caption, string $crop = null)
@@ -153,7 +156,7 @@ class PhotoRepository
     }
 
     /**
-     * Get photos by User
+     * Get photos by User.
      *
      * @param \Illuminate\Foundation\Auth\User $user
      * @param int                              $perPage
@@ -168,7 +171,5 @@ class PhotoRepository
             ->when($search, function ($query) use ($search) {
                 $query->q($search);
             })->paginate($perPage);
-
     }
-
 }

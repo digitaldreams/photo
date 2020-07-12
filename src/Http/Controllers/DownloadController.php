@@ -28,7 +28,6 @@ class DownloadController extends Controller
      */
     protected PhotoRepository $photoRepository;
 
-
     /**
      * @var \Illuminate\Contracts\Filesystem\Filesystem
      */
@@ -97,7 +96,6 @@ class DownloadController extends Controller
     public function dropzone(Dropzone $request)
     {
         if ($request->file('file')->isValid()) {
-
             $model = $this->photoRepository->create($request->file('file'));
 
             session()->flash('message', 'Photo saved');
@@ -120,6 +118,7 @@ class DownloadController extends Controller
      * @param \Photo\Models\Photo $photo
      *
      * @return mixed
+     *
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function download(Photo $photo)

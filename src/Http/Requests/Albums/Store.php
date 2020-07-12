@@ -29,5 +29,4 @@ class Store extends FormRequest
             'description' => 'nullable|max:191',
         ];
     }
-
 }
