@@ -23,14 +23,14 @@ class AlbumTest extends TestCase
             ->followingRedirects()
             ->from(route('photo::albums.create'))
             ->post(route('photo::albums.store'), [
-                'name' => $albumData->name,
+                'name'        => $albumData->name,
                 'description' => $albumData->description,
             ]);
         $response->assertOk();
 
         $this->assertDatabaseHas((new Album())->getTable(), [
-            'user_id' => $user->id,
-            'name' => $albumData->name,
+            'user_id'     => $user->id,
+            'name'        => $albumData->name,
             'description' => $albumData->description,
         ]);
     }
@@ -48,14 +48,14 @@ class AlbumTest extends TestCase
             ->followingRedirects()
             ->from(route('photo::albums.edit', $album->id))
             ->put(route('photo::albums.update', $album->id), [
-                'name' => $albumData->name,
+                'name'        => $albumData->name,
                 'description' => $albumData->description,
             ]);
         $response->assertOk();
 
         $this->assertDatabaseHas((new Album())->getTable(), [
-            'id' => $album->id,
-            'name' => $albumData->name,
+            'id'          => $album->id,
+            'name'        => $albumData->name,
             'description' => $albumData->description,
         ]);
     }
@@ -75,14 +75,14 @@ class AlbumTest extends TestCase
             ->followingRedirects()
             ->from(route('photo::albums.edit', $album->id))
             ->put(route('photo::albums.update', $album->id), [
-                'name' => $albumData->name,
+                'name'        => $albumData->name,
                 'description' => $albumData->description,
             ]);
         $response->assertForbidden();
 
         $this->assertDatabaseMissing((new Album())->getTable(), [
-            'id' => $album->id,
-            'name' => $albumData->name,
+            'id'          => $album->id,
+            'name'        => $albumData->name,
             'description' => $albumData->description,
         ]);
     }

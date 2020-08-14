@@ -45,9 +45,9 @@ class PhotoController extends Controller
      *
      * @param Store $request
      *
-     * @return \Photo\Http\Resources\PhotoResource
-     *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     *
+     * @return \Photo\Http\Resources\PhotoResource
      */
     public function store(Store $request): PhotoResource
     {

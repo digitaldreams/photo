@@ -19,11 +19,11 @@ class PhotoResource extends JsonResource
         $photoRender = app(PhotoRenderService::class);
 
         return [
-            'id' => $this->id,
-            'user_id' => $this->id,
-            'urls' => $photoRender->getMainUrls($this->src),
+            'id'         => $this->id,
+            'user_id'    => $this->id,
+            'urls'       => $photoRender->getMainUrls($this->src),
             'thumbnails' => $photoRender->getThumbnailUrls($this->src),
-            'caption' => $this->caption,
+            'caption'    => $this->caption,
         ];
     }
 }

@@ -35,7 +35,7 @@ class PhotoApiTest extends TestCase
         $user = factory(User::class)->create();
 
         $response = $this->actingAs($user)->postJson(route('photo::api.photos.store'), [
-            'file' => $file,
+            'file'    => $file,
             'caption' => 'This is a testing photo',
         ]);
         $response->assertCreated();

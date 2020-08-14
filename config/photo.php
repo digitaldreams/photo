@@ -51,9 +51,9 @@ return [
              * Suppose rootPath is photos and thumbnail path is thumbnails.
              * Then your thumbnail full path will be photos/thumbnails
              */
-            'path' => 'thumbnails',
+            'path'   => 'thumbnails',
             'height' => 250,
-            'width' => 250,
+            'width'  => 250,
         ],
     ],
 ];

@@ -25,7 +25,7 @@ class PhotoTest extends TestCase
         $response = $this->followingRedirects()
             ->actingAs($user)
             ->from(route('photo::photos.create'))->post(route('photo::photos.store'), [
-                'file' => $file,
+                'file'    => $file,
                 'caption' => 'This is a testing photo',
             ]);
 
@@ -102,13 +102,13 @@ class PhotoTest extends TestCase
             ->actingAs($user)
             ->from(route('photo::photos.edit', $photo->id))
             ->put(route('photo::photos.update', $photo->id), [
-                'file' => $file,
+                'file'    => $file,
                 'caption' => 'This is a testing photo',
             ]);
 
         $response->assertOk();
         $this->assertDatabaseHas((new Photo())->getTable(), [
-            'id' => $photo->id,
+            'id'  => $photo->id,
             'src' => 'images/this-is-a-testing-photo.jpeg',
         ]);
         $storage->assertExists('images/this-is-a-testing-photo.jpeg');
@@ -131,13 +131,13 @@ class PhotoTest extends TestCase
             ->actingAs($otherUser)
             ->from(route('photo::photos.edit', $photo->id))
             ->put(route('photo::photos.update', $photo->id), [
-                'file' => $file,
+                'file'    => $file,
                 'caption' => 'This is a testing photo',
             ]);
 
         $response->assertForbidden();
         $this->assertDatabaseMissing((new Photo())->getTable(), [
-            'id' => $photo->id,
+            'id'  => $photo->id,
             'src' => 'images/this-is-a-testing-photo.jpeg',
         ]);
         $storage->assertMissing('images/this-is-a-testing-photo.jpeg');

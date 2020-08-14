@@ -12,7 +12,10 @@ use Photo\Services\ExifDataService;
 
 class GetExifDataJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
     /**
      * @var Photo
      */
@@ -37,7 +40,7 @@ class GetExifDataJob implements ShouldQueue
      */
     public function handle()
     {
-        $fullPath = rtrim($this->getRootPath(), '/') . '/' . $this->photo->src;
+        $fullPath = rtrim($this->getRootPath(), '/').'/'.$this->photo->src;
         $exifServie = new ExifDataService($this->photo);
         $data = $exifServie->toArray();
         if ($location = $exifServie->location()) {
@@ -55,6 +58,6 @@ class GetExifDataJob implements ShouldQueue
      */
     protected function getRootPath()
     {
-        return config('filesystems.disks.' . $this->driver . '.root');
+        return config('filesystems.disks.'.$this->driver.'.root');
     }
 }
