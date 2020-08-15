@@ -8,7 +8,7 @@
             <input type="file" class="form-control {{ $errors->has('file') ? ' is-invalid' : '' }}"
                    name="file" id="file"
                    onchange="checkSize(2097152,'file')"
-                   placeholder="" required accept="image/*">
+                   placeholder="" accept="image/*" {{empty($model->id)?'required':''}}>
             @if($errors->has('file'))
                 <div class="invalid-feedback">
                     <strong>{{ $errors->first('file') }}</strong>

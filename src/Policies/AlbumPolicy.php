@@ -4,7 +4,7 @@ namespace Photo\Policies;
 
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Photo\Models\Album;
+use Photo\Models\Tag;
 
 class AlbumPolicy
 {
@@ -35,12 +35,12 @@ class AlbumPolicy
     /**
      * Determine whether the user can view the Album.
      *
-     * @param User  $user
-     * @param Album $album
+     * @param User $user
+     * @param Tag  $album
      *
      * @return mixed
      */
-    public function view($user, Album $album)
+    public function view($user, Tag $album)
     {
         return $user->id == $album->user_id;
     }
@@ -60,12 +60,12 @@ class AlbumPolicy
     /**
      * Determine whether the user can update the Album.
      *
-     * @param User  $user
-     * @param Album $album
+     * @param User $user
+     * @param Tag  $album
      *
      * @return mixed
      */
-    public function update($user, Album $album)
+    public function update($user, Tag $album)
     {
         return $user->id == $album->user_id;
     }
@@ -73,12 +73,12 @@ class AlbumPolicy
     /**
      * Determine whether the user can delete the Album.
      *
-     * @param User  $user
-     * @param Album $album
+     * @param User $user
+     * @param Tag  $album
      *
      * @return mixed
      */
-    public function delete($user, Album $album)
+    public function delete($user, Tag $album)
     {
         return $user->id == $album->user_id;
     }

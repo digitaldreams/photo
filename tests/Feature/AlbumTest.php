@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Photo\Models\Album;
+use Photo\Models\Tag;
 use Tests\TestCase;
 
 class AlbumTest extends TestCase
@@ -17,7 +17,7 @@ class AlbumTest extends TestCase
     public function a_user_can_create_photo_album()
     {
         $user = factory(User::class)->create();
-        $albumData = factory(Album::class)->make();
+        $albumData = factory(Tag::class)->make();
 
         $response = $this->actingAs($user)
             ->followingRedirects()
@@ -28,7 +28,7 @@ class AlbumTest extends TestCase
             ]);
         $response->assertOk();
 
-        $this->assertDatabaseHas((new Album())->getTable(), [
+        $this->assertDatabaseHas((new Tag())->getTable(), [
             'user_id'     => $user->id,
             'name'        => $albumData->name,
             'description' => $albumData->description,
@@ -41,8 +41,8 @@ class AlbumTest extends TestCase
     public function a_user_can_update_his_own_album(): void
     {
         $user = factory(User::class)->create();
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
-        $albumData = factory(Album::class)->make();
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
+        $albumData = factory(Tag::class)->make();
 
         $response = $this->actingAs($user)
             ->followingRedirects()
@@ -53,7 +53,7 @@ class AlbumTest extends TestCase
             ]);
         $response->assertOk();
 
-        $this->assertDatabaseHas((new Album())->getTable(), [
+        $this->assertDatabaseHas((new Tag())->getTable(), [
             'id'          => $album->id,
             'name'        => $albumData->name,
             'description' => $albumData->description,
@@ -68,8 +68,8 @@ class AlbumTest extends TestCase
         $user = factory(User::class)->create();
         $otherUser = factory(User::class)->create();
 
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
-        $albumData = factory(Album::class)->make();
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
+        $albumData = factory(Tag::class)->make();
 
         $response = $this->actingAs($otherUser)
             ->followingRedirects()
@@ -80,7 +80,7 @@ class AlbumTest extends TestCase
             ]);
         $response->assertForbidden();
 
-        $this->assertDatabaseMissing((new Album())->getTable(), [
+        $this->assertDatabaseMissing((new Tag())->getTable(), [
             'id'          => $album->id,
             'name'        => $albumData->name,
             'description' => $albumData->description,
@@ -94,7 +94,7 @@ class AlbumTest extends TestCase
     {
         $user = factory(User::class)->create();
 
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)
             ->followingRedirects()
@@ -112,7 +112,7 @@ class AlbumTest extends TestCase
         $user = factory(User::class)->create();
         $otherUser = factory(User::class)->create();
 
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($otherUser)
             ->followingRedirects()
@@ -129,7 +129,7 @@ class AlbumTest extends TestCase
     {
         $user = factory(User::class)->create();
 
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)
             ->followingRedirects()
@@ -137,7 +137,7 @@ class AlbumTest extends TestCase
             ->delete(route('photo::albums.destroy', $album->id));
 
         $response->assertOk();
-        $this->assertDatabaseMissing((new Album())->getTable(), [
+        $this->assertDatabaseMissing((new Tag())->getTable(), [
             'id' => $album->id,
         ]);
     }
@@ -150,7 +150,7 @@ class AlbumTest extends TestCase
         $user = factory(User::class)->create();
         $otherUser = factory(User::class)->create();
 
-        $album = factory(Album::class)->create(['user_id' => $user->id]);
+        $album = factory(Tag::class)->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($otherUser)
             ->followingRedirects()

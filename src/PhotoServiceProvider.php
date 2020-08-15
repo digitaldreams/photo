@@ -4,7 +4,7 @@ namespace Photo;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Photo\Models\Album;
+use Photo\Models\Tag;
 use Photo\Models\Photo;
 use Photo\Observers\AlbumObserver;
 use Photo\Observers\PhotoObserver;
@@ -23,7 +23,7 @@ class PhotoServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Photo::class => PhotoPolicy::class,
-        Album::class => AlbumPolicy::class,
+        Tag::class => AlbumPolicy::class,
     ];
 
     /**
@@ -41,7 +41,7 @@ class PhotoServiceProvider extends ServiceProvider
         $this->loadFactoriesFrom(__DIR__.'/../database/factories');
 
         Photo::observe(PhotoObserver::class);
-        Album::observe(AlbumObserver::class);
+        Tag::observe(AlbumObserver::class);
     }
 
     /**

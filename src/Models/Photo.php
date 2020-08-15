@@ -63,7 +63,7 @@ class Photo extends Model
      */
     public function albums()
     {
-        return $this->belongsToMany(Album::class, 'album_photo');
+        return $this->belongsToMany(Tag::class, 'album_photo');
     }
 
     /**
@@ -119,5 +119,15 @@ class Photo extends Model
         $photoRender = app(PhotoRenderService::class);
 
         return $photoRender->getUrls($this);
+    }
+
+    /**
+     * Tags.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function tags()
+    {
+        return $this->belongsToMany(Photo::class, 'photo_tag');
     }
 }

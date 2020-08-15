@@ -7,36 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int                                      $user_id     user id
  * @property string                                   $name        name
- * @property string                                   $description description
  * @property \Carbon\Carbon                           $created_at  created at
  * @property \Carbon\Carbon                           $updated_at  updated at
- * @property \Illuminate\Database\Eloquent\Collection $albumphoto  belongsToMany
+ * @property \Illuminate\Database\Eloquent\Collection $photos  belongsToMany
  */
-class Album extends Model
+class Tag extends Model
 {
     /**
      * Database table name.
      */
-    protected $table = 'photo_albums';
+    protected $table = 'photo_tags';
     /**
      * Protected columns from mass assignment.
      */
-    protected $fillable = ['name', 'description'];
-
-    /**
-     * Date time columns.
-     */
-    protected $dates = [];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user()
-    {
-        $userModel = config('auth.providers.users.model');
-
-        return $this->belongsTo($userModel);
-    }
+    protected $fillable = ['name'];
 
     /**
      * photos.
@@ -45,6 +29,6 @@ class Album extends Model
      */
     public function photos()
     {
-        return $this->belongsToMany(Photo::class, 'album_photo');
+        return $this->belongsToMany(Photo::class, 'photo_tag');
     }
 }

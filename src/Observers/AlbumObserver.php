@@ -2,16 +2,16 @@
 
 namespace Photo\Observers;
 
-use Photo\Models\Album;
+use Photo\Models\Tag;
 
 class AlbumObserver
 {
     /**
      * Handling the "creating" event of Photo.
      *
-     * @param \Photo\Models\Album $album
+     * @param \Photo\Models\Tag $album
      */
-    public function creating(Album $album): void
+    public function creating(Tag $album): void
     {
         if (empty($album->user_id) && auth()->check()) {
             $album->user_id = auth()->id();

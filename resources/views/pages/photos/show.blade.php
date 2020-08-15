@@ -36,62 +36,70 @@
 @endsection
 
 @section('content')
-
-    <form method="post" id="photoUploadForm"
-          form="photoUploadForm" enctype="multipart/form-data">
-        {{csrf_field()}}
-        {{method_field('PUT')}}
-        <div class="form-group text-center">
-            <input type="text" class="form-control" name="caption" id="caption" value="{{$record->caption}}"
-                   placeholder="e.g. Photo from Bandarban tour" required>
-        </div>
-        <div id="upload-demo"></div>
-        <div class="form-group text-center">
-            <button class="btn btn-primary" id="upload-image">Resize Image</button>
-        </div>
-    </form>
-    <hr/>
-    <div class="card">
-        <h3 class="card-header text-center">Image Sources</h3>
-        <div class="card-body">
-            @foreach($photoRenderService->getImageDetailsInfo($record->src) as $url=>$info)
-                <div class="form-group form-group-sm">
-                    <div class="input-group">
-                        <input type="text" class="form-control" value="{{$url}}" id="photoFullAddress_{{$loop->index}}">
-                        <div class="input-group-btn">
-                            <button class="btn btn-secondary"
-                                    onclick="copyToClipboard(this,'photoFullAddress_{{$loop->index}}')">Copy path
-                            </button>
-                        </div>
-                    </div>
-                    @foreach($info as $name=>$value)
-                        {{$name}}:<span class="badge badge-light">{{$value}}</span>
-                    @endforeach
-                </div>
-            @endforeach
-        </div>
-    </div>
-<hr/>
-    <div class="row mb-5">
-        @if(!empty($record->exif))
-            <div class="col-sm-4">
-                @include('photo::pages.photos.exif_data_table')
+    <section ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+        <form method="post" id="photoUploadForm"
+              form="photoUploadForm" enctype="multipart/form-data">
+            {{csrf_field()}}
+            {{method_field('PUT')}}
+            <div class="form-group text-center">
+                <input type="text" class="form-control" name="caption" id="caption" value="{{$record->caption}}"
+                       placeholder="e.g. Photo from Bandarban tour" required>
             </div>
-        @endif
+            <div id="upload-demo"></div>
+            <div class="form-group text-center">
+                <button class="btn btn-primary" id="upload-image">Resize Image</button>
+            </div>
+        </form>
+        <hr/>
+        <div class="card">
+            <h3 class="card-header text-center">Image Sources</h3>
+            <div class="card-body">
+                @foreach($photoRenderService->getImageDetailsInfo($record->src) as $url=>$info)
+                    <div class="form-group form-group-sm">
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{$url}}"
+                                   id="photoFullAddress_{{$loop->index}}">
+                            <div class="input-group-btn">
+                                <button class="btn btn-outline-secondary"
+                                        onclick="copyToClipboard(this,'photoFullAddress_{{$loop->index}}')">Copy path
+                                </button>
+                            </div>
+                            <div class="input-group-text">
+                                <a href="{{$url}}" target="_blank">View</a>
+                            </div>
+                        </div>
+                        @foreach($info as $name=>$value)
+                            {{$name}}:<span class="badge badge-light">{{$value}}</span>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <hr/>
+        <div class="row mb-5">
+            @if(!empty($record->exif))
+                <div class="col-sm-4">
+                    @include('photo::pages.photos.exif_data_table')
+                </div>
+            @endif
             <div class="col-sm-8">
                 <div class="card ">
                     <div class="card-header">
-                        Html Code <button class="btn btn-link"
-                                     onclick="copyToClipboard(this,'htmlCodeForPicture')"><i class="fa fa-copy"></i> Copy Html
+                        Html Code
+                        <button class="btn btn-link"
+                                onclick="copyToClipboard(this,'htmlCodeForPicture')"><i class="fa fa-copy"></i> Copy
+                            Html
                         </button>
                     </div>
                     <div class="card-body">
-                        <textarea class="form-control" rows="6" id="htmlCodeForPicture">{{ $photoRenderService->render($record)}}</textarea>
+                    <textarea class="form-control" rows="6"
+                              id="htmlCodeForPicture">{{ $photoRenderService->render($record)}}</textarea>
                     </div>
                 </div>
             </div>
 
-    </div>
+        </div>
+    </section>
 @endSection
 
 @section('scripts')
@@ -204,4 +212,6 @@
             ev.preventDefault();
         }
     </script>
+
+    @include('photo::pages.photos.drag_drop_scripts')
 @endsection

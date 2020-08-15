@@ -76,18 +76,6 @@
                             New Photo
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('photo::albums.index')}}">
-                            <i class="fa fa-file-image-o"></i>
-                            Albums
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{route('photo::albums.create')}}">
-                            <i class="fa fa-plus"></i>
-                            New Album
-                        </a>
-                    </li>
                 </ul>
 
                 <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
