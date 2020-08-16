@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string                                   $name        name
  * @property \Carbon\Carbon                           $created_at  created at
  * @property \Carbon\Carbon                           $updated_at  updated at
- * @property \Illuminate\Database\Eloquent\Collection $photos  belongsToMany
+ * @property \Illuminate\Database\Eloquent\Collection $photos      belongsToMany
  */
 class Tag extends Model
 {
@@ -21,6 +21,7 @@ class Tag extends Model
      * Protected columns from mass assignment.
      */
     protected $fillable = ['name'];
+    public $timestamps = false;
 
     /**
      * photos.

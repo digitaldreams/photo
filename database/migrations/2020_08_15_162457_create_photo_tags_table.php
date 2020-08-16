@@ -16,7 +16,6 @@ class CreatePhotoTagsTable extends Migration
         Schema::create('photo_tags', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->timestamps();
         });
     }
 

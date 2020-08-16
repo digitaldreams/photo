@@ -43,7 +43,7 @@
             var url = rex.exec(imageUrl);
             var alt = altRex.exec(imageUrl);
 
-            if (alt != null &&  alt.length > 0) {
+            if (alt != null && alt.length > 0) {
                 caption = alt[1];
             }
 

@@ -42,7 +42,19 @@
             </div>
         @endif
     </div>
-
+    <div class="form-group">
+        <label for="caption">Tags</label>
+        <select class="form-control" id="photo_tags" name="tags[]" multiple>
+            @foreach($model->tags as $tag)
+                <option selected>{{$tag->name}}</option>
+            @endforeach
+        </select>
+        @if($errors->has('tags.*'))
+            <div class="invalid-feedback">
+                <strong>{{ $errors->first('tags') }}</strong>
+            </div>
+        @endif
+    </div>
 
     <div class="form-group text-right ">
         <input type="submit" class="btn btn-primary" value="Upload"/>

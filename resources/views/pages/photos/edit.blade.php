@@ -32,6 +32,9 @@
 @section('scripts')
 
     <script type="text/javascript">
-        $("#photo_album").select2();
+        $("#photo_tags").select2({
+            tags: true,
+            tokenSeparators: [",",],
+        });
     </script>
 @endsection

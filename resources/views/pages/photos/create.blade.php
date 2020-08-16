@@ -24,4 +24,12 @@
         </div>
     </div>
 @endSection
+@section('scripts')
+    <script>
+        $("#photo_tags").select2({
+            tags: true,
+            tokenSeparators: [",",],
+        });
+    </script>
+@endsection
 

@@ -9,6 +9,7 @@ use Photo\Http\Requests\Photos\Store;
 use Photo\Http\Requests\Photos\Update;
 use Photo\Models\Photo;
 use Photo\Repositories\PhotoRepository;
+use Photo\Repositories\TagRepository;
 use Photo\Services\PhotoRenderService;
 
 /**
@@ -25,13 +26,20 @@ class PhotoController extends Controller
     protected PhotoRepository $photoRepository;
 
     /**
+     * @var \Photo\Repositories\TagRepository
+     */
+    protected $tagRepository;
+
+    /**
      * PhotoController constructor.
      *
      * @param \Photo\Repositories\PhotoRepository $photoRepository
+     * @param \Photo\Repositories\TagRepository   $tagRepository
      */
-    public function __construct(PhotoRepository $photoRepository)
+    public function __construct(PhotoRepository $photoRepository, TagRepository $tagRepository)
     {
         $this->photoRepository = $photoRepository;
+        $this->tagRepository = $tagRepository;
     }
 
     /**
@@ -113,6 +121,7 @@ class PhotoController extends Controller
     public function store(Store $request): RedirectResponse
     {
         $photo = $this->photoRepository->create($request->file('file'), $request->all());
+        $this->tagRepository->save($photo, $request->get('tags', []));
 
         return redirect()->route('photo::photos.show', $photo->id)
             ->with('message', 'Image successfully saved.');
@@ -151,6 +160,7 @@ class PhotoController extends Controller
     public function update(Update $request, Photo $photo)
     {
         $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'));
+        $this->tagRepository->save($photo, $request->get('tags', []));
 
         return redirect()->route('photo::photos.show', $photo->id);
     }

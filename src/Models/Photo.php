@@ -128,6 +128,6 @@ class Photo extends Model
      */
     public function tags()
     {
-        return $this->belongsToMany(Photo::class, 'photo_tag');
+        return $this->belongsToMany(Tag::class, 'photo_tag');
     }
 }
