@@ -11,7 +11,8 @@
         </h6>
         <div class="btn-group col-2 text-center">
             <div class="dropdown" id="dropdown-{{$record->id}}">
-                <a href="#" title="Click here to See Action Buttons" class="fa fa-ellipsis-v" data-toggle="dropdown" role="button" aria-expanded="false">
+                <a href="#" title="Click here to See Action Buttons" class="fa fa-ellipsis-v" data-toggle="dropdown"
+                   role="button" aria-expanded="false">
                 </a>
                 <ul class="dropdown-menu">
                     @can('update',$record)
@@ -46,7 +47,7 @@
 
     <div class="card-footer bg-transparent">
         @foreach($record->tags as $tag)
-            <a class="badge badge-light" href="">{{$tag->name}}</a>
+            <a class="badge badge-light" href="{{route('photo::photos.index',['tag'=>$tag->name])}}">{{$tag->name}}</a>
         @endforeach
 
     </div>

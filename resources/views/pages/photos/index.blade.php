@@ -4,8 +4,13 @@
           integrity="sha256-TE6npVxnrwCx22/P21S/0pZb9M0pUiZI3nUukZiI6pE=" crossorigin="anonymous"/>    @endsection
 @section('breadcrumb')
     <li class="breadcrumb-item">
-        Photos
+        <a href="{{route('photo::photos.index')}}"> Photos</a>
     </li>
+    @if(request()->has('tag'))
+        <li class="breadcrumb-item active">
+            {{request('tag')}}
+        </li>
+    @endif
 @endsection
 @section('header')
     <i class="fa fa-images text-muted" style="font-size: 18px"></i> Photos

@@ -59,12 +59,18 @@ class PhotoController extends Controller
         $photos = Photo::query();
         $search = $request->get('search');
         $folder = $request->get('folder');
+        $tag = $request->get('tag');
         if (!empty($search)) {
             $search = pathinfo($search, PATHINFO_BASENAME);
             $photos = $photos->q($search);
         }
         if (!empty($folder)) {
             $photos = $photos->where('src', 'LIKE', '%' . $folder . '%');
+        }
+        if (!empty($tag)) {
+            $photos = $photos->whereHas('tags', function ($q) use ($tag) {
+                $q->where('name', $tag);
+            });
         }
 
         return view('photo::pages.photos.index', [
