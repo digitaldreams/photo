@@ -1,4 +1,4 @@
-# photo 
+# Laravl Photo Manager 
 Laravel Photo Manager
 ### Installation
 **Step one**
