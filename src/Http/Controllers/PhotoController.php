@@ -165,7 +165,7 @@ class PhotoController extends Controller
      */
     public function update(Update $request, Photo $photo)
     {
-        $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'));
+        $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'), $request->get('crop'));
         $this->tagRepository->save($photo, $request->get('tags', []));
 
         return redirect()->route('photo::photos.show', $photo->id);

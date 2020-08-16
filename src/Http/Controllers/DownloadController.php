@@ -68,7 +68,7 @@ class DownloadController extends Controller
             $photo->src = $path;
             $photo->save();
 
-            $this->photoService->convertMaxDimensionToWebP($path);
+            $this->photoService->convertMaxDimensionToWebP($path, false);
             foreach (config('photo.sizes') as $name => $info) {
                 $this->photoService->setDimension($info['width'], $info['height'], $info['path']);
             }

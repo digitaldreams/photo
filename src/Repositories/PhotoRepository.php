@@ -52,7 +52,8 @@ class PhotoRepository
     public function create(UploadedFile $file, array $data = []): Photo
     {
         $caption = $data['caption'] ?? null;
-        $this->photo->src = $this->uploadAndGenerateThumbnails($file, $caption);
+        $crop = $data['crop'] ?? null;
+        $this->photo->src = $this->uploadAndGenerateThumbnails($file, $caption, $crop);
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
         $this->photo->save();
@@ -63,19 +64,21 @@ class PhotoRepository
     /**
      * Update an Existing Photo Model.
      *
-     * @param \Illuminate\Http\UploadedFile $file
      * @param \Photo\Models\Photo           $photo
      * @param string|null                   $caption
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param null                          $crop
      *
      * @return \Photo\Models\Photo
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function update(Photo $photo, ?string $caption = null, ?UploadedFile $file = null): Photo
+    public function update(Photo $photo, ?string $caption = null, ?UploadedFile $file = null, $crop = null): Photo
     {
         if ($file) {
             $oldPhoto = $photo->src;
-            $photo->src = $this->uploadAndGenerateThumbnails($file, $caption);
+            $photo->src = $this->uploadAndGenerateThumbnails($file, $caption, $crop);
             $photo->mime_type = $this->storage->mimeType($photo->src);
             $this->removeFiles($oldPhoto);
         }

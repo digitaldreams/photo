@@ -93,7 +93,7 @@ class PhotoService
         } else {
             $this->imageSource = $this->storage->putFileAs($path, $uploadedFile, $uniqueFileName, 'public');
         }
-        $this->convertMaxDimensionToWebP($this->imageSource);
+        $this->convertMaxDimensionToWebP($this->imageSource, $crop);
 
         return $this;
     }
@@ -154,16 +154,24 @@ class PhotoService
      *
      * @param string $path
      *
+     * @param bool   $crop
+     *
      * @return string
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function convertMaxDimensionToWebP(string $path): string
+    public function convertMaxDimensionToWebP(string $path, $crop = true): string
     {
         $pathInfo = pathinfo($path);
         $destination = sprintf('%s/%s.%s', $pathInfo['dirname'], $pathInfo['filename'], 'webp');
+        if ($crop) {
+            return $this->resizeAndConvert($path, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'webp');
+        } else {
+            $imageStream = $this->image->make($this->getImageSource($path))->encode('webp', $this->quality)->stream();
 
-        return $this->resizeAndConvert($path, $destination, $this->maxDimension['width'], $this->maxDimension['height'], 'webp');
+            $this->storage->put($destination, $imageStream, 'public');
+            return $destination;
+        }
     }
 
     /**
