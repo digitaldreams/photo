@@ -57,4 +57,26 @@ class TagRepository
 
         return true;
     }
+
+    /**
+     * @param null $perPage
+     *
+     * @return mixed
+     */
+    public function paginate($perPage = null)
+    {
+        return $this->tag->newQuery()->paginate($perPage);
+    }
+
+    /**
+     * @param $term
+     *
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function search($term)
+    {
+        return $this->tag->newQuery()
+            ->where('name', 'LIKE', '%' . $term . '%')
+            ->paginate(20);
+    }
 }

@@ -30,11 +30,24 @@
 @endSection
 
 @section('scripts')
-
-    <script type="text/javascript">
+    <script>
         $("#photo_tags").select2({
             tags: true,
             tokenSeparators: [",",],
+            createSearchChoice: function(term, data) {
+                if ($(data).filter(function() {
+                    return this.text.localeCompare(term) === 0;
+                }).length === 0) {
+                    return {
+                        id: term,
+                        text: term
+                    };
+                }
+            },
+            ajax: {
+                url: '{{route('photo::tags.search')}}',
+                dataType: "json",
+            }
         });
     </script>
 @endsection
