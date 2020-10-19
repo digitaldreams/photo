@@ -9,5 +9,4 @@ Route::group([
     Route::post('photos/dropzone', 'DownloadController@dropzone')->name('photos.dropzone');
     Route::get('tags/search', 'TagController@search')->name('tags.search');
     Route::resource('photos', 'PhotoController');
-    Route::resource('albums', 'AlbumController');
 });
