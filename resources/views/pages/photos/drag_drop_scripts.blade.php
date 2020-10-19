@@ -7,7 +7,42 @@
         }
 
     });
+    $("body").bind('drop', function (e) {
+        if (typeof e.originalEvent.dataTransfer.files !== 'undefined') {
+            var files = e.originalEvent.dataTransfer.files;
 
+            for (var i = 0; i < files.length; i++) {
+                var allowedMimes = ["image/png", "image/jpg", "image/gif", "image/jpeg"];
+                if (allowedMimes.includes(files[i].type) == true) {
+                    uploadFile(files[i]);
+                } else {
+                    console.log('Invalid file type');
+                }
+            }
+        }
+    });
+
+    function uploadFile(file) {
+        let url = '{{route('photo::api.photos.store')}}'
+        let redirectUrl = '{{route('photo::photos.show',['photo'=>'@id@'])}}'
+        let csrfToken = '{{csrf_token()}}';
+        let formData = new FormData();
+        var xhr = new XMLHttpRequest();
+
+        formData.append('file', file)
+        formData.append('_token', csrfToken)
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                var response = JSON.parse(xhr.response);
+                window.location.href = redirectUrl.replace("@id@", response.data.id);
+            }
+        }
+        xhr.open('POST', url, true)
+
+        xhr.send(formData)
+
+    }
 
     function pasteUrl(pastedData, url, caption) {
         pastedData = pastedData.split(/[?#]/)[0];
