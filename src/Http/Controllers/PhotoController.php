@@ -126,6 +126,8 @@ class PhotoController extends Controller
      */
     public function store(Store $request): RedirectResponse
     {
+        $this->authorize('create', Photo::class);
+
         $photo = $this->photoRepository->create($request->file('file'), $request->all());
         $this->tagRepository->save($photo, $request->get('tags', []));
 
@@ -165,6 +167,8 @@ class PhotoController extends Controller
      */
     public function update(Update $request, Photo $photo)
     {
+        $this->authorize('update', $photo);
+
         $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'), $request->get('crop'));
         $this->tagRepository->save($photo, $request->get('tags', []));
 
@@ -179,6 +183,7 @@ class PhotoController extends Controller
      * @return \Illuminate\Http\Response
      *
      * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Exception
      */
     public function destroy(Photo $photo)
     {

@@ -4,7 +4,7 @@ namespace Photo\Observers;
 
 use Photo\Models\Tag;
 
-class AlbumObserver
+class TagObserver
 {
     /**
      * Handling the "creating" event of Photo.

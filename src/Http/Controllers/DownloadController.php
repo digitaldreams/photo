@@ -55,9 +55,12 @@ class DownloadController extends Controller
      * @param \Photo\Http\Requests\Photos\Download $request
      *
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function downloadUrl(Download $request)
     {
+        $this->authorize('create', Photo::class);
+
         try {
             $url = $request->get('url');
             $this->imageDownloadService->setImageUrl($url);
@@ -93,9 +96,12 @@ class DownloadController extends Controller
      * @return \Illuminate\Http\JsonResponse
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function dropzone(Dropzone $request)
     {
+        $this->authorize('create', Photo::class);
+
         if ($request->file('file')->isValid()) {
             $model = $this->photoRepository->create($request->file('file'));
 
