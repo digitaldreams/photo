@@ -10,6 +10,7 @@ namespace Photo\Services;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 
@@ -86,7 +87,7 @@ class PhotoService
      */
     public function store(string $path, UploadedFile $uploadedFile, ?string $fileName = null, $crop = null): PhotoService
     {
-        $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName) . '.' . $uploadedFile->guessExtension() : $uploadedFile->hashName($path);
+        $uniqueFileName = !empty($fileName) ? $this->getUniqueFileName($path, $fileName, $uploadedFile->guessExtension()) . '.' . $uploadedFile->guessExtension() : $uploadedFile->hashName($path);
 
         if ('yes' == $crop) {
             $this->imageSource = $this->resizeAndConvert($uploadedFile, $path . '/' . $uniqueFileName, $this->maxDimension['width'], $this->maxDimension['height'], $uploadedFile->guessExtension());

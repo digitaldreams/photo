@@ -3,7 +3,6 @@
 namespace Photo\Services;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Log;
 use Photo\Models\Photo;
 
 class PhotoRenderService
@@ -122,7 +121,6 @@ class PhotoRenderService
         foreach (config('photo.sizes', []) as $name => $info) {
             $thumbWebPPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
             $thumbPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
-            Log::error($thumbPath);
             if ($this->exists($thumbPath)) {
                 $sourceSets[] = $thumbUrl = $this->storage->url($thumbPath);
                 $info = [];
