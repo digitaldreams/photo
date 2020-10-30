@@ -43,15 +43,15 @@ class PhotoRenderService
         $tag = '<picture>';
         $mainUrls = $this->getMainUrls($photo->src);
         if (isset($mainUrls[1])) {
-            $tag .= '<source media="(min-width::992px)" srcset="' . $mainUrls[1] . '">';
+            $tag .= '<source media="(min-width:577px)" type="' . $mainUrls[1]['type'] . '" srcset="' . $mainUrls[1]['url'] . '">';
         }
         $thumbs = $this->getThumbnailUrls($photo->src);
 
         foreach ($thumbs as $thumb) {
-            $tag .= '<source media="(min-width::576px)" srcset="' . $thumb . '">';
+            $tag .= '<source media="(max-width:576px)" type="' . $thumb['type'] . '" srcset="' . $thumb['url'] . '">';
         }
 
-        $tag .= '<img src="' . $mainUrls[0] . '" alt="' . $photo->caption . '" class="img img-responsive">';
+        $tag .= '<img src="' . $mainUrls[0]['url'] . '" alt="' . $photo->caption . '" class="img img-responsive">';
         $tag .= '</picture>';
 
         return $tag;
@@ -73,47 +73,64 @@ class PhotoRenderService
             return $tag;
         }
         if (isset($thumbs[1])) {
-            $tag .= '<source srcset="' . $thumbs[1] . '">';
+            $tag .= '<source type="' . $thumbs[1]['type'] . '" srcset="' . $thumbs[1]['url'] . '">';
         }
 
-        $tag .= '<img src="' . $thumbs[0] . '" alt="' . $photo->caption . '" class="card-img-top img img-responsive">';
+        $tag .= '<img src="' . $thumbs[0]['url'] . '" alt="' . $photo->caption . '" class="card-img-top img img-responsive">';
         $tag .= '</picture>';
 
         return $tag;
     }
 
     /**
-     * @param $source
+     * @param      $source
+     *
+     * @param bool $size
      *
      * @return array
      */
-    public function getMainUrls($source): array
+    public function getMainUrls($source, $size = false): array
     {
         $mainUrl = $this->storage->url($source);
-        $sourceSets = [$mainUrl];
-        $info = [];
-        $info['size'] = round($this->storage->size($source) / 1000) . ' kb';
-        $this->info[$mainUrl] = $info;
+        $sourceSets[] = [
+            'type' => 'image/' . pathinfo($source, PATHINFO_EXTENSION),
+            'url' => $mainUrl,
+        ];
+
+        if ($size) {
+            $info = [];
+            $info['size'] = round($this->storage->size($source) / 1000) . ' kb';
+            $this->info[$mainUrl] = $info;
+        }
 
         $pathInfo = pathinfo($source);
         $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
 
         if ($this->exists($webP)) {
-            $sourceSets[] = $mainWebP = $this->storage->url($webP);
-            $info = [];
-            $info['size'] = round($this->storage->size($webP) / 1000) . ' kb';
-            $this->info[$mainWebP] = $info;
+            $mainWebP = $this->storage->url($webP);
+            $sourceSets[] = [
+                'type' => 'image/webp',
+                'url' => $mainWebP,
+            ];
+
+            if ($size) {
+                $info = [];
+                $info['size'] = round($this->storage->size($webP) / 1000) . ' kb';
+                $this->info[$mainWebP] = $info;
+            }
         }
 
         return $sourceSets;
     }
 
     /**
-     * @param $source
+     * @param      $source
+     *
+     * @param bool $size
      *
      * @return array
      */
-    public function getThumbnailUrls($source): array
+    public function getThumbnailUrls($source, $size = false): array
     {
         $sourceSets = [];
         $pathInfo = pathinfo($source);
@@ -121,17 +138,33 @@ class PhotoRenderService
         foreach (config('photo.sizes', []) as $name => $info) {
             $thumbWebPPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
             $thumbPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
+
             if ($this->exists($thumbPath)) {
-                $sourceSets[] = $thumbUrl = $this->storage->url($thumbPath);
-                $info = [];
-                $info['size'] = round($this->storage->size($thumbPath) / 1000) . ' kb';
-                $this->info[$thumbUrl] = $info;
+                $sourceSets[] = [
+                    'type' => 'image/' . $pathInfo['extension'],
+                    'url' => $thumbUrl = $this->storage->url($thumbPath),
+                ];
+
+                if ($size) {
+                    $info = [];
+                    $info['size'] = round($this->storage->size($thumbPath) / 1000) . ' kb';
+                    $this->info[$thumbUrl] = $info;
+                }
             }
+
             if ($this->exists($thumbWebPPath)) {
-                $sourceSets[] = $thumbWUrl = $this->storage->url($thumbWebPPath);
-                $info = [];
-                $info['size'] = round($this->storage->size($thumbWebPPath) / 1000) . ' kb';
-                $this->info[$thumbWUrl] = $info;
+                $thumbWUrl = $this->storage->url($thumbWebPPath);
+
+                $sourceSets[] = [
+                    'type' => 'image/webp',
+                    'url' => $thumbWUrl,
+                ];
+
+                if ($size) {
+                    $info = [];
+                    $info['size'] = round($this->storage->size($thumbWebPPath) / 1000) . ' kb';
+                    $this->info[$thumbWUrl] = $info;
+                }
             }
         }
 
@@ -167,8 +200,8 @@ class PhotoRenderService
      */
     public function getImageDetailsInfo(string $source): array
     {
-        $this->getMainUrls($source);
-        $this->getThumbnailUrls($source);
+        $this->getMainUrls($source, true);
+        $this->getThumbnailUrls($source, true);
 
         return $this->info;
     }
