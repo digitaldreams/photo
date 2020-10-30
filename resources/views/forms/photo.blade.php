@@ -19,7 +19,7 @@
         </div>
         <div class="col-md-3">
             @if(!empty($model->id) && !empty($thumbs=$photoRender->getThumbnailUrls($model->src)))
-                <img height="120px" id="file_preview" src="{{$thumbs[0]}}">
+                <img height="120px" id="file_preview" src="{{$thumbs[0]['url']}}">
             @else
                 <img height="120px" id="file_preview" src="{{config('photo.default')}}">
             @endif

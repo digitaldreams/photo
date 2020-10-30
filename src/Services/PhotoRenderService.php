@@ -19,6 +19,15 @@ class PhotoRenderService
     protected Photo $photo;
 
     /**
+     * @var string
+     */
+    protected $class = 'card-img-top img img-responsive';
+    /**
+     * @var string
+     */
+    protected $style;
+
+    /**
      * PhotoRenderService constructor.
      *
      * @param \Illuminate\Contracts\Filesystem\Filesystem $storage
@@ -51,7 +60,7 @@ class PhotoRenderService
             $tag .= '<source media="(max-width:576px)" type="' . $thumb['type'] . '" srcset="' . $thumb['url'] . '">';
         }
 
-        $tag .= '<img src="' . $mainUrls[0]['url'] . '" alt="' . $photo->caption . '" class="img img-responsive">';
+        $tag .= '<img src="' . $mainUrls[0]['url'] . '" alt="' . $photo->caption . '" class="' . $this->class . '" style="' . $this->style . '">';
         $tag .= '</picture>';
 
         return $tag;
@@ -76,7 +85,7 @@ class PhotoRenderService
             $tag .= '<source type="' . $thumbs[1]['type'] . '" srcset="' . $thumbs[1]['url'] . '">';
         }
 
-        $tag .= '<img src="' . $thumbs[0]['url'] . '" alt="' . $photo->caption . '" class="card-img-top img img-responsive">';
+        $tag .= '<img src="' . $thumbs[0]['url'] . '" alt="' . $photo->caption . '" class="' . $this->class . '" style="' . $this->style . '">';
         $tag .= '</picture>';
 
         return $tag;
@@ -204,5 +213,29 @@ class PhotoRenderService
         $this->getThumbnailUrls($source, true);
 
         return $this->info;
+    }
+
+    /**
+     * @param string $class
+     *
+     * @return \Photo\Services\PhotoRenderService
+     */
+    public function setClass(string $class)
+    {
+        $this->class = $class;
+
+        return $this;
+    }
+
+    /**
+     * @param string $style
+     *
+     * @return \Photo\Services\PhotoRenderService
+     */
+    public function setStyle(string $style)
+    {
+        $this->style = $style;
+
+        return $this;
     }
 }

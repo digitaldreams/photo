@@ -92,23 +92,29 @@ class Photo extends Model
     }
 
     /**
+     * @param string $class
+     * @param string $style
+     *
      * @return mixed
      */
-    public function render(): string
+    public function render(string $class = '', string $style = ''): string
     {
         $photoRender = app(PhotoRenderService::class);
 
-        return $photoRender->render($this);
+        return $photoRender->setClass($class)->setStyle($style)->render($this);
     }
 
     /**
+     * @param string $class
+     * @param string $style
+     *
      * @return mixed
      */
-    public function renderThumbnails(): string
+    public function renderThumbnails(string $class = '', string $style = ''): string
     {
         $photoRender = app(PhotoRenderService::class);
 
-        return $photoRender->renderThumbnails($this);
+        return $photoRender->setClass($class)->setStyle($style)->renderThumbnails($this);
     }
 
     /**
