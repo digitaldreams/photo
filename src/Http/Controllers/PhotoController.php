@@ -174,6 +174,7 @@ class PhotoController extends Controller
         $returnUrl = $request->get('returnUrl', false);
 
         if (!empty($returnUrl) && filter_var($returnUrl, FILTER_VALIDATE_URL)) {
+
             return redirect()->away($returnUrl)->with('message', 'Photo successfully updated');
         }
 

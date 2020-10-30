@@ -41,6 +41,7 @@
               form="photoUploadForm" enctype="multipart/form-data">
             {{csrf_field()}}
             {{method_field('PUT')}}
+            <input type="hidden" name="returnUrl" value="{{request('returnUrl')}}">
             <div class="form-group text-center">
                 <input type="text" class="form-control" name="caption" id="caption" value="{{$record->caption}}"
                        placeholder="e.g. Photo from Bandarban tour" required>
@@ -165,7 +166,12 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (result) {
+                        @if(request('returnUrl') && filter_var(request('returnUrl'),FILTER_VALIDATE_URL))
+                            window.location.href = '{{request('returnUrl')}}'
+                        @else
                         window.location.reload();
+                        @endif
+
                         $('.btn-upload-image').prop('disabled', false);
                     },
                     error: function (xhr, ajaxOptions, thrownError) {
