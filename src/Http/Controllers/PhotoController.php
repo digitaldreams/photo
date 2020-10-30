@@ -171,8 +171,13 @@ class PhotoController extends Controller
 
         $this->photoRepository->update($photo, $request->get('caption'), $request->file('file'), $request->get('crop'));
         $this->tagRepository->save($photo, $request->get('tags', []));
+        $returnUrl = $request->get('returnUrl', false);
 
-        return redirect()->route('photo::photos.show', $photo->id);
+        if (!empty($returnUrl) && filter_var($returnUrl, FILTER_VALIDATE_URL)) {
+            return redirect()->away($returnUrl)->with('message', 'Photo successfully updated');
+        }
+
+        return redirect()->route('photo::photos.show', $photo->id)->with('message', 'Photo successfully updated');
     }
 
     /**
