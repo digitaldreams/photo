@@ -130,6 +130,14 @@ class PhotoController extends Controller
 
         $photo = $this->photoRepository->create($request->file('file'), $request->all());
         $this->tagRepository->save($photo, $request->get('tags', []));
+        $returnUrl = $request->get('returnUrl');
+
+        if (!empty($returnUrl) && filter_var($returnUrl, FILTER_VALIDATE_URL)) {
+            $queryString = parse_url($returnUrl, PHP_URL_QUERY);
+            $returnUrl = empty($queryString) ? $returnUrl . '?image_id=' . $photo->id : $returnUrl . '?' . $queryString . '&image_id=' . $photo->id;
+
+            return redirect()->away($returnUrl)->with('message', 'Image successfully saved');
+        }
 
         return redirect()->route('photo::photos.show', $photo->id)
             ->with('message', 'Image successfully saved.');

@@ -2,6 +2,7 @@
       id="photoUploadForm" form="photoUploadForm">
     {{csrf_field()}}
     <input type="hidden" name="_method" value="{{$method ?? 'POST'}}"/>
+    <input type="hidden" name="returnUrl" value="{{request('returnUrl')}}">
     <div class="m-form__group form-group form-row">
         <div class="col-md-9">
             <label for="file" class="col-form-label">Image</label>
