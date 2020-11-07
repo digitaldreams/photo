@@ -68,6 +68,8 @@ Now to register this Policy class lets change `policy` key on  `config/photo.php
 9.Translation
 
 10.PHPunit test classes included. 
+<img src="https://i.ibb.co/y47HP3g/Screenshot-2020-11-07-at-11-19-13-PM.png" alt="Drag n Drop from local machine" border="0">
+<img src="https://i.ibb.co/2tT1W40/Resize-image.png" alt="Resize-image" border="0">
 
 ### How to use in a Model as BelongsTo
 First of all you need to put a line on your model migration for example posts.
