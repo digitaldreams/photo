@@ -14,15 +14,15 @@
         }
     ],
     "require": {
-        "php": ">=7.4.0",
-        "laravel/framework": ">=7.0",
-        "intervention/image": "^2.5",
-        "ext-exif": "*",
-        "ext-curl": "*"
+        "php": "^7.4",
+        "laravel/framework": "^7.0",
+        "intervention/image": "^2.5"
     },
     "require-dev": {
     },
     "suggest": {
+        "ext-exif": "*",
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {
