@@ -25,7 +25,7 @@ class Download extends FormRequest
     public function rules()
     {
         return [
-            'url' => 'required|url|max:191',
+            'url' => 'required|url',
         ];
     }
 }

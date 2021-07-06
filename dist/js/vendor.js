@@ -1,10 +1,3107 @@
 (window["webpackJsonp"] = window["webpackJsonp"] || []).push([["/dist/js/vendor"],{
 
+/***/ "./node_modules/@popperjs/core/lib/createPopper.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/createPopper.js ***!
+  \*********************************************************/
+/*! exports provided: popperGenerator, createPopper, detectOverflow */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "popperGenerator", function() { return popperGenerator; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createPopper", function() { return createPopper; });
+/* harmony import */ var _dom_utils_getCompositeRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dom-utils/getCompositeRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js");
+/* harmony import */ var _dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./dom-utils/getLayoutRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js");
+/* harmony import */ var _dom_utils_listScrollParents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dom-utils/listScrollParents.js */ "./node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js");
+/* harmony import */ var _dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./dom-utils/getOffsetParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js");
+/* harmony import */ var _dom_utils_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./dom-utils/getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+/* harmony import */ var _utils_orderModifiers_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/orderModifiers.js */ "./node_modules/@popperjs/core/lib/utils/orderModifiers.js");
+/* harmony import */ var _utils_debounce_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/debounce.js */ "./node_modules/@popperjs/core/lib/utils/debounce.js");
+/* harmony import */ var _utils_validateModifiers_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/validateModifiers.js */ "./node_modules/@popperjs/core/lib/utils/validateModifiers.js");
+/* harmony import */ var _utils_uniqueBy_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/uniqueBy.js */ "./node_modules/@popperjs/core/lib/utils/uniqueBy.js");
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _utils_mergeByName_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./utils/mergeByName.js */ "./node_modules/@popperjs/core/lib/utils/mergeByName.js");
+/* harmony import */ var _utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./utils/detectOverflow.js */ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "detectOverflow", function() { return _utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_11__["default"]; });
+
+/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./dom-utils/instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var INVALID_ELEMENT_ERROR = 'Popper: Invalid reference or popper argument provided. They must be either a DOM element or virtual element.';
+var INFINITE_LOOP_ERROR = 'Popper: An infinite loop in the modifiers cycle has been detected! The cycle has been interrupted to prevent a browser crash.';
+var DEFAULT_OPTIONS = {
+  placement: 'bottom',
+  modifiers: [],
+  strategy: 'absolute'
+};
+
+function areValidElements() {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  return !args.some(function (element) {
+    return !(element && typeof element.getBoundingClientRect === 'function');
+  });
+}
+
+function popperGenerator(generatorOptions) {
+  if (generatorOptions === void 0) {
+    generatorOptions = {};
+  }
+
+  var _generatorOptions = generatorOptions,
+      _generatorOptions$def = _generatorOptions.defaultModifiers,
+      defaultModifiers = _generatorOptions$def === void 0 ? [] : _generatorOptions$def,
+      _generatorOptions$def2 = _generatorOptions.defaultOptions,
+      defaultOptions = _generatorOptions$def2 === void 0 ? DEFAULT_OPTIONS : _generatorOptions$def2;
+  return function createPopper(reference, popper, options) {
+    if (options === void 0) {
+      options = defaultOptions;
+    }
+
+    var state = {
+      placement: 'bottom',
+      orderedModifiers: [],
+      options: Object.assign({}, DEFAULT_OPTIONS, defaultOptions),
+      modifiersData: {},
+      elements: {
+        reference: reference,
+        popper: popper
+      },
+      attributes: {},
+      styles: {}
+    };
+    var effectCleanupFns = [];
+    var isDestroyed = false;
+    var instance = {
+      state: state,
+      setOptions: function setOptions(options) {
+        cleanupModifierEffects();
+        state.options = Object.assign({}, defaultOptions, state.options, options);
+        state.scrollParents = {
+          reference: Object(_dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_12__["isElement"])(reference) ? Object(_dom_utils_listScrollParents_js__WEBPACK_IMPORTED_MODULE_2__["default"])(reference) : reference.contextElement ? Object(_dom_utils_listScrollParents_js__WEBPACK_IMPORTED_MODULE_2__["default"])(reference.contextElement) : [],
+          popper: Object(_dom_utils_listScrollParents_js__WEBPACK_IMPORTED_MODULE_2__["default"])(popper)
+        }; // Orders the modifiers based on their dependencies and `phase`
+        // properties
+
+        var orderedModifiers = Object(_utils_orderModifiers_js__WEBPACK_IMPORTED_MODULE_5__["default"])(Object(_utils_mergeByName_js__WEBPACK_IMPORTED_MODULE_10__["default"])([].concat(defaultModifiers, state.options.modifiers))); // Strip out disabled modifiers
+
+        state.orderedModifiers = orderedModifiers.filter(function (m) {
+          return m.enabled;
+        }); // Validate the provided modifiers so that the consumer will get warned
+        // if one of the modifiers is invalid for any reason
+
+        if (true) {
+          var modifiers = Object(_utils_uniqueBy_js__WEBPACK_IMPORTED_MODULE_8__["default"])([].concat(orderedModifiers, state.options.modifiers), function (_ref) {
+            var name = _ref.name;
+            return name;
+          });
+          Object(_utils_validateModifiers_js__WEBPACK_IMPORTED_MODULE_7__["default"])(modifiers);
+
+          if (Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_9__["default"])(state.options.placement) === _enums_js__WEBPACK_IMPORTED_MODULE_13__["auto"]) {
+            var flipModifier = state.orderedModifiers.find(function (_ref2) {
+              var name = _ref2.name;
+              return name === 'flip';
+            });
+
+            if (!flipModifier) {
+              console.error(['Popper: "auto" placements require the "flip" modifier be', 'present and enabled to work.'].join(' '));
+            }
+          }
+
+          var _getComputedStyle = Object(_dom_utils_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__["default"])(popper),
+              marginTop = _getComputedStyle.marginTop,
+              marginRight = _getComputedStyle.marginRight,
+              marginBottom = _getComputedStyle.marginBottom,
+              marginLeft = _getComputedStyle.marginLeft; // We no longer take into account `margins` on the popper, and it can
+          // cause bugs with positioning, so we'll warn the consumer
+
+
+          if ([marginTop, marginRight, marginBottom, marginLeft].some(function (margin) {
+            return parseFloat(margin);
+          })) {
+            console.warn(['Popper: CSS "margin" styles cannot be used to apply padding', 'between the popper and its reference element or boundary.', 'To replicate margin, use the `offset` modifier, as well as', 'the `padding` option in the `preventOverflow` and `flip`', 'modifiers.'].join(' '));
+          }
+        }
+
+        runModifierEffects();
+        return instance.update();
+      },
+      // Sync update – it will always be executed, even if not necessary. This
+      // is useful for low frequency updates where sync behavior simplifies the
+      // logic.
+      // For high frequency updates (e.g. `resize` and `scroll` events), always
+      // prefer the async Popper#update method
+      forceUpdate: function forceUpdate() {
+        if (isDestroyed) {
+          return;
+        }
+
+        var _state$elements = state.elements,
+            reference = _state$elements.reference,
+            popper = _state$elements.popper; // Don't proceed if `reference` or `popper` are not valid elements
+        // anymore
+
+        if (!areValidElements(reference, popper)) {
+          if (true) {
+            console.error(INVALID_ELEMENT_ERROR);
+          }
+
+          return;
+        } // Store the reference and popper rects to be read by modifiers
+
+
+        state.rects = {
+          reference: Object(_dom_utils_getCompositeRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(reference, Object(_dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_3__["default"])(popper), state.options.strategy === 'fixed'),
+          popper: Object(_dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_1__["default"])(popper)
+        }; // Modifiers have the ability to reset the current update cycle. The
+        // most common use case for this is the `flip` modifier changing the
+        // placement, which then needs to re-run all the modifiers, because the
+        // logic was previously ran for the previous placement and is therefore
+        // stale/incorrect
+
+        state.reset = false;
+        state.placement = state.options.placement; // On each update cycle, the `modifiersData` property for each modifier
+        // is filled with the initial data specified by the modifier. This means
+        // it doesn't persist and is fresh on each update.
+        // To ensure persistent data, use `${name}#persistent`
+
+        state.orderedModifiers.forEach(function (modifier) {
+          return state.modifiersData[modifier.name] = Object.assign({}, modifier.data);
+        });
+        var __debug_loops__ = 0;
+
+        for (var index = 0; index < state.orderedModifiers.length; index++) {
+          if (true) {
+            __debug_loops__ += 1;
+
+            if (__debug_loops__ > 100) {
+              console.error(INFINITE_LOOP_ERROR);
+              break;
+            }
+          }
+
+          if (state.reset === true) {
+            state.reset = false;
+            index = -1;
+            continue;
+          }
+
+          var _state$orderedModifie = state.orderedModifiers[index],
+              fn = _state$orderedModifie.fn,
+              _state$orderedModifie2 = _state$orderedModifie.options,
+              _options = _state$orderedModifie2 === void 0 ? {} : _state$orderedModifie2,
+              name = _state$orderedModifie.name;
+
+          if (typeof fn === 'function') {
+            state = fn({
+              state: state,
+              options: _options,
+              name: name,
+              instance: instance
+            }) || state;
+          }
+        }
+      },
+      // Async and optimistically optimized update – it will not be executed if
+      // not necessary (debounced to run at most once-per-tick)
+      update: Object(_utils_debounce_js__WEBPACK_IMPORTED_MODULE_6__["default"])(function () {
+        return new Promise(function (resolve) {
+          instance.forceUpdate();
+          resolve(state);
+        });
+      }),
+      destroy: function destroy() {
+        cleanupModifierEffects();
+        isDestroyed = true;
+      }
+    };
+
+    if (!areValidElements(reference, popper)) {
+      if (true) {
+        console.error(INVALID_ELEMENT_ERROR);
+      }
+
+      return instance;
+    }
+
+    instance.setOptions(options).then(function (state) {
+      if (!isDestroyed && options.onFirstUpdate) {
+        options.onFirstUpdate(state);
+      }
+    }); // Modifiers have the ability to execute arbitrary code before the first
+    // update cycle runs. They will be executed in the same order as the update
+    // cycle. This is useful when a modifier adds some persistent data that
+    // other modifiers need to use, but the modifier is run after the dependent
+    // one.
+
+    function runModifierEffects() {
+      state.orderedModifiers.forEach(function (_ref3) {
+        var name = _ref3.name,
+            _ref3$options = _ref3.options,
+            options = _ref3$options === void 0 ? {} : _ref3$options,
+            effect = _ref3.effect;
+
+        if (typeof effect === 'function') {
+          var cleanupFn = effect({
+            state: state,
+            name: name,
+            instance: instance,
+            options: options
+          });
+
+          var noopFn = function noopFn() {};
+
+          effectCleanupFns.push(cleanupFn || noopFn);
+        }
+      });
+    }
+
+    function cleanupModifierEffects() {
+      effectCleanupFns.forEach(function (fn) {
+        return fn();
+      });
+      effectCleanupFns = [];
+    }
+
+    return instance;
+  };
+}
+var createPopper = /*#__PURE__*/popperGenerator(); // eslint-disable-next-line import/no-unused-modules
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/contains.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/contains.js ***!
+  \***************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return contains; });
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+function contains(parent, child) {
+  var rootNode = child.getRootNode && child.getRootNode(); // First, attempt with faster native method
+
+  if (parent.contains(child)) {
+    return true;
+  } // then fallback to custom implementation with Shadow DOM support
+  else if (rootNode && Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_0__["isShadowRoot"])(rootNode)) {
+      var next = child;
+
+      do {
+        if (next && parent.isSameNode(next)) {
+          return true;
+        } // $FlowFixMe[prop-missing]: need a better way to handle this...
+
+
+        next = next.parentNode || next.host;
+      } while (next);
+    } // Give up, the result is false
+
+
+  return false;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js":
+/*!****************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js ***!
+  \****************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getBoundingClientRect; });
+function getBoundingClientRect(element) {
+  var rect = element.getBoundingClientRect();
+  return {
+    width: rect.width,
+    height: rect.height,
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    left: rect.left,
+    x: rect.left,
+    y: rect.top
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getClippingRect.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getClippingRect.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getClippingRect; });
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _getViewportRect_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getViewportRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js");
+/* harmony import */ var _getDocumentRect_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getDocumentRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentRect.js");
+/* harmony import */ var _listScrollParents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./listScrollParents.js */ "./node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js");
+/* harmony import */ var _getOffsetParent_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./getOffsetParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js");
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./getBoundingClientRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js");
+/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./getParentNode.js */ "./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js");
+/* harmony import */ var _contains_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./contains.js */ "./node_modules/@popperjs/core/lib/dom-utils/contains.js");
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _utils_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../utils/rectToClientRect.js */ "./node_modules/@popperjs/core/lib/utils/rectToClientRect.js");
+/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../utils/math.js */ "./node_modules/@popperjs/core/lib/utils/math.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getInnerBoundingClientRect(element) {
+  var rect = Object(_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_8__["default"])(element);
+  rect.top = rect.top + element.clientTop;
+  rect.left = rect.left + element.clientLeft;
+  rect.bottom = rect.top + element.clientHeight;
+  rect.right = rect.left + element.clientWidth;
+  rect.width = element.clientWidth;
+  rect.height = element.clientHeight;
+  rect.x = rect.left;
+  rect.y = rect.top;
+  return rect;
+}
+
+function getClientRectFromMixedType(element, clippingParent) {
+  return clippingParent === _enums_js__WEBPACK_IMPORTED_MODULE_0__["viewport"] ? Object(_utils_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_12__["default"])(Object(_getViewportRect_js__WEBPACK_IMPORTED_MODULE_1__["default"])(element)) : Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_7__["isHTMLElement"])(clippingParent) ? getInnerBoundingClientRect(clippingParent) : Object(_utils_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_12__["default"])(Object(_getDocumentRect_js__WEBPACK_IMPORTED_MODULE_2__["default"])(Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__["default"])(element)));
+} // A "clipping parent" is an overflowable container with the characteristic of
+// clipping (or hiding) overflowing elements with a position different from
+// `initial`
+
+
+function getClippingParents(element) {
+  var clippingParents = Object(_listScrollParents_js__WEBPACK_IMPORTED_MODULE_3__["default"])(Object(_getParentNode_js__WEBPACK_IMPORTED_MODULE_9__["default"])(element));
+  var canEscapeClipping = ['absolute', 'fixed'].indexOf(Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_6__["default"])(element).position) >= 0;
+  var clipperElement = canEscapeClipping && Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_7__["isHTMLElement"])(element) ? Object(_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_4__["default"])(element) : element;
+
+  if (!Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_7__["isElement"])(clipperElement)) {
+    return [];
+  } // $FlowFixMe[incompatible-return]: https://github.com/facebook/flow/issues/1414
+
+
+  return clippingParents.filter(function (clippingParent) {
+    return Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_7__["isElement"])(clippingParent) && Object(_contains_js__WEBPACK_IMPORTED_MODULE_10__["default"])(clippingParent, clipperElement) && Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_11__["default"])(clippingParent) !== 'body';
+  });
+} // Gets the maximum area that the element is visible in due to any number of
+// clipping parents
+
+
+function getClippingRect(element, boundary, rootBoundary) {
+  var mainClippingParents = boundary === 'clippingParents' ? getClippingParents(element) : [].concat(boundary);
+  var clippingParents = [].concat(mainClippingParents, [rootBoundary]);
+  var firstClippingParent = clippingParents[0];
+  var clippingRect = clippingParents.reduce(function (accRect, clippingParent) {
+    var rect = getClientRectFromMixedType(element, clippingParent);
+    accRect.top = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_13__["max"])(rect.top, accRect.top);
+    accRect.right = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_13__["min"])(rect.right, accRect.right);
+    accRect.bottom = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_13__["min"])(rect.bottom, accRect.bottom);
+    accRect.left = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_13__["max"])(rect.left, accRect.left);
+    return accRect;
+  }, getClientRectFromMixedType(element, firstClippingParent));
+  clippingRect.width = clippingRect.right - clippingRect.left;
+  clippingRect.height = clippingRect.bottom - clippingRect.top;
+  clippingRect.x = clippingRect.left;
+  clippingRect.y = clippingRect.top;
+  return clippingRect;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getCompositeRect.js ***!
+  \***********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getCompositeRect; });
+/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getBoundingClientRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js");
+/* harmony import */ var _getNodeScroll_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getNodeScroll.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeScroll.js");
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./getWindowScrollBarX.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js");
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./isScrollParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js");
+
+
+
+
+
+
+ // Returns the composite rect of an element relative to its offsetParent.
+// Composite means it takes into account transforms as well as layout.
+
+function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
+  if (isFixed === void 0) {
+    isFixed = false;
+  }
+
+  var documentElement = Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_5__["default"])(offsetParent);
+  var rect = Object(_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(elementOrVirtualElement);
+  var isOffsetParentAnElement = Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(offsetParent);
+  var scroll = {
+    scrollLeft: 0,
+    scrollTop: 0
+  };
+  var offsets = {
+    x: 0,
+    y: 0
+  };
+
+  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
+    if (Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_2__["default"])(offsetParent) !== 'body' || // https://github.com/popperjs/popper-core/issues/1078
+    Object(_isScrollParent_js__WEBPACK_IMPORTED_MODULE_6__["default"])(documentElement)) {
+      scroll = Object(_getNodeScroll_js__WEBPACK_IMPORTED_MODULE_1__["default"])(offsetParent);
+    }
+
+    if (Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(offsetParent)) {
+      offsets = Object(_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(offsetParent);
+      offsets.x += offsetParent.clientLeft;
+      offsets.y += offsetParent.clientTop;
+    } else if (documentElement) {
+      offsets.x = Object(_getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_4__["default"])(documentElement);
+    }
+  }
+
+  return {
+    x: rect.left + scroll.scrollLeft - offsets.x,
+    y: rect.top + scroll.scrollTop - offsets.y,
+    width: rect.width,
+    height: rect.height
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js ***!
+  \***********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getComputedStyle; });
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+
+function getComputedStyle(element) {
+  return Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element).getComputedStyle(element);
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js":
+/*!*************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js ***!
+  \*************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getDocumentElement; });
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+function getDocumentElement(element) {
+  // $FlowFixMe[incompatible-return]: assume body is always available
+  return ((Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_0__["isElement"])(element) ? element.ownerDocument : // $FlowFixMe[prop-missing]
+  element.document) || window.document).documentElement;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentRect.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getDocumentRect.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getDocumentRect; });
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getWindowScrollBarX.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js");
+/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getWindowScroll.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js");
+/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/math.js */ "./node_modules/@popperjs/core/lib/utils/math.js");
+
+
+
+
+ // Gets the entire size of the scrollable document area, even extending outside
+// of the `<html>` and `<body>` rect bounds if horizontally scrollable
+
+function getDocumentRect(element) {
+  var _element$ownerDocumen;
+
+  var html = Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element);
+  var winScroll = Object(_getWindowScroll_js__WEBPACK_IMPORTED_MODULE_3__["default"])(element);
+  var body = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
+  var width = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_4__["max"])(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
+  var height = Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_4__["max"])(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
+  var x = -winScroll.scrollLeft + Object(_getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_2__["default"])(element);
+  var y = -winScroll.scrollTop;
+
+  if (Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_1__["default"])(body || html).direction === 'rtl') {
+    x += Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_4__["max"])(html.clientWidth, body ? body.clientWidth : 0) - width;
+  }
+
+  return {
+    width: width,
+    height: height,
+    x: x,
+    y: y
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getHTMLElementScroll.js":
+/*!***************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getHTMLElementScroll.js ***!
+  \***************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getHTMLElementScroll; });
+function getHTMLElementScroll(element) {
+  return {
+    scrollLeft: element.scrollLeft,
+    scrollTop: element.scrollTop
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js ***!
+  \********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getLayoutRect; });
+/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getBoundingClientRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js");
+ // Returns the layout rect of an element relative to its offsetParent. Layout
+// means it doesn't take into account transforms.
+
+function getLayoutRect(element) {
+  var clientRect = Object(_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element); // Use the clientRect sizes if it's not been transformed.
+  // Fixes https://github.com/popperjs/popper-core/issues/1223
+
+  var width = element.offsetWidth;
+  var height = element.offsetHeight;
+
+  if (Math.abs(clientRect.width - width) <= 1) {
+    width = clientRect.width;
+  }
+
+  if (Math.abs(clientRect.height - height) <= 1) {
+    height = clientRect.height;
+  }
+
+  return {
+    x: element.offsetLeft,
+    y: element.offsetTop,
+    width: width,
+    height: height
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js ***!
+  \******************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getNodeName; });
+function getNodeName(element) {
+  return element ? (element.nodeName || '').toLowerCase() : null;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getNodeScroll.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getNodeScroll.js ***!
+  \********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getNodeScroll; });
+/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindowScroll.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js");
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _getHTMLElementScroll_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getHTMLElementScroll.js */ "./node_modules/@popperjs/core/lib/dom-utils/getHTMLElementScroll.js");
+
+
+
+
+function getNodeScroll(node) {
+  if (node === Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_1__["default"])(node) || !Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_2__["isHTMLElement"])(node)) {
+    return Object(_getWindowScroll_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node);
+  } else {
+    return Object(_getHTMLElementScroll_js__WEBPACK_IMPORTED_MODULE_3__["default"])(node);
+  }
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getOffsetParent; });
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _isTableElement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./isTableElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/isTableElement.js");
+/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./getParentNode.js */ "./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js");
+
+
+
+
+
+
+
+function getTrueOffsetParent(element) {
+  if (!Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(element) || // https://github.com/popperjs/popper-core/issues/837
+  Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__["default"])(element).position === 'fixed') {
+    return null;
+  }
+
+  return element.offsetParent;
+} // `.offsetParent` reports `null` for fixed elements, while absolute elements
+// return the containing block
+
+
+function getContainingBlock(element) {
+  var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') !== -1;
+  var isIE = navigator.userAgent.indexOf('Trident') !== -1;
+
+  if (isIE && Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(element)) {
+    // In IE 9, 10 and 11 fixed elements containing block is always established by the viewport
+    var elementCss = Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__["default"])(element);
+
+    if (elementCss.position === 'fixed') {
+      return null;
+    }
+  }
+
+  var currentNode = Object(_getParentNode_js__WEBPACK_IMPORTED_MODULE_5__["default"])(element);
+
+  while (Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(currentNode) && ['html', 'body'].indexOf(Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_1__["default"])(currentNode)) < 0) {
+    var css = Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__["default"])(currentNode); // This is non-exhaustive but covers the most common CSS properties that
+    // create a containing block.
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#identifying_the_containing_block
+
+    if (css.transform !== 'none' || css.perspective !== 'none' || css.contain === 'paint' || ['transform', 'perspective'].indexOf(css.willChange) !== -1 || isFirefox && css.willChange === 'filter' || isFirefox && css.filter && css.filter !== 'none') {
+      return currentNode;
+    } else {
+      currentNode = currentNode.parentNode;
+    }
+  }
+
+  return null;
+} // Gets the closest ancestor positioned element. Handles some edge cases,
+// such as table ancestors and cross browser bugs.
+
+
+function getOffsetParent(element) {
+  var window = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element);
+  var offsetParent = getTrueOffsetParent(element);
+
+  while (offsetParent && Object(_isTableElement_js__WEBPACK_IMPORTED_MODULE_4__["default"])(offsetParent) && Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__["default"])(offsetParent).position === 'static') {
+    offsetParent = getTrueOffsetParent(offsetParent);
+  }
+
+  if (offsetParent && (Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_1__["default"])(offsetParent) === 'html' || Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_1__["default"])(offsetParent) === 'body' && Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_2__["default"])(offsetParent).position === 'static')) {
+    return window;
+  }
+
+  return offsetParent || getContainingBlock(element) || window;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js ***!
+  \********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getParentNode; });
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+
+
+function getParentNode(element) {
+  if (Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element) === 'html') {
+    return element;
+  }
+
+  return (// this is a quicker (but less type safe) way to save quite some bytes from the bundle
+    // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[prop-missing]
+    element.assignedSlot || // step into the shadow DOM of the parent of a slotted node
+    element.parentNode || ( // DOM Element detected
+    Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_2__["isShadowRoot"])(element) ? element.host : null) || // ShadowRoot detected
+    // $FlowFixMe[incompatible-call]: HTMLElement is a Node
+    Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(element) // fallback
+
+  );
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getScrollParent.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getScrollParent.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getScrollParent; });
+/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getParentNode.js */ "./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js");
+/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./isScrollParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js");
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _instanceOf_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+
+
+
+function getScrollParent(node) {
+  if (['html', 'body', '#document'].indexOf(Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_2__["default"])(node)) >= 0) {
+    // $FlowFixMe[incompatible-return]: assume body is always available
+    return node.ownerDocument.body;
+  }
+
+  if (Object(_instanceOf_js__WEBPACK_IMPORTED_MODULE_3__["isHTMLElement"])(node) && Object(_isScrollParent_js__WEBPACK_IMPORTED_MODULE_1__["default"])(node)) {
+    return node;
+  }
+
+  return getScrollParent(Object(_getParentNode_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node));
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getViewportRect.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getViewportRect; });
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getWindowScrollBarX.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js");
+
+
+
+function getViewportRect(element) {
+  var win = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element);
+  var html = Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(element);
+  var visualViewport = win.visualViewport;
+  var width = html.clientWidth;
+  var height = html.clientHeight;
+  var x = 0;
+  var y = 0; // NB: This isn't supported on iOS <= 12. If the keyboard is open, the popper
+  // can be obscured underneath it.
+  // Also, `html.clientHeight` adds the bottom bar height in Safari iOS, even
+  // if it isn't open, so if this isn't available, the popper will be detected
+  // to overflow the bottom of the screen too early.
+
+  if (visualViewport) {
+    width = visualViewport.width;
+    height = visualViewport.height; // Uses Layout Viewport (like Chrome; Safari does not currently)
+    // In Chrome, it returns a value very close to 0 (+/-) but contains rounding
+    // errors due to floating point numbers, so we need to check precision.
+    // Safari returns a number <= 0, usually < -1 when pinch-zoomed
+    // Feature detection fails in mobile emulation mode in Chrome.
+    // Math.abs(win.innerWidth / visualViewport.scale - visualViewport.width) <
+    // 0.001
+    // Fallback here: "Not Safari" userAgent
+
+    if (!/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+      x = visualViewport.offsetLeft;
+      y = visualViewport.offsetTop;
+    }
+  }
+
+  return {
+    width: width,
+    height: height,
+    x: x + Object(_getWindowScrollBarX_js__WEBPACK_IMPORTED_MODULE_2__["default"])(element),
+    y: y
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getWindow.js ***!
+  \****************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getWindow; });
+function getWindow(node) {
+  if (node == null) {
+    return window;
+  }
+
+  if (node.toString() !== '[object Window]') {
+    var ownerDocument = node.ownerDocument;
+    return ownerDocument ? ownerDocument.defaultView || window : window;
+  }
+
+  return node;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getWindowScroll; });
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+
+function getWindowScroll(node) {
+  var win = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node);
+  var scrollLeft = win.pageXOffset;
+  var scrollTop = win.pageYOffset;
+  return {
+    scrollLeft: scrollLeft,
+    scrollTop: scrollTop
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js":
+/*!**************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/getWindowScrollBarX.js ***!
+  \**************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getWindowScrollBarX; });
+/* harmony import */ var _getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getBoundingClientRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js");
+/* harmony import */ var _getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getWindowScroll.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindowScroll.js");
+
+
+
+function getWindowScrollBarX(element) {
+  // If <html> has a CSS width greater than the viewport, then this will be
+  // incorrect for RTL.
+  // Popper 1 is broken in this case and never had a bug report so let's assume
+  // it's not an issue. I don't think anyone ever specifies width on <html>
+  // anyway.
+  // Browsers where the left scrollbar doesn't cause an issue report `0` for
+  // this (e.g. Edge 2019, IE11, Safari)
+  return Object(_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(Object(_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(element)).left + Object(_getWindowScroll_js__WEBPACK_IMPORTED_MODULE_2__["default"])(element).scrollLeft;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js ***!
+  \*****************************************************************/
+/*! exports provided: isElement, isHTMLElement, isShadowRoot */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isElement", function() { return isElement; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isHTMLElement", function() { return isHTMLElement; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isShadowRoot", function() { return isShadowRoot; });
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+
+
+function isElement(node) {
+  var OwnElement = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node).Element;
+  return node instanceof OwnElement || node instanceof Element;
+}
+
+function isHTMLElement(node) {
+  var OwnElement = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node).HTMLElement;
+  return node instanceof OwnElement || node instanceof HTMLElement;
+}
+
+function isShadowRoot(node) {
+  // IE 11 has no ShadowRoot
+  if (typeof ShadowRoot === 'undefined') {
+    return false;
+  }
+
+  var OwnElement = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(node).ShadowRoot;
+  return node instanceof OwnElement || node instanceof ShadowRoot;
+}
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return isScrollParent; });
+/* harmony import */ var _getComputedStyle_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+
+function isScrollParent(element) {
+  // Firefox wants us to check `-x` and `-y` variations as well
+  var _getComputedStyle = Object(_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element),
+      overflow = _getComputedStyle.overflow,
+      overflowX = _getComputedStyle.overflowX,
+      overflowY = _getComputedStyle.overflowY;
+
+  return /auto|scroll|overlay|hidden/.test(overflow + overflowY + overflowX);
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/isTableElement.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/isTableElement.js ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return isTableElement; });
+/* harmony import */ var _getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+
+function isTableElement(element) {
+  return ['table', 'td', 'th'].indexOf(Object(_getNodeName_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element)) >= 0;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js":
+/*!************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/dom-utils/listScrollParents.js ***!
+  \************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return listScrollParents; });
+/* harmony import */ var _getScrollParent_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getScrollParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getScrollParent.js");
+/* harmony import */ var _getParentNode_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getParentNode.js */ "./node_modules/@popperjs/core/lib/dom-utils/getParentNode.js");
+/* harmony import */ var _getWindow_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+/* harmony import */ var _isScrollParent_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./isScrollParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/isScrollParent.js");
+
+
+
+
+/*
+given a DOM element, return the list of all scroll parents, up the list of ancesors
+until we get to the top window object. This list is what we attach scroll listeners
+to, because if any of these parent elements scroll, we'll need to re-calculate the
+reference element's position.
+*/
+
+function listScrollParents(element, list) {
+  var _element$ownerDocumen;
+
+  if (list === void 0) {
+    list = [];
+  }
+
+  var scrollParent = Object(_getScrollParent_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element);
+  var isBody = scrollParent === ((_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body);
+  var win = Object(_getWindow_js__WEBPACK_IMPORTED_MODULE_2__["default"])(scrollParent);
+  var target = isBody ? [win].concat(win.visualViewport || [], Object(_isScrollParent_js__WEBPACK_IMPORTED_MODULE_3__["default"])(scrollParent) ? scrollParent : []) : scrollParent;
+  var updatedList = list.concat(target);
+  return isBody ? updatedList : // $FlowFixMe[incompatible-call]: isBody tells us target will be an HTMLElement here
+  updatedList.concat(listScrollParents(Object(_getParentNode_js__WEBPACK_IMPORTED_MODULE_1__["default"])(target)));
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/enums.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/enums.js ***!
+  \**************************************************/
+/*! exports provided: top, bottom, right, left, auto, basePlacements, start, end, clippingParents, viewport, popper, reference, variationPlacements, placements, beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite, modifierPhases */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "top", function() { return top; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bottom", function() { return bottom; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "right", function() { return right; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "left", function() { return left; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "auto", function() { return auto; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "basePlacements", function() { return basePlacements; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "start", function() { return start; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "end", function() { return end; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "clippingParents", function() { return clippingParents; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "viewport", function() { return viewport; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "popper", function() { return popper; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "reference", function() { return reference; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "variationPlacements", function() { return variationPlacements; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "placements", function() { return placements; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "beforeRead", function() { return beforeRead; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "read", function() { return read; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "afterRead", function() { return afterRead; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "beforeMain", function() { return beforeMain; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "main", function() { return main; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "afterMain", function() { return afterMain; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "beforeWrite", function() { return beforeWrite; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "write", function() { return write; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "afterWrite", function() { return afterWrite; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "modifierPhases", function() { return modifierPhases; });
+var top = 'top';
+var bottom = 'bottom';
+var right = 'right';
+var left = 'left';
+var auto = 'auto';
+var basePlacements = [top, bottom, right, left];
+var start = 'start';
+var end = 'end';
+var clippingParents = 'clippingParents';
+var viewport = 'viewport';
+var popper = 'popper';
+var reference = 'reference';
+var variationPlacements = /*#__PURE__*/basePlacements.reduce(function (acc, placement) {
+  return acc.concat([placement + "-" + start, placement + "-" + end]);
+}, []);
+var placements = /*#__PURE__*/[].concat(basePlacements, [auto]).reduce(function (acc, placement) {
+  return acc.concat([placement, placement + "-" + start, placement + "-" + end]);
+}, []); // modifiers that need to read the DOM
+
+var beforeRead = 'beforeRead';
+var read = 'read';
+var afterRead = 'afterRead'; // pure-logic modifiers
+
+var beforeMain = 'beforeMain';
+var main = 'main';
+var afterMain = 'afterMain'; // modifier with the purpose to write to the DOM (or write into a framework state)
+
+var beforeWrite = 'beforeWrite';
+var write = 'write';
+var afterWrite = 'afterWrite';
+var modifierPhases = [beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite];
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/index.js ***!
+  \**************************************************/
+/*! exports provided: top, bottom, right, left, auto, basePlacements, start, end, clippingParents, viewport, popper, reference, variationPlacements, placements, beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite, modifierPhases, applyStyles, arrow, computeStyles, eventListeners, flip, hide, offset, popperOffsets, preventOverflow, popperGenerator, detectOverflow, createPopperBase, createPopper, createPopperLite */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "top", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["top"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "bottom", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["bottom"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "right", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["right"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "left", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "auto", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["auto"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "basePlacements", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["basePlacements"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "start", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["start"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "end", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["end"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "clippingParents", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["clippingParents"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "viewport", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["viewport"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popper", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["popper"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "reference", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["reference"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "variationPlacements", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["variationPlacements"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "placements", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["placements"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "beforeRead", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["beforeRead"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "read", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["read"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "afterRead", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["afterRead"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "beforeMain", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["beforeMain"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "main", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["main"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "afterMain", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["afterMain"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "beforeWrite", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["beforeWrite"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "write", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["write"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "afterWrite", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["afterWrite"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "modifierPhases", function() { return _enums_js__WEBPACK_IMPORTED_MODULE_0__["modifierPhases"]; });
+
+/* harmony import */ var _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modifiers/index.js */ "./node_modules/@popperjs/core/lib/modifiers/index.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "applyStyles", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["applyStyles"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "arrow", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["arrow"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "computeStyles", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["computeStyles"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "eventListeners", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["eventListeners"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "flip", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["flip"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "hide", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["hide"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "offset", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["offset"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperOffsets", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["popperOffsets"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "preventOverflow", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_1__["preventOverflow"]; });
+
+/* harmony import */ var _createPopper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./createPopper.js */ "./node_modules/@popperjs/core/lib/createPopper.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperGenerator", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_2__["popperGenerator"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "detectOverflow", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_2__["detectOverflow"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "createPopperBase", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_2__["createPopper"]; });
+
+/* harmony import */ var _popper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./popper.js */ "./node_modules/@popperjs/core/lib/popper.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "createPopper", function() { return _popper_js__WEBPACK_IMPORTED_MODULE_3__["createPopper"]; });
+
+/* harmony import */ var _popper_lite_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./popper-lite.js */ "./node_modules/@popperjs/core/lib/popper-lite.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "createPopperLite", function() { return _popper_lite_js__WEBPACK_IMPORTED_MODULE_4__["createPopper"]; });
+
+
+ // eslint-disable-next-line import/no-unused-modules
+
+ // eslint-disable-next-line import/no-unused-modules
+
+ // eslint-disable-next-line import/no-unused-modules
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/applyStyles.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/applyStyles.js ***!
+  \******************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _dom_utils_getNodeName_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom-utils/getNodeName.js */ "./node_modules/@popperjs/core/lib/dom-utils/getNodeName.js");
+/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../dom-utils/instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+ // This modifier takes the styles prepared by the `computeStyles` modifier
+// and applies them to the HTMLElements such as popper and arrow
+
+function applyStyles(_ref) {
+  var state = _ref.state;
+  Object.keys(state.elements).forEach(function (name) {
+    var style = state.styles[name] || {};
+    var attributes = state.attributes[name] || {};
+    var element = state.elements[name]; // arrow is optional + virtual elements
+
+    if (!Object(_dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_1__["isHTMLElement"])(element) || !Object(_dom_utils_getNodeName_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element)) {
+      return;
+    } // Flow doesn't support to extend this property, but it's the most
+    // effective way to apply styles to an HTMLElement
+    // $FlowFixMe[cannot-write]
+
+
+    Object.assign(element.style, style);
+    Object.keys(attributes).forEach(function (name) {
+      var value = attributes[name];
+
+      if (value === false) {
+        element.removeAttribute(name);
+      } else {
+        element.setAttribute(name, value === true ? '' : value);
+      }
+    });
+  });
+}
+
+function effect(_ref2) {
+  var state = _ref2.state;
+  var initialStyles = {
+    popper: {
+      position: state.options.strategy,
+      left: '0',
+      top: '0',
+      margin: '0'
+    },
+    arrow: {
+      position: 'absolute'
+    },
+    reference: {}
+  };
+  Object.assign(state.elements.popper.style, initialStyles.popper);
+  state.styles = initialStyles;
+
+  if (state.elements.arrow) {
+    Object.assign(state.elements.arrow.style, initialStyles.arrow);
+  }
+
+  return function () {
+    Object.keys(state.elements).forEach(function (name) {
+      var element = state.elements[name];
+      var attributes = state.attributes[name] || {};
+      var styleProperties = Object.keys(state.styles.hasOwnProperty(name) ? state.styles[name] : initialStyles[name]); // Set all values to an empty string to unset them
+
+      var style = styleProperties.reduce(function (style, property) {
+        style[property] = '';
+        return style;
+      }, {}); // arrow is optional + virtual elements
+
+      if (!Object(_dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_1__["isHTMLElement"])(element) || !Object(_dom_utils_getNodeName_js__WEBPACK_IMPORTED_MODULE_0__["default"])(element)) {
+        return;
+      }
+
+      Object.assign(element.style, style);
+      Object.keys(attributes).forEach(function (attribute) {
+        element.removeAttribute(attribute);
+      });
+    });
+  };
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'applyStyles',
+  enabled: true,
+  phase: 'write',
+  fn: applyStyles,
+  effect: effect,
+  requires: ['computeStyles']
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/arrow.js":
+/*!************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/arrow.js ***!
+  \************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../dom-utils/getLayoutRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js");
+/* harmony import */ var _dom_utils_contains_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../dom-utils/contains.js */ "./node_modules/@popperjs/core/lib/dom-utils/contains.js");
+/* harmony import */ var _dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../dom-utils/getOffsetParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js");
+/* harmony import */ var _utils_getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/getMainAxisFromPlacement.js */ "./node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js");
+/* harmony import */ var _utils_within_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/within.js */ "./node_modules/@popperjs/core/lib/utils/within.js");
+/* harmony import */ var _utils_mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/mergePaddingObject.js */ "./node_modules/@popperjs/core/lib/utils/mergePaddingObject.js");
+/* harmony import */ var _utils_expandToHashMap_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils/expandToHashMap.js */ "./node_modules/@popperjs/core/lib/utils/expandToHashMap.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../dom-utils/instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+
+
+
+
+
+
+
+
+
+ // eslint-disable-next-line import/no-unused-modules
+
+var toPaddingObject = function toPaddingObject(padding, state) {
+  padding = typeof padding === 'function' ? padding(Object.assign({}, state.rects, {
+    placement: state.placement
+  })) : padding;
+  return Object(_utils_mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_6__["default"])(typeof padding !== 'number' ? padding : Object(_utils_expandToHashMap_js__WEBPACK_IMPORTED_MODULE_7__["default"])(padding, _enums_js__WEBPACK_IMPORTED_MODULE_8__["basePlacements"]));
+};
+
+function arrow(_ref) {
+  var _state$modifiersData$;
+
+  var state = _ref.state,
+      name = _ref.name,
+      options = _ref.options;
+  var arrowElement = state.elements.arrow;
+  var popperOffsets = state.modifiersData.popperOffsets;
+  var basePlacement = Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(state.placement);
+  var axis = Object(_utils_getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_4__["default"])(basePlacement);
+  var isVertical = [_enums_js__WEBPACK_IMPORTED_MODULE_8__["left"], _enums_js__WEBPACK_IMPORTED_MODULE_8__["right"]].indexOf(basePlacement) >= 0;
+  var len = isVertical ? 'height' : 'width';
+
+  if (!arrowElement || !popperOffsets) {
+    return;
+  }
+
+  var paddingObject = toPaddingObject(options.padding, state);
+  var arrowRect = Object(_dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_1__["default"])(arrowElement);
+  var minProp = axis === 'y' ? _enums_js__WEBPACK_IMPORTED_MODULE_8__["top"] : _enums_js__WEBPACK_IMPORTED_MODULE_8__["left"];
+  var maxProp = axis === 'y' ? _enums_js__WEBPACK_IMPORTED_MODULE_8__["bottom"] : _enums_js__WEBPACK_IMPORTED_MODULE_8__["right"];
+  var endDiff = state.rects.reference[len] + state.rects.reference[axis] - popperOffsets[axis] - state.rects.popper[len];
+  var startDiff = popperOffsets[axis] - state.rects.reference[axis];
+  var arrowOffsetParent = Object(_dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_3__["default"])(arrowElement);
+  var clientSize = arrowOffsetParent ? axis === 'y' ? arrowOffsetParent.clientHeight || 0 : arrowOffsetParent.clientWidth || 0 : 0;
+  var centerToReference = endDiff / 2 - startDiff / 2; // Make sure the arrow doesn't overflow the popper if the center point is
+  // outside of the popper bounds
+
+  var min = paddingObject[minProp];
+  var max = clientSize - arrowRect[len] - paddingObject[maxProp];
+  var center = clientSize / 2 - arrowRect[len] / 2 + centerToReference;
+  var offset = Object(_utils_within_js__WEBPACK_IMPORTED_MODULE_5__["default"])(min, center, max); // Prevents breaking syntax highlighting...
+
+  var axisProp = axis;
+  state.modifiersData[name] = (_state$modifiersData$ = {}, _state$modifiersData$[axisProp] = offset, _state$modifiersData$.centerOffset = offset - center, _state$modifiersData$);
+}
+
+function effect(_ref2) {
+  var state = _ref2.state,
+      options = _ref2.options;
+  var _options$element = options.element,
+      arrowElement = _options$element === void 0 ? '[data-popper-arrow]' : _options$element;
+
+  if (arrowElement == null) {
+    return;
+  } // CSS selector
+
+
+  if (typeof arrowElement === 'string') {
+    arrowElement = state.elements.popper.querySelector(arrowElement);
+
+    if (!arrowElement) {
+      return;
+    }
+  }
+
+  if (true) {
+    if (!Object(_dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_9__["isHTMLElement"])(arrowElement)) {
+      console.error(['Popper: "arrow" element must be an HTMLElement (not an SVGElement).', 'To use an SVG arrow, wrap it in an HTMLElement that will be used as', 'the arrow.'].join(' '));
+    }
+  }
+
+  if (!Object(_dom_utils_contains_js__WEBPACK_IMPORTED_MODULE_2__["default"])(state.elements.popper, arrowElement)) {
+    if (true) {
+      console.error(['Popper: "arrow" modifier\'s `element` must be a child of the popper', 'element.'].join(' '));
+    }
+
+    return;
+  }
+
+  state.elements.arrow = arrowElement;
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'arrow',
+  enabled: true,
+  phase: 'main',
+  fn: arrow,
+  effect: effect,
+  requires: ['popperOffsets'],
+  requiresIfExists: ['preventOverflow']
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/computeStyles.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/computeStyles.js ***!
+  \********************************************************************/
+/*! exports provided: mapToStyles, default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mapToStyles", function() { return mapToStyles; });
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../dom-utils/getOffsetParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js");
+/* harmony import */ var _dom_utils_getWindow_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../dom-utils/getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+/* harmony import */ var _dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../dom-utils/getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _dom_utils_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../dom-utils/getComputedStyle.js */ "./node_modules/@popperjs/core/lib/dom-utils/getComputedStyle.js");
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/math.js */ "./node_modules/@popperjs/core/lib/utils/math.js");
+
+
+
+
+
+
+ // eslint-disable-next-line import/no-unused-modules
+
+var unsetSides = {
+  top: 'auto',
+  right: 'auto',
+  bottom: 'auto',
+  left: 'auto'
+}; // Round the offsets to the nearest suitable subpixel based on the DPR.
+// Zooming can change the DPR, but it seems to report a value that will
+// cleanly divide the values into the appropriate subpixels.
+
+function roundOffsetsByDPR(_ref) {
+  var x = _ref.x,
+      y = _ref.y;
+  var win = window;
+  var dpr = win.devicePixelRatio || 1;
+  return {
+    x: Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_6__["round"])(Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_6__["round"])(x * dpr) / dpr) || 0,
+    y: Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_6__["round"])(Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_6__["round"])(y * dpr) / dpr) || 0
+  };
+}
+
+function mapToStyles(_ref2) {
+  var _Object$assign2;
+
+  var popper = _ref2.popper,
+      popperRect = _ref2.popperRect,
+      placement = _ref2.placement,
+      offsets = _ref2.offsets,
+      position = _ref2.position,
+      gpuAcceleration = _ref2.gpuAcceleration,
+      adaptive = _ref2.adaptive,
+      roundOffsets = _ref2.roundOffsets;
+
+  var _ref3 = roundOffsets === true ? roundOffsetsByDPR(offsets) : typeof roundOffsets === 'function' ? roundOffsets(offsets) : offsets,
+      _ref3$x = _ref3.x,
+      x = _ref3$x === void 0 ? 0 : _ref3$x,
+      _ref3$y = _ref3.y,
+      y = _ref3$y === void 0 ? 0 : _ref3$y;
+
+  var hasX = offsets.hasOwnProperty('x');
+  var hasY = offsets.hasOwnProperty('y');
+  var sideX = _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"];
+  var sideY = _enums_js__WEBPACK_IMPORTED_MODULE_0__["top"];
+  var win = window;
+
+  if (adaptive) {
+    var offsetParent = Object(_dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_1__["default"])(popper);
+    var heightProp = 'clientHeight';
+    var widthProp = 'clientWidth';
+
+    if (offsetParent === Object(_dom_utils_getWindow_js__WEBPACK_IMPORTED_MODULE_2__["default"])(popper)) {
+      offsetParent = Object(_dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_3__["default"])(popper);
+
+      if (Object(_dom_utils_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__["default"])(offsetParent).position !== 'static') {
+        heightProp = 'scrollHeight';
+        widthProp = 'scrollWidth';
+      }
+    } // $FlowFixMe[incompatible-cast]: force type refinement, we compare offsetParent with window above, but Flow doesn't detect it
+
+
+    offsetParent = offsetParent;
+
+    if (placement === _enums_js__WEBPACK_IMPORTED_MODULE_0__["top"]) {
+      sideY = _enums_js__WEBPACK_IMPORTED_MODULE_0__["bottom"]; // $FlowFixMe[prop-missing]
+
+      y -= offsetParent[heightProp] - popperRect.height;
+      y *= gpuAcceleration ? 1 : -1;
+    }
+
+    if (placement === _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"]) {
+      sideX = _enums_js__WEBPACK_IMPORTED_MODULE_0__["right"]; // $FlowFixMe[prop-missing]
+
+      x -= offsetParent[widthProp] - popperRect.width;
+      x *= gpuAcceleration ? 1 : -1;
+    }
+  }
+
+  var commonStyles = Object.assign({
+    position: position
+  }, adaptive && unsetSides);
+
+  if (gpuAcceleration) {
+    var _Object$assign;
+
+    return Object.assign({}, commonStyles, (_Object$assign = {}, _Object$assign[sideY] = hasY ? '0' : '', _Object$assign[sideX] = hasX ? '0' : '', _Object$assign.transform = (win.devicePixelRatio || 1) < 2 ? "translate(" + x + "px, " + y + "px)" : "translate3d(" + x + "px, " + y + "px, 0)", _Object$assign));
+  }
+
+  return Object.assign({}, commonStyles, (_Object$assign2 = {}, _Object$assign2[sideY] = hasY ? y + "px" : '', _Object$assign2[sideX] = hasX ? x + "px" : '', _Object$assign2.transform = '', _Object$assign2));
+}
+
+function computeStyles(_ref4) {
+  var state = _ref4.state,
+      options = _ref4.options;
+  var _options$gpuAccelerat = options.gpuAcceleration,
+      gpuAcceleration = _options$gpuAccelerat === void 0 ? true : _options$gpuAccelerat,
+      _options$adaptive = options.adaptive,
+      adaptive = _options$adaptive === void 0 ? true : _options$adaptive,
+      _options$roundOffsets = options.roundOffsets,
+      roundOffsets = _options$roundOffsets === void 0 ? true : _options$roundOffsets;
+
+  if (true) {
+    var transitionProperty = Object(_dom_utils_getComputedStyle_js__WEBPACK_IMPORTED_MODULE_4__["default"])(state.elements.popper).transitionProperty || '';
+
+    if (adaptive && ['transform', 'top', 'right', 'bottom', 'left'].some(function (property) {
+      return transitionProperty.indexOf(property) >= 0;
+    })) {
+      console.warn(['Popper: Detected CSS transitions on at least one of the following', 'CSS properties: "transform", "top", "right", "bottom", "left".', '\n\n', 'Disable the "computeStyles" modifier\'s `adaptive` option to allow', 'for smooth transitions, or remove these properties from the CSS', 'transition declaration on the popper element if only transitioning', 'opacity or background-color for example.', '\n\n', 'We recommend using the popper element as a wrapper around an inner', 'element that can have any CSS property transitioned for animations.'].join(' '));
+    }
+  }
+
+  var commonStyles = {
+    placement: Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_5__["default"])(state.placement),
+    popper: state.elements.popper,
+    popperRect: state.rects.popper,
+    gpuAcceleration: gpuAcceleration
+  };
+
+  if (state.modifiersData.popperOffsets != null) {
+    state.styles.popper = Object.assign({}, state.styles.popper, mapToStyles(Object.assign({}, commonStyles, {
+      offsets: state.modifiersData.popperOffsets,
+      position: state.options.strategy,
+      adaptive: adaptive,
+      roundOffsets: roundOffsets
+    })));
+  }
+
+  if (state.modifiersData.arrow != null) {
+    state.styles.arrow = Object.assign({}, state.styles.arrow, mapToStyles(Object.assign({}, commonStyles, {
+      offsets: state.modifiersData.arrow,
+      position: 'absolute',
+      adaptive: false,
+      roundOffsets: roundOffsets
+    })));
+  }
+
+  state.attributes.popper = Object.assign({}, state.attributes.popper, {
+    'data-popper-placement': state.placement
+  });
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'computeStyles',
+  enabled: true,
+  phase: 'beforeWrite',
+  fn: computeStyles,
+  data: {}
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/eventListeners.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/eventListeners.js ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _dom_utils_getWindow_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom-utils/getWindow.js */ "./node_modules/@popperjs/core/lib/dom-utils/getWindow.js");
+ // eslint-disable-next-line import/no-unused-modules
+
+var passive = {
+  passive: true
+};
+
+function effect(_ref) {
+  var state = _ref.state,
+      instance = _ref.instance,
+      options = _ref.options;
+  var _options$scroll = options.scroll,
+      scroll = _options$scroll === void 0 ? true : _options$scroll,
+      _options$resize = options.resize,
+      resize = _options$resize === void 0 ? true : _options$resize;
+  var window = Object(_dom_utils_getWindow_js__WEBPACK_IMPORTED_MODULE_0__["default"])(state.elements.popper);
+  var scrollParents = [].concat(state.scrollParents.reference, state.scrollParents.popper);
+
+  if (scroll) {
+    scrollParents.forEach(function (scrollParent) {
+      scrollParent.addEventListener('scroll', instance.update, passive);
+    });
+  }
+
+  if (resize) {
+    window.addEventListener('resize', instance.update, passive);
+  }
+
+  return function () {
+    if (scroll) {
+      scrollParents.forEach(function (scrollParent) {
+        scrollParent.removeEventListener('scroll', instance.update, passive);
+      });
+    }
+
+    if (resize) {
+      window.removeEventListener('resize', instance.update, passive);
+    }
+  };
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'eventListeners',
+  enabled: true,
+  phase: 'write',
+  fn: function fn() {},
+  effect: effect,
+  data: {}
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/flip.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/flip.js ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _utils_getOppositePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/getOppositePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getOppositePlacement.js");
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _utils_getOppositeVariationPlacement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/getOppositeVariationPlacement.js */ "./node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js");
+/* harmony import */ var _utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/detectOverflow.js */ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js");
+/* harmony import */ var _utils_computeAutoPlacement_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/computeAutoPlacement.js */ "./node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _utils_getVariation_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/getVariation.js */ "./node_modules/@popperjs/core/lib/utils/getVariation.js");
+
+
+
+
+
+
+ // eslint-disable-next-line import/no-unused-modules
+
+function getExpandedFallbackPlacements(placement) {
+  if (Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(placement) === _enums_js__WEBPACK_IMPORTED_MODULE_5__["auto"]) {
+    return [];
+  }
+
+  var oppositePlacement = Object(_utils_getOppositePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(placement);
+  return [Object(_utils_getOppositeVariationPlacement_js__WEBPACK_IMPORTED_MODULE_2__["default"])(placement), oppositePlacement, Object(_utils_getOppositeVariationPlacement_js__WEBPACK_IMPORTED_MODULE_2__["default"])(oppositePlacement)];
+}
+
+function flip(_ref) {
+  var state = _ref.state,
+      options = _ref.options,
+      name = _ref.name;
+
+  if (state.modifiersData[name]._skip) {
+    return;
+  }
+
+  var _options$mainAxis = options.mainAxis,
+      checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis,
+      _options$altAxis = options.altAxis,
+      checkAltAxis = _options$altAxis === void 0 ? true : _options$altAxis,
+      specifiedFallbackPlacements = options.fallbackPlacements,
+      padding = options.padding,
+      boundary = options.boundary,
+      rootBoundary = options.rootBoundary,
+      altBoundary = options.altBoundary,
+      _options$flipVariatio = options.flipVariations,
+      flipVariations = _options$flipVariatio === void 0 ? true : _options$flipVariatio,
+      allowedAutoPlacements = options.allowedAutoPlacements;
+  var preferredPlacement = state.options.placement;
+  var basePlacement = Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(preferredPlacement);
+  var isBasePlacement = basePlacement === preferredPlacement;
+  var fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipVariations ? [Object(_utils_getOppositePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(preferredPlacement)] : getExpandedFallbackPlacements(preferredPlacement));
+  var placements = [preferredPlacement].concat(fallbackPlacements).reduce(function (acc, placement) {
+    return acc.concat(Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(placement) === _enums_js__WEBPACK_IMPORTED_MODULE_5__["auto"] ? Object(_utils_computeAutoPlacement_js__WEBPACK_IMPORTED_MODULE_4__["default"])(state, {
+      placement: placement,
+      boundary: boundary,
+      rootBoundary: rootBoundary,
+      padding: padding,
+      flipVariations: flipVariations,
+      allowedAutoPlacements: allowedAutoPlacements
+    }) : placement);
+  }, []);
+  var referenceRect = state.rects.reference;
+  var popperRect = state.rects.popper;
+  var checksMap = new Map();
+  var makeFallbackChecks = true;
+  var firstFittingPlacement = placements[0];
+
+  for (var i = 0; i < placements.length; i++) {
+    var placement = placements[i];
+
+    var _basePlacement = Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(placement);
+
+    var isStartVariation = Object(_utils_getVariation_js__WEBPACK_IMPORTED_MODULE_6__["default"])(placement) === _enums_js__WEBPACK_IMPORTED_MODULE_5__["start"];
+    var isVertical = [_enums_js__WEBPACK_IMPORTED_MODULE_5__["top"], _enums_js__WEBPACK_IMPORTED_MODULE_5__["bottom"]].indexOf(_basePlacement) >= 0;
+    var len = isVertical ? 'width' : 'height';
+    var overflow = Object(_utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_3__["default"])(state, {
+      placement: placement,
+      boundary: boundary,
+      rootBoundary: rootBoundary,
+      altBoundary: altBoundary,
+      padding: padding
+    });
+    var mainVariationSide = isVertical ? isStartVariation ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["right"] : _enums_js__WEBPACK_IMPORTED_MODULE_5__["left"] : isStartVariation ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["bottom"] : _enums_js__WEBPACK_IMPORTED_MODULE_5__["top"];
+
+    if (referenceRect[len] > popperRect[len]) {
+      mainVariationSide = Object(_utils_getOppositePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(mainVariationSide);
+    }
+
+    var altVariationSide = Object(_utils_getOppositePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(mainVariationSide);
+    var checks = [];
+
+    if (checkMainAxis) {
+      checks.push(overflow[_basePlacement] <= 0);
+    }
+
+    if (checkAltAxis) {
+      checks.push(overflow[mainVariationSide] <= 0, overflow[altVariationSide] <= 0);
+    }
+
+    if (checks.every(function (check) {
+      return check;
+    })) {
+      firstFittingPlacement = placement;
+      makeFallbackChecks = false;
+      break;
+    }
+
+    checksMap.set(placement, checks);
+  }
+
+  if (makeFallbackChecks) {
+    // `2` may be desired in some cases – research later
+    var numberOfChecks = flipVariations ? 3 : 1;
+
+    var _loop = function _loop(_i) {
+      var fittingPlacement = placements.find(function (placement) {
+        var checks = checksMap.get(placement);
+
+        if (checks) {
+          return checks.slice(0, _i).every(function (check) {
+            return check;
+          });
+        }
+      });
+
+      if (fittingPlacement) {
+        firstFittingPlacement = fittingPlacement;
+        return "break";
+      }
+    };
+
+    for (var _i = numberOfChecks; _i > 0; _i--) {
+      var _ret = _loop(_i);
+
+      if (_ret === "break") break;
+    }
+  }
+
+  if (state.placement !== firstFittingPlacement) {
+    state.modifiersData[name]._skip = true;
+    state.placement = firstFittingPlacement;
+    state.reset = true;
+  }
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'flip',
+  enabled: true,
+  phase: 'main',
+  fn: flip,
+  requiresIfExists: ['offset'],
+  data: {
+    _skip: false
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/hide.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/hide.js ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/detectOverflow.js */ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js");
+
+
+
+function getSideOffsets(overflow, rect, preventedOffsets) {
+  if (preventedOffsets === void 0) {
+    preventedOffsets = {
+      x: 0,
+      y: 0
+    };
+  }
+
+  return {
+    top: overflow.top - rect.height - preventedOffsets.y,
+    right: overflow.right - rect.width + preventedOffsets.x,
+    bottom: overflow.bottom - rect.height + preventedOffsets.y,
+    left: overflow.left - rect.width - preventedOffsets.x
+  };
+}
+
+function isAnySideFullyClipped(overflow) {
+  return [_enums_js__WEBPACK_IMPORTED_MODULE_0__["top"], _enums_js__WEBPACK_IMPORTED_MODULE_0__["right"], _enums_js__WEBPACK_IMPORTED_MODULE_0__["bottom"], _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"]].some(function (side) {
+    return overflow[side] >= 0;
+  });
+}
+
+function hide(_ref) {
+  var state = _ref.state,
+      name = _ref.name;
+  var referenceRect = state.rects.reference;
+  var popperRect = state.rects.popper;
+  var preventedOffsets = state.modifiersData.preventOverflow;
+  var referenceOverflow = Object(_utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_1__["default"])(state, {
+    elementContext: 'reference'
+  });
+  var popperAltOverflow = Object(_utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_1__["default"])(state, {
+    altBoundary: true
+  });
+  var referenceClippingOffsets = getSideOffsets(referenceOverflow, referenceRect);
+  var popperEscapeOffsets = getSideOffsets(popperAltOverflow, popperRect, preventedOffsets);
+  var isReferenceHidden = isAnySideFullyClipped(referenceClippingOffsets);
+  var hasPopperEscaped = isAnySideFullyClipped(popperEscapeOffsets);
+  state.modifiersData[name] = {
+    referenceClippingOffsets: referenceClippingOffsets,
+    popperEscapeOffsets: popperEscapeOffsets,
+    isReferenceHidden: isReferenceHidden,
+    hasPopperEscaped: hasPopperEscaped
+  };
+  state.attributes.popper = Object.assign({}, state.attributes.popper, {
+    'data-popper-reference-hidden': isReferenceHidden,
+    'data-popper-escaped': hasPopperEscaped
+  });
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'hide',
+  enabled: true,
+  phase: 'main',
+  requiresIfExists: ['preventOverflow'],
+  fn: hide
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/index.js":
+/*!************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/index.js ***!
+  \************************************************************/
+/*! exports provided: applyStyles, arrow, computeStyles, eventListeners, flip, hide, offset, popperOffsets, preventOverflow */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _applyStyles_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./applyStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/applyStyles.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "applyStyles", function() { return _applyStyles_js__WEBPACK_IMPORTED_MODULE_0__["default"]; });
+
+/* harmony import */ var _arrow_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./arrow.js */ "./node_modules/@popperjs/core/lib/modifiers/arrow.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "arrow", function() { return _arrow_js__WEBPACK_IMPORTED_MODULE_1__["default"]; });
+
+/* harmony import */ var _computeStyles_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./computeStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/computeStyles.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "computeStyles", function() { return _computeStyles_js__WEBPACK_IMPORTED_MODULE_2__["default"]; });
+
+/* harmony import */ var _eventListeners_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./eventListeners.js */ "./node_modules/@popperjs/core/lib/modifiers/eventListeners.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "eventListeners", function() { return _eventListeners_js__WEBPACK_IMPORTED_MODULE_3__["default"]; });
+
+/* harmony import */ var _flip_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./flip.js */ "./node_modules/@popperjs/core/lib/modifiers/flip.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "flip", function() { return _flip_js__WEBPACK_IMPORTED_MODULE_4__["default"]; });
+
+/* harmony import */ var _hide_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./hide.js */ "./node_modules/@popperjs/core/lib/modifiers/hide.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "hide", function() { return _hide_js__WEBPACK_IMPORTED_MODULE_5__["default"]; });
+
+/* harmony import */ var _offset_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./offset.js */ "./node_modules/@popperjs/core/lib/modifiers/offset.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "offset", function() { return _offset_js__WEBPACK_IMPORTED_MODULE_6__["default"]; });
+
+/* harmony import */ var _popperOffsets_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./popperOffsets.js */ "./node_modules/@popperjs/core/lib/modifiers/popperOffsets.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperOffsets", function() { return _popperOffsets_js__WEBPACK_IMPORTED_MODULE_7__["default"]; });
+
+/* harmony import */ var _preventOverflow_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./preventOverflow.js */ "./node_modules/@popperjs/core/lib/modifiers/preventOverflow.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "preventOverflow", function() { return _preventOverflow_js__WEBPACK_IMPORTED_MODULE_8__["default"]; });
+
+
+
+
+
+
+
+
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/offset.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/offset.js ***!
+  \*************************************************************/
+/*! exports provided: distanceAndSkiddingToXY, default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "distanceAndSkiddingToXY", function() { return distanceAndSkiddingToXY; });
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+
+
+function distanceAndSkiddingToXY(placement, rects, offset) {
+  var basePlacement = Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(placement);
+  var invertDistance = [_enums_js__WEBPACK_IMPORTED_MODULE_1__["left"], _enums_js__WEBPACK_IMPORTED_MODULE_1__["top"]].indexOf(basePlacement) >= 0 ? -1 : 1;
+
+  var _ref = typeof offset === 'function' ? offset(Object.assign({}, rects, {
+    placement: placement
+  })) : offset,
+      skidding = _ref[0],
+      distance = _ref[1];
+
+  skidding = skidding || 0;
+  distance = (distance || 0) * invertDistance;
+  return [_enums_js__WEBPACK_IMPORTED_MODULE_1__["left"], _enums_js__WEBPACK_IMPORTED_MODULE_1__["right"]].indexOf(basePlacement) >= 0 ? {
+    x: distance,
+    y: skidding
+  } : {
+    x: skidding,
+    y: distance
+  };
+}
+
+function offset(_ref2) {
+  var state = _ref2.state,
+      options = _ref2.options,
+      name = _ref2.name;
+  var _options$offset = options.offset,
+      offset = _options$offset === void 0 ? [0, 0] : _options$offset;
+  var data = _enums_js__WEBPACK_IMPORTED_MODULE_1__["placements"].reduce(function (acc, placement) {
+    acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset);
+    return acc;
+  }, {});
+  var _data$state$placement = data[state.placement],
+      x = _data$state$placement.x,
+      y = _data$state$placement.y;
+
+  if (state.modifiersData.popperOffsets != null) {
+    state.modifiersData.popperOffsets.x += x;
+    state.modifiersData.popperOffsets.y += y;
+  }
+
+  state.modifiersData[name] = data;
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'offset',
+  enabled: true,
+  phase: 'main',
+  requires: ['popperOffsets'],
+  fn: offset
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/popperOffsets.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/popperOffsets.js ***!
+  \********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _utils_computeOffsets_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/computeOffsets.js */ "./node_modules/@popperjs/core/lib/utils/computeOffsets.js");
+
+
+function popperOffsets(_ref) {
+  var state = _ref.state,
+      name = _ref.name;
+  // Offsets are the actual position the popper needs to have to be
+  // properly positioned near its reference element
+  // This is the most basic placement, and will be adjusted by
+  // the modifiers in the next step
+  state.modifiersData[name] = Object(_utils_computeOffsets_js__WEBPACK_IMPORTED_MODULE_0__["default"])({
+    reference: state.rects.reference,
+    element: state.rects.popper,
+    strategy: 'absolute',
+    placement: state.placement
+  });
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'popperOffsets',
+  enabled: true,
+  phase: 'read',
+  fn: popperOffsets,
+  data: {}
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/modifiers/preventOverflow.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/modifiers/preventOverflow.js ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _utils_getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/getMainAxisFromPlacement.js */ "./node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js");
+/* harmony import */ var _utils_getAltAxis_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/getAltAxis.js */ "./node_modules/@popperjs/core/lib/utils/getAltAxis.js");
+/* harmony import */ var _utils_within_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/within.js */ "./node_modules/@popperjs/core/lib/utils/within.js");
+/* harmony import */ var _dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../dom-utils/getLayoutRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getLayoutRect.js");
+/* harmony import */ var _dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../dom-utils/getOffsetParent.js */ "./node_modules/@popperjs/core/lib/dom-utils/getOffsetParent.js");
+/* harmony import */ var _utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils/detectOverflow.js */ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js");
+/* harmony import */ var _utils_getVariation_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/getVariation.js */ "./node_modules/@popperjs/core/lib/utils/getVariation.js");
+/* harmony import */ var _utils_getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/getFreshSideObject.js */ "./node_modules/@popperjs/core/lib/utils/getFreshSideObject.js");
+/* harmony import */ var _utils_math_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../utils/math.js */ "./node_modules/@popperjs/core/lib/utils/math.js");
+
+
+
+
+
+
+
+
+
+
+
+
+function preventOverflow(_ref) {
+  var state = _ref.state,
+      options = _ref.options,
+      name = _ref.name;
+  var _options$mainAxis = options.mainAxis,
+      checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis,
+      _options$altAxis = options.altAxis,
+      checkAltAxis = _options$altAxis === void 0 ? false : _options$altAxis,
+      boundary = options.boundary,
+      rootBoundary = options.rootBoundary,
+      altBoundary = options.altBoundary,
+      padding = options.padding,
+      _options$tether = options.tether,
+      tether = _options$tether === void 0 ? true : _options$tether,
+      _options$tetherOffset = options.tetherOffset,
+      tetherOffset = _options$tetherOffset === void 0 ? 0 : _options$tetherOffset;
+  var overflow = Object(_utils_detectOverflow_js__WEBPACK_IMPORTED_MODULE_7__["default"])(state, {
+    boundary: boundary,
+    rootBoundary: rootBoundary,
+    padding: padding,
+    altBoundary: altBoundary
+  });
+  var basePlacement = Object(_utils_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_1__["default"])(state.placement);
+  var variation = Object(_utils_getVariation_js__WEBPACK_IMPORTED_MODULE_8__["default"])(state.placement);
+  var isBasePlacement = !variation;
+  var mainAxis = Object(_utils_getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_2__["default"])(basePlacement);
+  var altAxis = Object(_utils_getAltAxis_js__WEBPACK_IMPORTED_MODULE_3__["default"])(mainAxis);
+  var popperOffsets = state.modifiersData.popperOffsets;
+  var referenceRect = state.rects.reference;
+  var popperRect = state.rects.popper;
+  var tetherOffsetValue = typeof tetherOffset === 'function' ? tetherOffset(Object.assign({}, state.rects, {
+    placement: state.placement
+  })) : tetherOffset;
+  var data = {
+    x: 0,
+    y: 0
+  };
+
+  if (!popperOffsets) {
+    return;
+  }
+
+  if (checkMainAxis || checkAltAxis) {
+    var mainSide = mainAxis === 'y' ? _enums_js__WEBPACK_IMPORTED_MODULE_0__["top"] : _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"];
+    var altSide = mainAxis === 'y' ? _enums_js__WEBPACK_IMPORTED_MODULE_0__["bottom"] : _enums_js__WEBPACK_IMPORTED_MODULE_0__["right"];
+    var len = mainAxis === 'y' ? 'height' : 'width';
+    var offset = popperOffsets[mainAxis];
+    var min = popperOffsets[mainAxis] + overflow[mainSide];
+    var max = popperOffsets[mainAxis] - overflow[altSide];
+    var additive = tether ? -popperRect[len] / 2 : 0;
+    var minLen = variation === _enums_js__WEBPACK_IMPORTED_MODULE_0__["start"] ? referenceRect[len] : popperRect[len];
+    var maxLen = variation === _enums_js__WEBPACK_IMPORTED_MODULE_0__["start"] ? -popperRect[len] : -referenceRect[len]; // We need to include the arrow in the calculation so the arrow doesn't go
+    // outside the reference bounds
+
+    var arrowElement = state.elements.arrow;
+    var arrowRect = tether && arrowElement ? Object(_dom_utils_getLayoutRect_js__WEBPACK_IMPORTED_MODULE_5__["default"])(arrowElement) : {
+      width: 0,
+      height: 0
+    };
+    var arrowPaddingObject = state.modifiersData['arrow#persistent'] ? state.modifiersData['arrow#persistent'].padding : Object(_utils_getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_9__["default"])();
+    var arrowPaddingMin = arrowPaddingObject[mainSide];
+    var arrowPaddingMax = arrowPaddingObject[altSide]; // If the reference length is smaller than the arrow length, we don't want
+    // to include its full size in the calculation. If the reference is small
+    // and near the edge of a boundary, the popper can overflow even if the
+    // reference is not overflowing as well (e.g. virtual elements with no
+    // width or height)
+
+    var arrowLen = Object(_utils_within_js__WEBPACK_IMPORTED_MODULE_4__["default"])(0, referenceRect[len], arrowRect[len]);
+    var minOffset = isBasePlacement ? referenceRect[len] / 2 - additive - arrowLen - arrowPaddingMin - tetherOffsetValue : minLen - arrowLen - arrowPaddingMin - tetherOffsetValue;
+    var maxOffset = isBasePlacement ? -referenceRect[len] / 2 + additive + arrowLen + arrowPaddingMax + tetherOffsetValue : maxLen + arrowLen + arrowPaddingMax + tetherOffsetValue;
+    var arrowOffsetParent = state.elements.arrow && Object(_dom_utils_getOffsetParent_js__WEBPACK_IMPORTED_MODULE_6__["default"])(state.elements.arrow);
+    var clientOffset = arrowOffsetParent ? mainAxis === 'y' ? arrowOffsetParent.clientTop || 0 : arrowOffsetParent.clientLeft || 0 : 0;
+    var offsetModifierValue = state.modifiersData.offset ? state.modifiersData.offset[state.placement][mainAxis] : 0;
+    var tetherMin = popperOffsets[mainAxis] + minOffset - offsetModifierValue - clientOffset;
+    var tetherMax = popperOffsets[mainAxis] + maxOffset - offsetModifierValue;
+
+    if (checkMainAxis) {
+      var preventedOffset = Object(_utils_within_js__WEBPACK_IMPORTED_MODULE_4__["default"])(tether ? Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_10__["min"])(min, tetherMin) : min, offset, tether ? Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_10__["max"])(max, tetherMax) : max);
+      popperOffsets[mainAxis] = preventedOffset;
+      data[mainAxis] = preventedOffset - offset;
+    }
+
+    if (checkAltAxis) {
+      var _mainSide = mainAxis === 'x' ? _enums_js__WEBPACK_IMPORTED_MODULE_0__["top"] : _enums_js__WEBPACK_IMPORTED_MODULE_0__["left"];
+
+      var _altSide = mainAxis === 'x' ? _enums_js__WEBPACK_IMPORTED_MODULE_0__["bottom"] : _enums_js__WEBPACK_IMPORTED_MODULE_0__["right"];
+
+      var _offset = popperOffsets[altAxis];
+
+      var _min = _offset + overflow[_mainSide];
+
+      var _max = _offset - overflow[_altSide];
+
+      var _preventedOffset = Object(_utils_within_js__WEBPACK_IMPORTED_MODULE_4__["default"])(tether ? Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_10__["min"])(_min, tetherMin) : _min, _offset, tether ? Object(_utils_math_js__WEBPACK_IMPORTED_MODULE_10__["max"])(_max, tetherMax) : _max);
+
+      popperOffsets[altAxis] = _preventedOffset;
+      data[altAxis] = _preventedOffset - _offset;
+    }
+  }
+
+  state.modifiersData[name] = data;
+} // eslint-disable-next-line import/no-unused-modules
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: 'preventOverflow',
+  enabled: true,
+  phase: 'main',
+  fn: preventOverflow,
+  requiresIfExists: ['offset']
+});
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/popper-lite.js":
+/*!********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/popper-lite.js ***!
+  \********************************************************/
+/*! exports provided: createPopper, popperGenerator, defaultModifiers, detectOverflow */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createPopper", function() { return createPopper; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "defaultModifiers", function() { return defaultModifiers; });
+/* harmony import */ var _createPopper_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./createPopper.js */ "./node_modules/@popperjs/core/lib/createPopper.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperGenerator", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_0__["popperGenerator"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "detectOverflow", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_0__["detectOverflow"]; });
+
+/* harmony import */ var _modifiers_eventListeners_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modifiers/eventListeners.js */ "./node_modules/@popperjs/core/lib/modifiers/eventListeners.js");
+/* harmony import */ var _modifiers_popperOffsets_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modifiers/popperOffsets.js */ "./node_modules/@popperjs/core/lib/modifiers/popperOffsets.js");
+/* harmony import */ var _modifiers_computeStyles_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modifiers/computeStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/computeStyles.js");
+/* harmony import */ var _modifiers_applyStyles_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modifiers/applyStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/applyStyles.js");
+
+
+
+
+
+var defaultModifiers = [_modifiers_eventListeners_js__WEBPACK_IMPORTED_MODULE_1__["default"], _modifiers_popperOffsets_js__WEBPACK_IMPORTED_MODULE_2__["default"], _modifiers_computeStyles_js__WEBPACK_IMPORTED_MODULE_3__["default"], _modifiers_applyStyles_js__WEBPACK_IMPORTED_MODULE_4__["default"]];
+var createPopper = /*#__PURE__*/Object(_createPopper_js__WEBPACK_IMPORTED_MODULE_0__["popperGenerator"])({
+  defaultModifiers: defaultModifiers
+}); // eslint-disable-next-line import/no-unused-modules
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/popper.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/popper.js ***!
+  \***************************************************/
+/*! exports provided: createPopper, popperGenerator, defaultModifiers, detectOverflow, createPopperLite, applyStyles, arrow, computeStyles, eventListeners, flip, hide, offset, popperOffsets, preventOverflow */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createPopper", function() { return createPopper; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "defaultModifiers", function() { return defaultModifiers; });
+/* harmony import */ var _createPopper_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./createPopper.js */ "./node_modules/@popperjs/core/lib/createPopper.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperGenerator", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_0__["popperGenerator"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "detectOverflow", function() { return _createPopper_js__WEBPACK_IMPORTED_MODULE_0__["detectOverflow"]; });
+
+/* harmony import */ var _modifiers_eventListeners_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modifiers/eventListeners.js */ "./node_modules/@popperjs/core/lib/modifiers/eventListeners.js");
+/* harmony import */ var _modifiers_popperOffsets_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modifiers/popperOffsets.js */ "./node_modules/@popperjs/core/lib/modifiers/popperOffsets.js");
+/* harmony import */ var _modifiers_computeStyles_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modifiers/computeStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/computeStyles.js");
+/* harmony import */ var _modifiers_applyStyles_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modifiers/applyStyles.js */ "./node_modules/@popperjs/core/lib/modifiers/applyStyles.js");
+/* harmony import */ var _modifiers_offset_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modifiers/offset.js */ "./node_modules/@popperjs/core/lib/modifiers/offset.js");
+/* harmony import */ var _modifiers_flip_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modifiers/flip.js */ "./node_modules/@popperjs/core/lib/modifiers/flip.js");
+/* harmony import */ var _modifiers_preventOverflow_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modifiers/preventOverflow.js */ "./node_modules/@popperjs/core/lib/modifiers/preventOverflow.js");
+/* harmony import */ var _modifiers_arrow_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modifiers/arrow.js */ "./node_modules/@popperjs/core/lib/modifiers/arrow.js");
+/* harmony import */ var _modifiers_hide_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./modifiers/hide.js */ "./node_modules/@popperjs/core/lib/modifiers/hide.js");
+/* harmony import */ var _popper_lite_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./popper-lite.js */ "./node_modules/@popperjs/core/lib/popper-lite.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "createPopperLite", function() { return _popper_lite_js__WEBPACK_IMPORTED_MODULE_10__["createPopper"]; });
+
+/* harmony import */ var _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./modifiers/index.js */ "./node_modules/@popperjs/core/lib/modifiers/index.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "applyStyles", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["applyStyles"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "arrow", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["arrow"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "computeStyles", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["computeStyles"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "eventListeners", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["eventListeners"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "flip", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["flip"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "hide", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["hide"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "offset", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["offset"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "popperOffsets", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["popperOffsets"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "preventOverflow", function() { return _modifiers_index_js__WEBPACK_IMPORTED_MODULE_11__["preventOverflow"]; });
+
+
+
+
+
+
+
+
+
+
+
+var defaultModifiers = [_modifiers_eventListeners_js__WEBPACK_IMPORTED_MODULE_1__["default"], _modifiers_popperOffsets_js__WEBPACK_IMPORTED_MODULE_2__["default"], _modifiers_computeStyles_js__WEBPACK_IMPORTED_MODULE_3__["default"], _modifiers_applyStyles_js__WEBPACK_IMPORTED_MODULE_4__["default"], _modifiers_offset_js__WEBPACK_IMPORTED_MODULE_5__["default"], _modifiers_flip_js__WEBPACK_IMPORTED_MODULE_6__["default"], _modifiers_preventOverflow_js__WEBPACK_IMPORTED_MODULE_7__["default"], _modifiers_arrow_js__WEBPACK_IMPORTED_MODULE_8__["default"], _modifiers_hide_js__WEBPACK_IMPORTED_MODULE_9__["default"]];
+var createPopper = /*#__PURE__*/Object(_createPopper_js__WEBPACK_IMPORTED_MODULE_0__["popperGenerator"])({
+  defaultModifiers: defaultModifiers
+}); // eslint-disable-next-line import/no-unused-modules
+
+ // eslint-disable-next-line import/no-unused-modules
+
+ // eslint-disable-next-line import/no-unused-modules
+
+
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/computeAutoPlacement.js ***!
+  \***********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return computeAutoPlacement; });
+/* harmony import */ var _getVariation_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getVariation.js */ "./node_modules/@popperjs/core/lib/utils/getVariation.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _detectOverflow_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./detectOverflow.js */ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js");
+/* harmony import */ var _getBasePlacement_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+
+
+
+
+function computeAutoPlacement(state, options) {
+  if (options === void 0) {
+    options = {};
+  }
+
+  var _options = options,
+      placement = _options.placement,
+      boundary = _options.boundary,
+      rootBoundary = _options.rootBoundary,
+      padding = _options.padding,
+      flipVariations = _options.flipVariations,
+      _options$allowedAutoP = _options.allowedAutoPlacements,
+      allowedAutoPlacements = _options$allowedAutoP === void 0 ? _enums_js__WEBPACK_IMPORTED_MODULE_1__["placements"] : _options$allowedAutoP;
+  var variation = Object(_getVariation_js__WEBPACK_IMPORTED_MODULE_0__["default"])(placement);
+  var placements = variation ? flipVariations ? _enums_js__WEBPACK_IMPORTED_MODULE_1__["variationPlacements"] : _enums_js__WEBPACK_IMPORTED_MODULE_1__["variationPlacements"].filter(function (placement) {
+    return Object(_getVariation_js__WEBPACK_IMPORTED_MODULE_0__["default"])(placement) === variation;
+  }) : _enums_js__WEBPACK_IMPORTED_MODULE_1__["basePlacements"];
+  var allowedPlacements = placements.filter(function (placement) {
+    return allowedAutoPlacements.indexOf(placement) >= 0;
+  });
+
+  if (allowedPlacements.length === 0) {
+    allowedPlacements = placements;
+
+    if (true) {
+      console.error(['Popper: The `allowedAutoPlacements` option did not allow any', 'placements. Ensure the `placement` option matches the variation', 'of the allowed placements.', 'For example, "auto" cannot be used to allow "bottom-start".', 'Use "auto-start" instead.'].join(' '));
+    }
+  } // $FlowFixMe[incompatible-type]: Flow seems to have problems with two array unions...
+
+
+  var overflows = allowedPlacements.reduce(function (acc, placement) {
+    acc[placement] = Object(_detectOverflow_js__WEBPACK_IMPORTED_MODULE_2__["default"])(state, {
+      placement: placement,
+      boundary: boundary,
+      rootBoundary: rootBoundary,
+      padding: padding
+    })[Object(_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_3__["default"])(placement)];
+    return acc;
+  }, {});
+  return Object.keys(overflows).sort(function (a, b) {
+    return overflows[a] - overflows[b];
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/computeOffsets.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/computeOffsets.js ***!
+  \*****************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return computeOffsets; });
+/* harmony import */ var _getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getBasePlacement.js */ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js");
+/* harmony import */ var _getVariation_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./getVariation.js */ "./node_modules/@popperjs/core/lib/utils/getVariation.js");
+/* harmony import */ var _getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getMainAxisFromPlacement.js */ "./node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+
+
+
+
+function computeOffsets(_ref) {
+  var reference = _ref.reference,
+      element = _ref.element,
+      placement = _ref.placement;
+  var basePlacement = placement ? Object(_getBasePlacement_js__WEBPACK_IMPORTED_MODULE_0__["default"])(placement) : null;
+  var variation = placement ? Object(_getVariation_js__WEBPACK_IMPORTED_MODULE_1__["default"])(placement) : null;
+  var commonX = reference.x + reference.width / 2 - element.width / 2;
+  var commonY = reference.y + reference.height / 2 - element.height / 2;
+  var offsets;
+
+  switch (basePlacement) {
+    case _enums_js__WEBPACK_IMPORTED_MODULE_3__["top"]:
+      offsets = {
+        x: commonX,
+        y: reference.y - element.height
+      };
+      break;
+
+    case _enums_js__WEBPACK_IMPORTED_MODULE_3__["bottom"]:
+      offsets = {
+        x: commonX,
+        y: reference.y + reference.height
+      };
+      break;
+
+    case _enums_js__WEBPACK_IMPORTED_MODULE_3__["right"]:
+      offsets = {
+        x: reference.x + reference.width,
+        y: commonY
+      };
+      break;
+
+    case _enums_js__WEBPACK_IMPORTED_MODULE_3__["left"]:
+      offsets = {
+        x: reference.x - element.width,
+        y: commonY
+      };
+      break;
+
+    default:
+      offsets = {
+        x: reference.x,
+        y: reference.y
+      };
+  }
+
+  var mainAxis = basePlacement ? Object(_getMainAxisFromPlacement_js__WEBPACK_IMPORTED_MODULE_2__["default"])(basePlacement) : null;
+
+  if (mainAxis != null) {
+    var len = mainAxis === 'y' ? 'height' : 'width';
+
+    switch (variation) {
+      case _enums_js__WEBPACK_IMPORTED_MODULE_3__["start"]:
+        offsets[mainAxis] = offsets[mainAxis] - (reference[len] / 2 - element[len] / 2);
+        break;
+
+      case _enums_js__WEBPACK_IMPORTED_MODULE_3__["end"]:
+        offsets[mainAxis] = offsets[mainAxis] + (reference[len] / 2 - element[len] / 2);
+        break;
+
+      default:
+    }
+  }
+
+  return offsets;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/debounce.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/debounce.js ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return debounce; });
+function debounce(fn) {
+  var pending;
+  return function () {
+    if (!pending) {
+      pending = new Promise(function (resolve) {
+        Promise.resolve().then(function () {
+          pending = undefined;
+          resolve(fn());
+        });
+      });
+    }
+
+    return pending;
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/detectOverflow.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/detectOverflow.js ***!
+  \*****************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return detectOverflow; });
+/* harmony import */ var _dom_utils_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom-utils/getBoundingClientRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getBoundingClientRect.js");
+/* harmony import */ var _dom_utils_getClippingRect_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../dom-utils/getClippingRect.js */ "./node_modules/@popperjs/core/lib/dom-utils/getClippingRect.js");
+/* harmony import */ var _dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../dom-utils/getDocumentElement.js */ "./node_modules/@popperjs/core/lib/dom-utils/getDocumentElement.js");
+/* harmony import */ var _computeOffsets_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./computeOffsets.js */ "./node_modules/@popperjs/core/lib/utils/computeOffsets.js");
+/* harmony import */ var _rectToClientRect_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./rectToClientRect.js */ "./node_modules/@popperjs/core/lib/utils/rectToClientRect.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+/* harmony import */ var _dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../dom-utils/instanceOf.js */ "./node_modules/@popperjs/core/lib/dom-utils/instanceOf.js");
+/* harmony import */ var _mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./mergePaddingObject.js */ "./node_modules/@popperjs/core/lib/utils/mergePaddingObject.js");
+/* harmony import */ var _expandToHashMap_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./expandToHashMap.js */ "./node_modules/@popperjs/core/lib/utils/expandToHashMap.js");
+
+
+
+
+
+
+
+
+ // eslint-disable-next-line import/no-unused-modules
+
+function detectOverflow(state, options) {
+  if (options === void 0) {
+    options = {};
+  }
+
+  var _options = options,
+      _options$placement = _options.placement,
+      placement = _options$placement === void 0 ? state.placement : _options$placement,
+      _options$boundary = _options.boundary,
+      boundary = _options$boundary === void 0 ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["clippingParents"] : _options$boundary,
+      _options$rootBoundary = _options.rootBoundary,
+      rootBoundary = _options$rootBoundary === void 0 ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["viewport"] : _options$rootBoundary,
+      _options$elementConte = _options.elementContext,
+      elementContext = _options$elementConte === void 0 ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["popper"] : _options$elementConte,
+      _options$altBoundary = _options.altBoundary,
+      altBoundary = _options$altBoundary === void 0 ? false : _options$altBoundary,
+      _options$padding = _options.padding,
+      padding = _options$padding === void 0 ? 0 : _options$padding;
+  var paddingObject = Object(_mergePaddingObject_js__WEBPACK_IMPORTED_MODULE_7__["default"])(typeof padding !== 'number' ? padding : Object(_expandToHashMap_js__WEBPACK_IMPORTED_MODULE_8__["default"])(padding, _enums_js__WEBPACK_IMPORTED_MODULE_5__["basePlacements"]));
+  var altContext = elementContext === _enums_js__WEBPACK_IMPORTED_MODULE_5__["popper"] ? _enums_js__WEBPACK_IMPORTED_MODULE_5__["reference"] : _enums_js__WEBPACK_IMPORTED_MODULE_5__["popper"];
+  var referenceElement = state.elements.reference;
+  var popperRect = state.rects.popper;
+  var element = state.elements[altBoundary ? altContext : elementContext];
+  var clippingClientRect = Object(_dom_utils_getClippingRect_js__WEBPACK_IMPORTED_MODULE_1__["default"])(Object(_dom_utils_instanceOf_js__WEBPACK_IMPORTED_MODULE_6__["isElement"])(element) ? element : element.contextElement || Object(_dom_utils_getDocumentElement_js__WEBPACK_IMPORTED_MODULE_2__["default"])(state.elements.popper), boundary, rootBoundary);
+  var referenceClientRect = Object(_dom_utils_getBoundingClientRect_js__WEBPACK_IMPORTED_MODULE_0__["default"])(referenceElement);
+  var popperOffsets = Object(_computeOffsets_js__WEBPACK_IMPORTED_MODULE_3__["default"])({
+    reference: referenceClientRect,
+    element: popperRect,
+    strategy: 'absolute',
+    placement: placement
+  });
+  var popperClientRect = Object(_rectToClientRect_js__WEBPACK_IMPORTED_MODULE_4__["default"])(Object.assign({}, popperRect, popperOffsets));
+  var elementClientRect = elementContext === _enums_js__WEBPACK_IMPORTED_MODULE_5__["popper"] ? popperClientRect : referenceClientRect; // positive = overflowing the clipping rect
+  // 0 or negative = within the clipping rect
+
+  var overflowOffsets = {
+    top: clippingClientRect.top - elementClientRect.top + paddingObject.top,
+    bottom: elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom,
+    left: clippingClientRect.left - elementClientRect.left + paddingObject.left,
+    right: elementClientRect.right - clippingClientRect.right + paddingObject.right
+  };
+  var offsetData = state.modifiersData.offset; // Offsets can be applied only to the popper element
+
+  if (elementContext === _enums_js__WEBPACK_IMPORTED_MODULE_5__["popper"] && offsetData) {
+    var offset = offsetData[placement];
+    Object.keys(overflowOffsets).forEach(function (key) {
+      var multiply = [_enums_js__WEBPACK_IMPORTED_MODULE_5__["right"], _enums_js__WEBPACK_IMPORTED_MODULE_5__["bottom"]].indexOf(key) >= 0 ? 1 : -1;
+      var axis = [_enums_js__WEBPACK_IMPORTED_MODULE_5__["top"], _enums_js__WEBPACK_IMPORTED_MODULE_5__["bottom"]].indexOf(key) >= 0 ? 'y' : 'x';
+      overflowOffsets[key] += offset[axis] * multiply;
+    });
+  }
+
+  return overflowOffsets;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/expandToHashMap.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/expandToHashMap.js ***!
+  \******************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return expandToHashMap; });
+function expandToHashMap(value, keys) {
+  return keys.reduce(function (hashMap, key) {
+    hashMap[key] = value;
+    return hashMap;
+  }, {});
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/format.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/format.js ***!
+  \*********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return format; });
+function format(str) {
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
+  return [].concat(args).reduce(function (p, c) {
+    return p.replace(/%s/, c);
+  }, str);
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getAltAxis.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getAltAxis.js ***!
+  \*************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getAltAxis; });
+function getAltAxis(axis) {
+  return axis === 'x' ? 'y' : 'x';
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getBasePlacement.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getBasePlacement.js ***!
+  \*******************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getBasePlacement; });
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+
+function getBasePlacement(placement) {
+  return placement.split('-')[0];
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getFreshSideObject.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getFreshSideObject.js ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getFreshSideObject; });
+function getFreshSideObject() {
+  return {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0
+  };
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js":
+/*!***************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getMainAxisFromPlacement.js ***!
+  \***************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getMainAxisFromPlacement; });
+function getMainAxisFromPlacement(placement) {
+  return ['top', 'bottom'].indexOf(placement) >= 0 ? 'x' : 'y';
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getOppositePlacement.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getOppositePlacement.js ***!
+  \***********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getOppositePlacement; });
+var hash = {
+  left: 'right',
+  right: 'left',
+  bottom: 'top',
+  top: 'bottom'
+};
+function getOppositePlacement(placement) {
+  return placement.replace(/left|right|bottom|top/g, function (matched) {
+    return hash[matched];
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js":
+/*!********************************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getOppositeVariationPlacement.js ***!
+  \********************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getOppositeVariationPlacement; });
+var hash = {
+  start: 'end',
+  end: 'start'
+};
+function getOppositeVariationPlacement(placement) {
+  return placement.replace(/start|end/g, function (matched) {
+    return hash[matched];
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/getVariation.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/getVariation.js ***!
+  \***************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return getVariation; });
+function getVariation(placement) {
+  return placement.split('-')[1];
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/math.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/math.js ***!
+  \*******************************************************/
+/*! exports provided: max, min, round */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "max", function() { return max; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "min", function() { return min; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "round", function() { return round; });
+var max = Math.max;
+var min = Math.min;
+var round = Math.round;
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/mergeByName.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/mergeByName.js ***!
+  \**************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return mergeByName; });
+function mergeByName(modifiers) {
+  var merged = modifiers.reduce(function (merged, current) {
+    var existing = merged[current.name];
+    merged[current.name] = existing ? Object.assign({}, existing, current, {
+      options: Object.assign({}, existing.options, current.options),
+      data: Object.assign({}, existing.data, current.data)
+    }) : current;
+    return merged;
+  }, {}); // IE11 does not support Object.values
+
+  return Object.keys(merged).map(function (key) {
+    return merged[key];
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/mergePaddingObject.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/mergePaddingObject.js ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return mergePaddingObject; });
+/* harmony import */ var _getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./getFreshSideObject.js */ "./node_modules/@popperjs/core/lib/utils/getFreshSideObject.js");
+
+function mergePaddingObject(paddingObject) {
+  return Object.assign({}, Object(_getFreshSideObject_js__WEBPACK_IMPORTED_MODULE_0__["default"])(), paddingObject);
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/orderModifiers.js":
+/*!*****************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/orderModifiers.js ***!
+  \*****************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return orderModifiers; });
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+ // source: https://stackoverflow.com/questions/49875255
+
+function order(modifiers) {
+  var map = new Map();
+  var visited = new Set();
+  var result = [];
+  modifiers.forEach(function (modifier) {
+    map.set(modifier.name, modifier);
+  }); // On visiting object, check for its dependencies and visit them recursively
+
+  function sort(modifier) {
+    visited.add(modifier.name);
+    var requires = [].concat(modifier.requires || [], modifier.requiresIfExists || []);
+    requires.forEach(function (dep) {
+      if (!visited.has(dep)) {
+        var depModifier = map.get(dep);
+
+        if (depModifier) {
+          sort(depModifier);
+        }
+      }
+    });
+    result.push(modifier);
+  }
+
+  modifiers.forEach(function (modifier) {
+    if (!visited.has(modifier.name)) {
+      // check for visited object
+      sort(modifier);
+    }
+  });
+  return result;
+}
+
+function orderModifiers(modifiers) {
+  // order based on dependencies
+  var orderedModifiers = order(modifiers); // order based on phase
+
+  return _enums_js__WEBPACK_IMPORTED_MODULE_0__["modifierPhases"].reduce(function (acc, phase) {
+    return acc.concat(orderedModifiers.filter(function (modifier) {
+      return modifier.phase === phase;
+    }));
+  }, []);
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/rectToClientRect.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/rectToClientRect.js ***!
+  \*******************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return rectToClientRect; });
+function rectToClientRect(rect) {
+  return Object.assign({}, rect, {
+    left: rect.x,
+    top: rect.y,
+    right: rect.x + rect.width,
+    bottom: rect.y + rect.height
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/uniqueBy.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/uniqueBy.js ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return uniqueBy; });
+function uniqueBy(arr, fn) {
+  var identifiers = new Set();
+  return arr.filter(function (item) {
+    var identifier = fn(item);
+
+    if (!identifiers.has(identifier)) {
+      identifiers.add(identifier);
+      return true;
+    }
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/validateModifiers.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/validateModifiers.js ***!
+  \********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return validateModifiers; });
+/* harmony import */ var _format_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./format.js */ "./node_modules/@popperjs/core/lib/utils/format.js");
+/* harmony import */ var _enums_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../enums.js */ "./node_modules/@popperjs/core/lib/enums.js");
+
+
+var INVALID_MODIFIER_ERROR = 'Popper: modifier "%s" provided an invalid %s property, expected %s but got %s';
+var MISSING_DEPENDENCY_ERROR = 'Popper: modifier "%s" requires "%s", but "%s" modifier is not available';
+var VALID_PROPERTIES = ['name', 'enabled', 'phase', 'fn', 'effect', 'requires', 'options'];
+function validateModifiers(modifiers) {
+  modifiers.forEach(function (modifier) {
+    Object.keys(modifier).forEach(function (key) {
+      switch (key) {
+        case 'name':
+          if (typeof modifier.name !== 'string') {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, String(modifier.name), '"name"', '"string"', "\"" + String(modifier.name) + "\""));
+          }
+
+          break;
+
+        case 'enabled':
+          if (typeof modifier.enabled !== 'boolean') {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"enabled"', '"boolean"', "\"" + String(modifier.enabled) + "\""));
+          }
+
+        case 'phase':
+          if (_enums_js__WEBPACK_IMPORTED_MODULE_1__["modifierPhases"].indexOf(modifier.phase) < 0) {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"phase"', "either " + _enums_js__WEBPACK_IMPORTED_MODULE_1__["modifierPhases"].join(', '), "\"" + String(modifier.phase) + "\""));
+          }
+
+          break;
+
+        case 'fn':
+          if (typeof modifier.fn !== 'function') {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"fn"', '"function"', "\"" + String(modifier.fn) + "\""));
+          }
+
+          break;
+
+        case 'effect':
+          if (typeof modifier.effect !== 'function') {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"effect"', '"function"', "\"" + String(modifier.fn) + "\""));
+          }
+
+          break;
+
+        case 'requires':
+          if (!Array.isArray(modifier.requires)) {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"requires"', '"array"', "\"" + String(modifier.requires) + "\""));
+          }
+
+          break;
+
+        case 'requiresIfExists':
+          if (!Array.isArray(modifier.requiresIfExists)) {
+            console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(INVALID_MODIFIER_ERROR, modifier.name, '"requiresIfExists"', '"array"', "\"" + String(modifier.requiresIfExists) + "\""));
+          }
+
+          break;
+
+        case 'options':
+        case 'data':
+          break;
+
+        default:
+          console.error("PopperJS: an invalid property has been provided to the \"" + modifier.name + "\" modifier, valid properties are " + VALID_PROPERTIES.map(function (s) {
+            return "\"" + s + "\"";
+          }).join(', ') + "; but \"" + key + "\" was provided.");
+      }
+
+      modifier.requires && modifier.requires.forEach(function (requirement) {
+        if (modifiers.find(function (mod) {
+          return mod.name === requirement;
+        }) == null) {
+          console.error(Object(_format_js__WEBPACK_IMPORTED_MODULE_0__["default"])(MISSING_DEPENDENCY_ERROR, String(modifier.name), requirement, requirement));
+        }
+      });
+    });
+  });
+}
+
+/***/ }),
+
+/***/ "./node_modules/@popperjs/core/lib/utils/within.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/@popperjs/core/lib/utils/within.js ***!
+  \*********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return within; });
+/* harmony import */ var _math_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./math.js */ "./node_modules/@popperjs/core/lib/utils/math.js");
+
+function within(min, value, max) {
+  return Object(_math_js__WEBPACK_IMPORTED_MODULE_0__["max"])(min, Object(_math_js__WEBPACK_IMPORTED_MODULE_0__["min"])(value, max));
+}
+
+/***/ }),
+
 /***/ "./node_modules/bootstrap/dist/js/bootstrap.esm.js":
 /*!*********************************************************!*\
   !*** ./node_modules/bootstrap/dist/js/bootstrap.esm.js ***!
   \*********************************************************/
-/*! exports provided: Alert, Button, Carousel, Collapse, Dropdown, Modal, Popover, ScrollSpy, Tab, Toast, Tooltip */
+/*! exports provided: Alert, Button, Carousel, Collapse, Dropdown, Modal, Offcanvas, Popover, ScrollSpy, Tab, Toast, Tooltip */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -15,72 +3112,105 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Collapse", function() { return Collapse; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Dropdown", function() { return Dropdown; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Modal", function() { return Modal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Offcanvas", function() { return Offcanvas; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Popover", function() { return Popover; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ScrollSpy", function() { return ScrollSpy; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Tab", function() { return Tab; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Toast", function() { return Toast; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return Tooltip; });
-/* harmony import */ var popper_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! popper.js */ "./node_modules/popper.js/dist/esm/popper.js");
+/* harmony import */ var _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @popperjs/core */ "./node_modules/@popperjs/core/lib/index.js");
 /*!
-  * Bootstrap v5.0.0-alpha3 (https://getbootstrap.com/)
-  * Copyright 2011-2020 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Bootstrap v5.0.2 (https://getbootstrap.com/)
+  * Copyright 2011-2021 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
   */
 
 
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  return Constructor;
-}
-
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
-}
-
-function _inheritsLoose(subClass, superClass) {
-  subClass.prototype = Object.create(superClass.prototype);
-  subClass.prototype.constructor = subClass;
-  subClass.__proto__ = superClass;
-}
-
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): util/index.js
+ * Bootstrap (v5.0.2): dom/selector-engine.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
-var MAX_UID = 1000000;
-var MILLISECONDS_MULTIPLIER = 1000;
-var TRANSITION_END = 'transitionend'; // Shoutout AngusCroll (https://goo.gl/pxwQGp)
 
-var toType = function toType(obj) {
+/**
+ * ------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------
+ */
+const NODE_TEXT = 3;
+const SelectorEngine = {
+  find(selector, element = document.documentElement) {
+    return [].concat(...Element.prototype.querySelectorAll.call(element, selector));
+  },
+
+  findOne(selector, element = document.documentElement) {
+    return Element.prototype.querySelector.call(element, selector);
+  },
+
+  children(element, selector) {
+    return [].concat(...element.children).filter(child => child.matches(selector));
+  },
+
+  parents(element, selector) {
+    const parents = [];
+    let ancestor = element.parentNode;
+
+    while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE && ancestor.nodeType !== NODE_TEXT) {
+      if (ancestor.matches(selector)) {
+        parents.push(ancestor);
+      }
+
+      ancestor = ancestor.parentNode;
+    }
+
+    return parents;
+  },
+
+  prev(element, selector) {
+    let previous = element.previousElementSibling;
+
+    while (previous) {
+      if (previous.matches(selector)) {
+        return [previous];
+      }
+
+      previous = previous.previousElementSibling;
+    }
+
+    return [];
+  },
+
+  next(element, selector) {
+    let next = element.nextElementSibling;
+
+    while (next) {
+      if (next.matches(selector)) {
+        return [next];
+      }
+
+      next = next.nextElementSibling;
+    }
+
+    return [];
+  }
+
+};
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): util/index.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+
+const MAX_UID = 1000000;
+const MILLISECONDS_MULTIPLIER = 1000;
+const TRANSITION_END = 'transitionend'; // Shoutout AngusCroll (https://goo.gl/pxwQGp)
+
+const toType = obj => {
   if (obj === null || obj === undefined) {
-    return "" + obj;
+    return `${obj}`;
   }
 
   return {}.toString.call(obj).match(/\s([a-z]+)/i)[1].toLowerCase();
@@ -92,7 +3222,7 @@ var toType = function toType(obj) {
  */
 
 
-var getUID = function getUID(prefix) {
+const getUID = prefix => {
   do {
     prefix += Math.floor(Math.random() * MAX_UID);
   } while (document.getElementById(prefix));
@@ -100,19 +3230,32 @@ var getUID = function getUID(prefix) {
   return prefix;
 };
 
-var getSelector = function getSelector(element) {
-  var selector = element.getAttribute('data-target');
+const getSelector = element => {
+  let selector = element.getAttribute('data-bs-target');
 
   if (!selector || selector === '#') {
-    var hrefAttr = element.getAttribute('href');
+    let hrefAttr = element.getAttribute('href'); // The only valid content that could double as a selector are IDs or classes,
+    // so everything starting with `#` or `.`. If a "real" URL is used as the selector,
+    // `document.querySelector` will rightfully complain it is invalid.
+    // See https://github.com/twbs/bootstrap/issues/32273
+
+    if (!hrefAttr || !hrefAttr.includes('#') && !hrefAttr.startsWith('.')) {
+      return null;
+    } // Just in case some CMS puts out a full URL with the anchor appended
+
+
+    if (hrefAttr.includes('#') && !hrefAttr.startsWith('#')) {
+      hrefAttr = `#${hrefAttr.split('#')[1]}`;
+    }
+
     selector = hrefAttr && hrefAttr !== '#' ? hrefAttr.trim() : null;
   }
 
   return selector;
 };
 
-var getSelectorFromElement = function getSelectorFromElement(element) {
-  var selector = getSelector(element);
+const getSelectorFromElement = element => {
+  const selector = getSelector(element);
 
   if (selector) {
     return document.querySelector(selector) ? selector : null;
@@ -121,23 +3264,23 @@ var getSelectorFromElement = function getSelectorFromElement(element) {
   return null;
 };
 
-var getElementFromSelector = function getElementFromSelector(element) {
-  var selector = getSelector(element);
+const getElementFromSelector = element => {
+  const selector = getSelector(element);
   return selector ? document.querySelector(selector) : null;
 };
 
-var getTransitionDurationFromElement = function getTransitionDurationFromElement(element) {
+const getTransitionDurationFromElement = element => {
   if (!element) {
     return 0;
   } // Get transition-duration of the element
 
 
-  var _window$getComputedSt = window.getComputedStyle(element),
-      transitionDuration = _window$getComputedSt.transitionDuration,
-      transitionDelay = _window$getComputedSt.transitionDelay;
-
-  var floatTransitionDuration = parseFloat(transitionDuration);
-  var floatTransitionDelay = parseFloat(transitionDelay); // Return 0 if element or transition duration is not found
+  let {
+    transitionDuration,
+    transitionDelay
+  } = window.getComputedStyle(element);
+  const floatTransitionDuration = Number.parseFloat(transitionDuration);
+  const floatTransitionDelay = Number.parseFloat(transitionDelay); // Return 0 if element or transition duration is not found
 
   if (!floatTransitionDuration && !floatTransitionDelay) {
     return 0;
@@ -146,69 +3289,82 @@ var getTransitionDurationFromElement = function getTransitionDurationFromElement
 
   transitionDuration = transitionDuration.split(',')[0];
   transitionDelay = transitionDelay.split(',')[0];
-  return (parseFloat(transitionDuration) + parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER;
+  return (Number.parseFloat(transitionDuration) + Number.parseFloat(transitionDelay)) * MILLISECONDS_MULTIPLIER;
 };
 
-var triggerTransitionEnd = function triggerTransitionEnd(element) {
+const triggerTransitionEnd = element => {
   element.dispatchEvent(new Event(TRANSITION_END));
 };
 
-var isElement = function isElement(obj) {
-  return (obj[0] || obj).nodeType;
-};
-
-var emulateTransitionEnd = function emulateTransitionEnd(element, duration) {
-  var called = false;
-  var durationPadding = 5;
-  var emulatedDuration = duration + durationPadding;
-
-  function listener() {
-    called = true;
-    element.removeEventListener(TRANSITION_END, listener);
+const isElement = obj => {
+  if (!obj || typeof obj !== 'object') {
+    return false;
   }
 
-  element.addEventListener(TRANSITION_END, listener);
-  setTimeout(function () {
-    if (!called) {
-      triggerTransitionEnd(element);
-    }
-  }, emulatedDuration);
+  if (typeof obj.jquery !== 'undefined') {
+    obj = obj[0];
+  }
+
+  return typeof obj.nodeType !== 'undefined';
 };
 
-var typeCheckConfig = function typeCheckConfig(componentName, config, configTypes) {
-  Object.keys(configTypes).forEach(function (property) {
-    var expectedTypes = configTypes[property];
-    var value = config[property];
-    var valueType = value && isElement(value) ? 'element' : toType(value);
+const getElement = obj => {
+  if (isElement(obj)) {
+    // it's a jQuery object or a node element
+    return obj.jquery ? obj[0] : obj;
+  }
+
+  if (typeof obj === 'string' && obj.length > 0) {
+    return SelectorEngine.findOne(obj);
+  }
+
+  return null;
+};
+
+const typeCheckConfig = (componentName, config, configTypes) => {
+  Object.keys(configTypes).forEach(property => {
+    const expectedTypes = configTypes[property];
+    const value = config[property];
+    const valueType = value && isElement(value) ? 'element' : toType(value);
 
     if (!new RegExp(expectedTypes).test(valueType)) {
-      throw new Error(componentName.toUpperCase() + ": " + ("Option \"" + property + "\" provided type \"" + valueType + "\" ") + ("but expected type \"" + expectedTypes + "\"."));
+      throw new TypeError(`${componentName.toUpperCase()}: Option "${property}" provided type "${valueType}" but expected type "${expectedTypes}".`);
     }
   });
 };
 
-var isVisible = function isVisible(element) {
-  if (!element) {
+const isVisible = element => {
+  if (!isElement(element) || element.getClientRects().length === 0) {
     return false;
   }
 
-  if (element.style && element.parentNode && element.parentNode.style) {
-    var elementStyle = getComputedStyle(element);
-    var parentNodeStyle = getComputedStyle(element.parentNode);
-    return elementStyle.display !== 'none' && parentNodeStyle.display !== 'none' && elementStyle.visibility !== 'hidden';
-  }
-
-  return false;
+  return getComputedStyle(element).getPropertyValue('visibility') === 'visible';
 };
 
-var findShadowRoot = function findShadowRoot(element) {
+const isDisabled = element => {
+  if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+    return true;
+  }
+
+  if (element.classList.contains('disabled')) {
+    return true;
+  }
+
+  if (typeof element.disabled !== 'undefined') {
+    return element.disabled;
+  }
+
+  return element.hasAttribute('disabled') && element.getAttribute('disabled') !== 'false';
+};
+
+const findShadowRoot = element => {
   if (!document.documentElement.attachShadow) {
     return null;
   } // Can find the shadow root otherwise it'll return the document
 
 
   if (typeof element.getRootNode === 'function') {
-    var root = element.getRootNode();
+    const root = element.getRootNode();
     return root instanceof ShadowRoot ? root : null;
   }
 
@@ -224,103 +3380,126 @@ var findShadowRoot = function findShadowRoot(element) {
   return findShadowRoot(element.parentNode);
 };
 
-var noop = function noop() {
-  return function () {};
-};
+const noop = () => {};
 
-var reflow = function reflow(element) {
-  return element.offsetHeight;
-};
+const reflow = element => element.offsetHeight;
 
-var getjQuery = function getjQuery() {
-  var _window = window,
-      jQuery = _window.jQuery;
+const getjQuery = () => {
+  const {
+    jQuery
+  } = window;
 
-  if (jQuery && !document.body.hasAttribute('data-no-jquery')) {
+  if (jQuery && !document.body.hasAttribute('data-bs-no-jquery')) {
     return jQuery;
   }
 
   return null;
 };
 
-var onDOMContentLoaded = function onDOMContentLoaded(callback) {
+const DOMContentLoadedCallbacks = [];
+
+const onDOMContentLoaded = callback => {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', callback);
+    // add listener on the first call when the document is in loading state
+    if (!DOMContentLoadedCallbacks.length) {
+      document.addEventListener('DOMContentLoaded', () => {
+        DOMContentLoadedCallbacks.forEach(callback => callback());
+      });
+    }
+
+    DOMContentLoadedCallbacks.push(callback);
   } else {
     callback();
   }
 };
 
-/**
- * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): dom/data.js
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- * --------------------------------------------------------------------------
- */
+const isRTL = () => document.documentElement.dir === 'rtl';
 
-/**
- * ------------------------------------------------------------------------
- * Constants
- * ------------------------------------------------------------------------
- */
-var mapData = function () {
-  var storeData = {};
-  var id = 1;
-  return {
-    set: function set(element, key, data) {
-      if (typeof element.bsKey === 'undefined') {
-        element.bsKey = {
-          key: key,
-          id: id
-        };
-        id++;
-      }
+const defineJQueryPlugin = plugin => {
+  onDOMContentLoaded(() => {
+    const $ = getjQuery();
+    /* istanbul ignore if */
 
-      storeData[element.bsKey.id] = data;
-    },
-    get: function get(element, key) {
-      if (!element || typeof element.bsKey === 'undefined') {
-        return null;
-      }
+    if ($) {
+      const name = plugin.NAME;
+      const JQUERY_NO_CONFLICT = $.fn[name];
+      $.fn[name] = plugin.jQueryInterface;
+      $.fn[name].Constructor = plugin;
 
-      var keyProperties = element.bsKey;
-
-      if (keyProperties.key === key) {
-        return storeData[keyProperties.id];
-      }
-
-      return null;
-    },
-    delete: function _delete(element, key) {
-      if (typeof element.bsKey === 'undefined') {
-        return;
-      }
-
-      var keyProperties = element.bsKey;
-
-      if (keyProperties.key === key) {
-        delete storeData[keyProperties.id];
-        delete element.bsKey;
-      }
+      $.fn[name].noConflict = () => {
+        $.fn[name] = JQUERY_NO_CONFLICT;
+        return plugin.jQueryInterface;
+      };
     }
-  };
-}();
+  });
+};
 
-var Data = {
-  setData: function setData(instance, key, data) {
-    mapData.set(instance, key, data);
-  },
-  getData: function getData(instance, key) {
-    return mapData.get(instance, key);
-  },
-  removeData: function removeData(instance, key) {
-    mapData.delete(instance, key);
+const execute = callback => {
+  if (typeof callback === 'function') {
+    callback();
   }
 };
 
+const executeAfterTransition = (callback, transitionElement, waitForTransition = true) => {
+  if (!waitForTransition) {
+    execute(callback);
+    return;
+  }
+
+  const durationPadding = 5;
+  const emulatedDuration = getTransitionDurationFromElement(transitionElement) + durationPadding;
+  let called = false;
+
+  const handler = ({
+    target
+  }) => {
+    if (target !== transitionElement) {
+      return;
+    }
+
+    called = true;
+    transitionElement.removeEventListener(TRANSITION_END, handler);
+    execute(callback);
+  };
+
+  transitionElement.addEventListener(TRANSITION_END, handler);
+  setTimeout(() => {
+    if (!called) {
+      triggerTransitionEnd(transitionElement);
+    }
+  }, emulatedDuration);
+};
+/**
+ * Return the previous/next element of a list.
+ *
+ * @param {array} list    The list of elements
+ * @param activeElement   The active element
+ * @param shouldGetNext   Choose to get next or previous element
+ * @param isCycleAllowed
+ * @return {Element|elem} The proper element
+ */
+
+
+const getNextActiveElement = (list, activeElement, shouldGetNext, isCycleAllowed) => {
+  let index = list.indexOf(activeElement); // if the element does not exist in the list return an element depending on the direction and if cycle is allowed
+
+  if (index === -1) {
+    return list[!shouldGetNext && isCycleAllowed ? list.length - 1 : 0];
+  }
+
+  const listLength = list.length;
+  index += shouldGetNext ? 1 : -1;
+
+  if (isCycleAllowed) {
+    index = (index + listLength) % listLength;
+  }
+
+  return list[Math.max(0, Math.min(index, listLength - 1))];
+};
+
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): dom/event-handler.js
+ * Bootstrap (v5.0.2): dom/event-handler.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
@@ -330,17 +3509,18 @@ var Data = {
  * ------------------------------------------------------------------------
  */
 
-var namespaceRegex = /[^.]*(?=\..*)\.|.*/;
-var stripNameRegex = /\..*/;
-var stripUidRegex = /::\d+$/;
-var eventRegistry = {}; // Events storage
+const namespaceRegex = /[^.]*(?=\..*)\.|.*/;
+const stripNameRegex = /\..*/;
+const stripUidRegex = /::\d+$/;
+const eventRegistry = {}; // Events storage
 
-var uidEvent = 1;
-var customEvents = {
+let uidEvent = 1;
+const customEvents = {
   mouseenter: 'mouseover',
   mouseleave: 'mouseout'
 };
-var nativeEvents = ['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu', 'mousewheel', 'DOMMouseScroll', 'mouseover', 'mouseout', 'mousemove', 'selectstart', 'selectend', 'keydown', 'keypress', 'keyup', 'orientationchange', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'gesturestart', 'gesturechange', 'gestureend', 'focus', 'blur', 'change', 'reset', 'select', 'submit', 'focusin', 'focusout', 'load', 'unload', 'beforeunload', 'resize', 'move', 'DOMContentLoaded', 'readystatechange', 'error', 'abort', 'scroll'];
+const customEventsRegex = /^(mouseenter|mouseleave)/i;
+const nativeEvents = new Set(['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu', 'mousewheel', 'DOMMouseScroll', 'mouseover', 'mouseout', 'mousemove', 'selectstart', 'selectend', 'keydown', 'keypress', 'keyup', 'orientationchange', 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'gesturestart', 'gesturechange', 'gestureend', 'focus', 'blur', 'change', 'reset', 'select', 'submit', 'focusin', 'focusout', 'load', 'unload', 'beforeunload', 'resize', 'move', 'DOMContentLoaded', 'readystatechange', 'error', 'abort', 'scroll']);
 /**
  * ------------------------------------------------------------------------
  * Private methods
@@ -348,11 +3528,11 @@ var nativeEvents = ['click', 'dblclick', 'mouseup', 'mousedown', 'contextmenu', 
  */
 
 function getUidEvent(element, uid) {
-  return uid && uid + "::" + uidEvent++ || element.uidEvent || uidEvent++;
+  return uid && `${uid}::${uidEvent++}` || element.uidEvent || uidEvent++;
 }
 
 function getEvent(element) {
-  var uid = getUidEvent(element);
+  const uid = getUidEvent(element);
   element.uidEvent = uid;
   eventRegistry[uid] = eventRegistry[uid] || {};
   return eventRegistry[uid];
@@ -372,15 +3552,18 @@ function bootstrapHandler(element, fn) {
 
 function bootstrapDelegationHandler(element, selector, fn) {
   return function handler(event) {
-    var domElements = element.querySelectorAll(selector);
+    const domElements = element.querySelectorAll(selector);
 
-    for (var target = event.target; target && target !== this; target = target.parentNode) {
-      for (var i = domElements.length; i--;) {
+    for (let {
+      target
+    } = event; target && target !== this; target = target.parentNode) {
+      for (let i = domElements.length; i--;) {
         if (domElements[i] === target) {
           event.delegateTarget = target;
 
           if (handler.oneOff) {
-            EventHandler.off(element, event.type, fn);
+            // eslint-disable-next-line unicorn/consistent-destructuring
+            EventHandler.off(element, event.type, selector, fn);
           }
 
           return fn.apply(target, [event]);
@@ -393,15 +3576,11 @@ function bootstrapDelegationHandler(element, selector, fn) {
   };
 }
 
-function findHandler(events, handler, delegationSelector) {
-  if (delegationSelector === void 0) {
-    delegationSelector = null;
-  }
+function findHandler(events, handler, delegationSelector = null) {
+  const uidEventList = Object.keys(events);
 
-  var uidEventList = Object.keys(events);
-
-  for (var i = 0, len = uidEventList.length; i < len; i++) {
-    var event = events[uidEventList[i]];
+  for (let i = 0, len = uidEventList.length; i < len; i++) {
+    const event = events[uidEventList[i]];
 
     if (event.originalHandler === handler && event.delegationSelector === delegationSelector) {
       return event;
@@ -412,17 +3591,10 @@ function findHandler(events, handler, delegationSelector) {
 }
 
 function normalizeParams(originalTypeEvent, handler, delegationFn) {
-  var delegation = typeof handler === 'string';
-  var originalHandler = delegation ? delegationFn : handler; // allow to get the native events from namespaced events ('click.bs.button' --> 'click')
-
-  var typeEvent = originalTypeEvent.replace(stripNameRegex, '');
-  var custom = customEvents[typeEvent];
-
-  if (custom) {
-    typeEvent = custom;
-  }
-
-  var isNative = nativeEvents.indexOf(typeEvent) > -1;
+  const delegation = typeof handler === 'string';
+  const originalHandler = delegation ? delegationFn : handler;
+  let typeEvent = getTypeEvent(originalTypeEvent);
+  const isNative = nativeEvents.has(typeEvent);
 
   if (!isNative) {
     typeEvent = originalTypeEvent;
@@ -439,24 +3611,38 @@ function addHandler(element, originalTypeEvent, handler, delegationFn, oneOff) {
   if (!handler) {
     handler = delegationFn;
     delegationFn = null;
+  } // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
+  // this prevents the handler from being dispatched the same way as mouseover or mouseout does
+
+
+  if (customEventsRegex.test(originalTypeEvent)) {
+    const wrapFn = fn => {
+      return function (event) {
+        if (!event.relatedTarget || event.relatedTarget !== event.delegateTarget && !event.delegateTarget.contains(event.relatedTarget)) {
+          return fn.call(this, event);
+        }
+      };
+    };
+
+    if (delegationFn) {
+      delegationFn = wrapFn(delegationFn);
+    } else {
+      handler = wrapFn(handler);
+    }
   }
 
-  var _normalizeParams = normalizeParams(originalTypeEvent, handler, delegationFn),
-      delegation = _normalizeParams[0],
-      originalHandler = _normalizeParams[1],
-      typeEvent = _normalizeParams[2];
-
-  var events = getEvent(element);
-  var handlers = events[typeEvent] || (events[typeEvent] = {});
-  var previousFn = findHandler(handlers, originalHandler, delegation ? handler : null);
+  const [delegation, originalHandler, typeEvent] = normalizeParams(originalTypeEvent, handler, delegationFn);
+  const events = getEvent(element);
+  const handlers = events[typeEvent] || (events[typeEvent] = {});
+  const previousFn = findHandler(handlers, originalHandler, delegation ? handler : null);
 
   if (previousFn) {
     previousFn.oneOff = previousFn.oneOff && oneOff;
     return;
   }
 
-  var uid = getUidEvent(originalHandler, originalTypeEvent.replace(namespaceRegex, ''));
-  var fn = delegation ? bootstrapDelegationHandler(element, handler, delegationFn) : bootstrapHandler(element, handler);
+  const uid = getUidEvent(originalHandler, originalTypeEvent.replace(namespaceRegex, ''));
+  const fn = delegation ? bootstrapDelegationHandler(element, handler, delegationFn) : bootstrapHandler(element, handler);
   fn.delegationSelector = delegation ? handler : null;
   fn.originalHandler = originalHandler;
   fn.oneOff = oneOff;
@@ -466,7 +3652,7 @@ function addHandler(element, originalTypeEvent, handler, delegationFn, oneOff) {
 }
 
 function removeHandler(element, events, typeEvent, handler, delegationSelector) {
-  var fn = findHandler(events[typeEvent], handler, delegationSelector);
+  const fn = findHandler(events[typeEvent], handler, delegationSelector);
 
   if (!fn) {
     return;
@@ -477,35 +3663,39 @@ function removeHandler(element, events, typeEvent, handler, delegationSelector) 
 }
 
 function removeNamespacedHandlers(element, events, typeEvent, namespace) {
-  var storeElementEvent = events[typeEvent] || {};
-  Object.keys(storeElementEvent).forEach(function (handlerKey) {
-    if (handlerKey.indexOf(namespace) > -1) {
-      var event = storeElementEvent[handlerKey];
+  const storeElementEvent = events[typeEvent] || {};
+  Object.keys(storeElementEvent).forEach(handlerKey => {
+    if (handlerKey.includes(namespace)) {
+      const event = storeElementEvent[handlerKey];
       removeHandler(element, events, typeEvent, event.originalHandler, event.delegationSelector);
     }
   });
 }
 
-var EventHandler = {
-  on: function on(element, event, handler, delegationFn) {
+function getTypeEvent(event) {
+  // allow to get the native events from namespaced events ('click.bs.button' --> 'click')
+  event = event.replace(stripNameRegex, '');
+  return customEvents[event] || event;
+}
+
+const EventHandler = {
+  on(element, event, handler, delegationFn) {
     addHandler(element, event, handler, delegationFn, false);
   },
-  one: function one(element, event, handler, delegationFn) {
+
+  one(element, event, handler, delegationFn) {
     addHandler(element, event, handler, delegationFn, true);
   },
-  off: function off(element, originalTypeEvent, handler, delegationFn) {
+
+  off(element, originalTypeEvent, handler, delegationFn) {
     if (typeof originalTypeEvent !== 'string' || !element) {
       return;
     }
 
-    var _normalizeParams2 = normalizeParams(originalTypeEvent, handler, delegationFn),
-        delegation = _normalizeParams2[0],
-        originalHandler = _normalizeParams2[1],
-        typeEvent = _normalizeParams2[2];
-
-    var inNamespace = typeEvent !== originalTypeEvent;
-    var events = getEvent(element);
-    var isNamespace = originalTypeEvent.charAt(0) === '.';
+    const [delegation, originalHandler, typeEvent] = normalizeParams(originalTypeEvent, handler, delegationFn);
+    const inNamespace = typeEvent !== originalTypeEvent;
+    const events = getEvent(element);
+    const isNamespace = originalTypeEvent.startsWith('.');
 
     if (typeof originalHandler !== 'undefined') {
       // Simplest case: handler is passed, remove that listener ONLY.
@@ -518,35 +3708,36 @@ var EventHandler = {
     }
 
     if (isNamespace) {
-      Object.keys(events).forEach(function (elementEvent) {
+      Object.keys(events).forEach(elementEvent => {
         removeNamespacedHandlers(element, events, elementEvent, originalTypeEvent.slice(1));
       });
     }
 
-    var storeElementEvent = events[typeEvent] || {};
-    Object.keys(storeElementEvent).forEach(function (keyHandlers) {
-      var handlerKey = keyHandlers.replace(stripUidRegex, '');
+    const storeElementEvent = events[typeEvent] || {};
+    Object.keys(storeElementEvent).forEach(keyHandlers => {
+      const handlerKey = keyHandlers.replace(stripUidRegex, '');
 
-      if (!inNamespace || originalTypeEvent.indexOf(handlerKey) > -1) {
-        var event = storeElementEvent[keyHandlers];
+      if (!inNamespace || originalTypeEvent.includes(handlerKey)) {
+        const event = storeElementEvent[keyHandlers];
         removeHandler(element, events, typeEvent, event.originalHandler, event.delegationSelector);
       }
     });
   },
-  trigger: function trigger(element, event, args) {
+
+  trigger(element, event, args) {
     if (typeof event !== 'string' || !element) {
       return null;
     }
 
-    var $ = getjQuery();
-    var typeEvent = event.replace(stripNameRegex, '');
-    var inNamespace = event !== typeEvent;
-    var isNative = nativeEvents.indexOf(typeEvent) > -1;
-    var jQueryEvent;
-    var bubbles = true;
-    var nativeDispatch = true;
-    var defaultPrevented = false;
-    var evt = null;
+    const $ = getjQuery();
+    const typeEvent = getTypeEvent(event);
+    const inNamespace = event !== typeEvent;
+    const isNative = nativeEvents.has(typeEvent);
+    let jQueryEvent;
+    let bubbles = true;
+    let nativeDispatch = true;
+    let defaultPrevented = false;
+    let evt = null;
 
     if (inNamespace && $) {
       jQueryEvent = $.Event(event, args);
@@ -561,18 +3752,19 @@ var EventHandler = {
       evt.initEvent(typeEvent, bubbles, true);
     } else {
       evt = new CustomEvent(event, {
-        bubbles: bubbles,
+        bubbles,
         cancelable: true
       });
     } // merge custom information in our event
 
 
     if (typeof args !== 'undefined') {
-      Object.keys(args).forEach(function (key) {
+      Object.keys(args).forEach(key => {
         Object.defineProperty(evt, key, {
-          get: function get() {
+          get() {
             return args[key];
           }
+
         });
       });
     }
@@ -591,113 +3783,210 @@ var EventHandler = {
 
     return evt;
   }
+
 };
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): dom/data.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
+const elementMap = new Map();
+var Data = {
+  set(element, key, instance) {
+    if (!elementMap.has(element)) {
+      elementMap.set(element, new Map());
+    }
 
-var NAME = 'alert';
-var VERSION = '5.0.0-alpha3';
-var DATA_KEY = 'bs.alert';
-var EVENT_KEY = "." + DATA_KEY;
-var DATA_API_KEY = '.data-api';
-var SELECTOR_DISMISS = '[data-dismiss="alert"]';
-var EVENT_CLOSE = "close" + EVENT_KEY;
-var EVENT_CLOSED = "closed" + EVENT_KEY;
-var EVENT_CLICK_DATA_API = "click" + EVENT_KEY + DATA_API_KEY;
-var CLASSNAME_ALERT = 'alert';
-var CLASSNAME_FADE = 'fade';
-var CLASSNAME_SHOW = 'show';
+    const instanceMap = elementMap.get(element); // make it clear we only want one instance per element
+    // can be removed later when multiple key/instances are fine to be used
+
+    if (!instanceMap.has(key) && instanceMap.size !== 0) {
+      // eslint-disable-next-line no-console
+      console.error(`Bootstrap doesn't allow more than one instance per element. Bound instance: ${Array.from(instanceMap.keys())[0]}.`);
+      return;
+    }
+
+    instanceMap.set(key, instance);
+  },
+
+  get(element, key) {
+    if (elementMap.has(element)) {
+      return elementMap.get(element).get(key) || null;
+    }
+
+    return null;
+  },
+
+  remove(element, key) {
+    if (!elementMap.has(element)) {
+      return;
+    }
+
+    const instanceMap = elementMap.get(element);
+    instanceMap.delete(key); // free up element references if there are no instances left for an element
+
+    if (instanceMap.size === 0) {
+      elementMap.delete(element);
+    }
+  }
+
+};
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): base-component.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+/**
+ * ------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------
+ */
+
+const VERSION = '5.0.2';
+
+class BaseComponent {
+  constructor(element) {
+    element = getElement(element);
+
+    if (!element) {
+      return;
+    }
+
+    this._element = element;
+    Data.set(this._element, this.constructor.DATA_KEY, this);
+  }
+
+  dispose() {
+    Data.remove(this._element, this.constructor.DATA_KEY);
+    EventHandler.off(this._element, this.constructor.EVENT_KEY);
+    Object.getOwnPropertyNames(this).forEach(propertyName => {
+      this[propertyName] = null;
+    });
+  }
+
+  _queueCallback(callback, element, isAnimated = true) {
+    executeAfterTransition(callback, element, isAnimated);
+  }
+  /** Static */
+
+
+  static getInstance(element) {
+    return Data.get(element, this.DATA_KEY);
+  }
+
+  static getOrCreateInstance(element, config = {}) {
+    return this.getInstance(element) || new this(element, typeof config === 'object' ? config : null);
+  }
+
+  static get VERSION() {
+    return VERSION;
+  }
+
+  static get NAME() {
+    throw new Error('You have to implement the static method "NAME", for each component!');
+  }
+
+  static get DATA_KEY() {
+    return `bs.${this.NAME}`;
+  }
+
+  static get EVENT_KEY() {
+    return `.${this.DATA_KEY}`;
+  }
+
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): alert.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+/**
+ * ------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------
+ */
+
+const NAME$c = 'alert';
+const DATA_KEY$b = 'bs.alert';
+const EVENT_KEY$b = `.${DATA_KEY$b}`;
+const DATA_API_KEY$8 = '.data-api';
+const SELECTOR_DISMISS = '[data-bs-dismiss="alert"]';
+const EVENT_CLOSE = `close${EVENT_KEY$b}`;
+const EVENT_CLOSED = `closed${EVENT_KEY$b}`;
+const EVENT_CLICK_DATA_API$7 = `click${EVENT_KEY$b}${DATA_API_KEY$8}`;
+const CLASS_NAME_ALERT = 'alert';
+const CLASS_NAME_FADE$6 = 'fade';
+const CLASS_NAME_SHOW$9 = 'show';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Alert = /*#__PURE__*/function () {
-  function Alert(element) {
-    this._element = element;
-
-    if (this._element) {
-      Data.setData(element, DATA_KEY, this);
-    }
-  } // Getters
+class Alert extends BaseComponent {
+  // Getters
+  static get NAME() {
+    return NAME$c;
+  } // Public
 
 
-  var _proto = Alert.prototype;
+  close(element) {
+    const rootElement = element ? this._getRootElement(element) : this._element;
 
-  // Public
-  _proto.close = function close(element) {
-    var rootElement = element ? this._getRootElement(element) : this._element;
-
-    var customEvent = this._triggerCloseEvent(rootElement);
+    const customEvent = this._triggerCloseEvent(rootElement);
 
     if (customEvent === null || customEvent.defaultPrevented) {
       return;
     }
 
     this._removeElement(rootElement);
-  };
-
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY);
-    this._element = null;
   } // Private
-  ;
 
-  _proto._getRootElement = function _getRootElement(element) {
-    return getElementFromSelector(element) || element.closest("." + CLASSNAME_ALERT);
-  };
 
-  _proto._triggerCloseEvent = function _triggerCloseEvent(element) {
+  _getRootElement(element) {
+    return getElementFromSelector(element) || element.closest(`.${CLASS_NAME_ALERT}`);
+  }
+
+  _triggerCloseEvent(element) {
     return EventHandler.trigger(element, EVENT_CLOSE);
-  };
+  }
 
-  _proto._removeElement = function _removeElement(element) {
-    var _this = this;
+  _removeElement(element) {
+    element.classList.remove(CLASS_NAME_SHOW$9);
+    const isAnimated = element.classList.contains(CLASS_NAME_FADE$6);
 
-    element.classList.remove(CLASSNAME_SHOW);
+    this._queueCallback(() => this._destroyElement(element), element, isAnimated);
+  }
 
-    if (!element.classList.contains(CLASSNAME_FADE)) {
-      this._destroyElement(element);
-
-      return;
-    }
-
-    var transitionDuration = getTransitionDurationFromElement(element);
-    EventHandler.one(element, TRANSITION_END, function () {
-      return _this._destroyElement(element);
-    });
-    emulateTransitionEnd(element, transitionDuration);
-  };
-
-  _proto._destroyElement = function _destroyElement(element) {
-    if (element.parentNode) {
-      element.parentNode.removeChild(element);
-    }
-
+  _destroyElement(element) {
+    element.remove();
     EventHandler.trigger(element, EVENT_CLOSED);
   } // Static
-  ;
 
-  Alert.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY);
-
-      if (!data) {
-        data = new Alert(this);
-      }
+      const data = Alert.getOrCreateInstance(this);
 
       if (config === 'close') {
         data[config](this);
       }
     });
-  };
+  }
 
-  Alert.handleDismiss = function handleDismiss(alertInstance) {
+  static handleDismiss(alertInstance) {
     return function (event) {
       if (event) {
         event.preventDefault();
@@ -705,21 +3994,9 @@ var Alert = /*#__PURE__*/function () {
 
       alertInstance.close(this);
     };
-  };
+  }
 
-  Alert.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY);
-  };
-
-  _createClass(Alert, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION;
-    }
-  }]);
-
-  return Alert;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -727,7 +4004,7 @@ var Alert = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DISMISS, Alert.handleDismiss(new Alert()));
+EventHandler.on(document, EVENT_CLICK_DATA_API$7, SELECTOR_DISMISS, Alert.handleDismiss(new Alert()));
 /**
  * ------------------------------------------------------------------------
  * jQuery
@@ -735,90 +4012,57 @@ EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DISMISS, Alert.handleDi
  * add .Alert to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Alert);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME];
-    $.fn[NAME] = Alert.jQueryInterface;
-    $.fn[NAME].Constructor = Alert;
-
-    $.fn[NAME].noConflict = function () {
-      $.fn[NAME] = JQUERY_NO_CONFLICT;
-      return Alert.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): button.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$1 = 'button';
-var VERSION$1 = '5.0.0-alpha3';
-var DATA_KEY$1 = 'bs.button';
-var EVENT_KEY$1 = "." + DATA_KEY$1;
-var DATA_API_KEY$1 = '.data-api';
-var CLASS_NAME_ACTIVE = 'active';
-var SELECTOR_DATA_TOGGLE = '[data-toggle="button"]';
-var EVENT_CLICK_DATA_API$1 = "click" + EVENT_KEY$1 + DATA_API_KEY$1;
+const NAME$b = 'button';
+const DATA_KEY$a = 'bs.button';
+const EVENT_KEY$a = `.${DATA_KEY$a}`;
+const DATA_API_KEY$7 = '.data-api';
+const CLASS_NAME_ACTIVE$3 = 'active';
+const SELECTOR_DATA_TOGGLE$5 = '[data-bs-toggle="button"]';
+const EVENT_CLICK_DATA_API$6 = `click${EVENT_KEY$a}${DATA_API_KEY$7}`;
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Button = /*#__PURE__*/function () {
-  function Button(element) {
-    this._element = element;
-    Data.setData(element, DATA_KEY$1, this);
-  } // Getters
+class Button extends BaseComponent {
+  // Getters
+  static get NAME() {
+    return NAME$b;
+  } // Public
 
 
-  var _proto = Button.prototype;
-
-  // Public
-  _proto.toggle = function toggle() {
+  toggle() {
     // Toggle class and sync the `aria-pressed` attribute with the return value of the `.toggle()` method
-    this._element.setAttribute('aria-pressed', this._element.classList.toggle(CLASS_NAME_ACTIVE));
-  };
-
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY$1);
-    this._element = null;
+    this._element.setAttribute('aria-pressed', this._element.classList.toggle(CLASS_NAME_ACTIVE$3));
   } // Static
-  ;
 
-  Button.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$1);
-
-      if (!data) {
-        data = new Button(this);
-      }
+      const data = Button.getOrCreateInstance(this);
 
       if (config === 'toggle') {
         data[config]();
       }
     });
-  };
+  }
 
-  Button.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$1);
-  };
-
-  _createClass(Button, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$1;
-    }
-  }]);
-
-  return Button;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -826,15 +4070,10 @@ var Button = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API$1, SELECTOR_DATA_TOGGLE, function (event) {
+EventHandler.on(document, EVENT_CLICK_DATA_API$6, SELECTOR_DATA_TOGGLE$5, event => {
   event.preventDefault();
-  var button = event.target.closest(SELECTOR_DATA_TOGGLE);
-  var data = Data.getData(button, DATA_KEY$1);
-
-  if (!data) {
-    data = new Button(button);
-  }
-
+  const button = event.target.closest(SELECTOR_DATA_TOGGLE$5);
+  const data = Button.getOrCreateInstance(button);
   data.toggle();
 });
 /**
@@ -844,25 +4083,11 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$1, SELECTOR_DATA_TOGGLE, function
  * add .Button to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
-
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$1];
-    $.fn[NAME$1] = Button.jQueryInterface;
-    $.fn[NAME$1].Constructor = Button;
-
-    $.fn[NAME$1].noConflict = function () {
-      $.fn[NAME$1] = JQUERY_NO_CONFLICT;
-      return Button.jQueryInterface;
-    };
-  }
-});
+defineJQueryPlugin(Button);
 
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): dom/manipulator.js
+ * Bootstrap (v5.0.2): dom/manipulator.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
@@ -887,149 +4112,75 @@ function normalizeData(val) {
 }
 
 function normalizeDataKey(key) {
-  return key.replace(/[A-Z]/g, function (chr) {
-    return "-" + chr.toLowerCase();
-  });
+  return key.replace(/[A-Z]/g, chr => `-${chr.toLowerCase()}`);
 }
 
-var Manipulator = {
-  setDataAttribute: function setDataAttribute(element, key, value) {
-    element.setAttribute("data-" + normalizeDataKey(key), value);
+const Manipulator = {
+  setDataAttribute(element, key, value) {
+    element.setAttribute(`data-bs-${normalizeDataKey(key)}`, value);
   },
-  removeDataAttribute: function removeDataAttribute(element, key) {
-    element.removeAttribute("data-" + normalizeDataKey(key));
+
+  removeDataAttribute(element, key) {
+    element.removeAttribute(`data-bs-${normalizeDataKey(key)}`);
   },
-  getDataAttributes: function getDataAttributes(element) {
+
+  getDataAttributes(element) {
     if (!element) {
       return {};
     }
 
-    var attributes = _extends({}, element.dataset);
-
-    Object.keys(attributes).forEach(function (key) {
-      attributes[key] = normalizeData(attributes[key]);
+    const attributes = {};
+    Object.keys(element.dataset).filter(key => key.startsWith('bs')).forEach(key => {
+      let pureKey = key.replace(/^bs/, '');
+      pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1, pureKey.length);
+      attributes[pureKey] = normalizeData(element.dataset[key]);
     });
     return attributes;
   },
-  getDataAttribute: function getDataAttribute(element, key) {
-    return normalizeData(element.getAttribute("data-" + normalizeDataKey(key)));
+
+  getDataAttribute(element, key) {
+    return normalizeData(element.getAttribute(`data-bs-${normalizeDataKey(key)}`));
   },
-  offset: function offset(element) {
-    var rect = element.getBoundingClientRect();
+
+  offset(element) {
+    const rect = element.getBoundingClientRect();
     return {
       top: rect.top + document.body.scrollTop,
       left: rect.left + document.body.scrollLeft
     };
   },
-  position: function position(element) {
+
+  position(element) {
     return {
       top: element.offsetTop,
       left: element.offsetLeft
     };
   }
+
 };
 
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): dom/selector-engine.js
+ * Bootstrap (v5.0.2): carousel.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
-
-/**
- * ------------------------------------------------------------------------
- * Constants
- * ------------------------------------------------------------------------
- */
-var NODE_TEXT = 3;
-var SelectorEngine = {
-  matches: function matches(element, selector) {
-    return element.matches(selector);
-  },
-  find: function find(selector, element) {
-    var _ref;
-
-    if (element === void 0) {
-      element = document.documentElement;
-    }
-
-    return (_ref = []).concat.apply(_ref, Element.prototype.querySelectorAll.call(element, selector));
-  },
-  findOne: function findOne(selector, element) {
-    if (element === void 0) {
-      element = document.documentElement;
-    }
-
-    return Element.prototype.querySelector.call(element, selector);
-  },
-  children: function children(element, selector) {
-    var _ref2;
-
-    var children = (_ref2 = []).concat.apply(_ref2, element.children);
-
-    return children.filter(function (child) {
-      return child.matches(selector);
-    });
-  },
-  parents: function parents(element, selector) {
-    var parents = [];
-    var ancestor = element.parentNode;
-
-    while (ancestor && ancestor.nodeType === Node.ELEMENT_NODE && ancestor.nodeType !== NODE_TEXT) {
-      if (this.matches(ancestor, selector)) {
-        parents.push(ancestor);
-      }
-
-      ancestor = ancestor.parentNode;
-    }
-
-    return parents;
-  },
-  prev: function prev(element, selector) {
-    var previous = element.previousElementSibling;
-
-    while (previous) {
-      if (previous.matches(selector)) {
-        return [previous];
-      }
-
-      previous = previous.previousElementSibling;
-    }
-
-    return [];
-  },
-  next: function next(element, selector) {
-    var next = element.nextElementSibling;
-
-    while (next) {
-      if (this.matches(next, selector)) {
-        return [next];
-      }
-
-      next = next.nextElementSibling;
-    }
-
-    return [];
-  }
-};
-
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$2 = 'carousel';
-var VERSION$2 = '5.0.0-alpha3';
-var DATA_KEY$2 = 'bs.carousel';
-var EVENT_KEY$2 = "." + DATA_KEY$2;
-var DATA_API_KEY$2 = '.data-api';
-var ARROW_LEFT_KEY = 'ArrowLeft';
-var ARROW_RIGHT_KEY = 'ArrowRight';
-var TOUCHEVENT_COMPAT_WAIT = 500; // Time for mouse compat events to fire after touch
+const NAME$a = 'carousel';
+const DATA_KEY$9 = 'bs.carousel';
+const EVENT_KEY$9 = `.${DATA_KEY$9}`;
+const DATA_API_KEY$6 = '.data-api';
+const ARROW_LEFT_KEY = 'ArrowLeft';
+const ARROW_RIGHT_KEY = 'ArrowRight';
+const TOUCHEVENT_COMPAT_WAIT = 500; // Time for mouse compat events to fire after touch
 
-var SWIPE_THRESHOLD = 40;
-var Default = {
+const SWIPE_THRESHOLD = 40;
+const Default$9 = {
   interval: 5000,
   keyboard: true,
   slide: false,
@@ -1037,7 +4188,7 @@ var Default = {
   wrap: true,
   touch: true
 };
-var DefaultType = {
+const DefaultType$9 = {
   interval: '(number|boolean)',
   keyboard: 'boolean',
   slide: '(boolean|string)',
@@ -1045,51 +4196,55 @@ var DefaultType = {
   wrap: 'boolean',
   touch: 'boolean'
 };
-var DIRECTION_NEXT = 'next';
-var DIRECTION_PREV = 'prev';
-var DIRECTION_LEFT = 'left';
-var DIRECTION_RIGHT = 'right';
-var EVENT_SLIDE = "slide" + EVENT_KEY$2;
-var EVENT_SLID = "slid" + EVENT_KEY$2;
-var EVENT_KEYDOWN = "keydown" + EVENT_KEY$2;
-var EVENT_MOUSEENTER = "mouseenter" + EVENT_KEY$2;
-var EVENT_MOUSELEAVE = "mouseleave" + EVENT_KEY$2;
-var EVENT_TOUCHSTART = "touchstart" + EVENT_KEY$2;
-var EVENT_TOUCHMOVE = "touchmove" + EVENT_KEY$2;
-var EVENT_TOUCHEND = "touchend" + EVENT_KEY$2;
-var EVENT_POINTERDOWN = "pointerdown" + EVENT_KEY$2;
-var EVENT_POINTERUP = "pointerup" + EVENT_KEY$2;
-var EVENT_DRAG_START = "dragstart" + EVENT_KEY$2;
-var EVENT_LOAD_DATA_API = "load" + EVENT_KEY$2 + DATA_API_KEY$2;
-var EVENT_CLICK_DATA_API$2 = "click" + EVENT_KEY$2 + DATA_API_KEY$2;
-var CLASS_NAME_CAROUSEL = 'carousel';
-var CLASS_NAME_ACTIVE$1 = 'active';
-var CLASS_NAME_SLIDE = 'slide';
-var CLASS_NAME_RIGHT = 'carousel-item-right';
-var CLASS_NAME_LEFT = 'carousel-item-left';
-var CLASS_NAME_NEXT = 'carousel-item-next';
-var CLASS_NAME_PREV = 'carousel-item-prev';
-var CLASS_NAME_POINTER_EVENT = 'pointer-event';
-var SELECTOR_ACTIVE = '.active';
-var SELECTOR_ACTIVE_ITEM = '.active.carousel-item';
-var SELECTOR_ITEM = '.carousel-item';
-var SELECTOR_ITEM_IMG = '.carousel-item img';
-var SELECTOR_NEXT_PREV = '.carousel-item-next, .carousel-item-prev';
-var SELECTOR_INDICATORS = '.carousel-indicators';
-var SELECTOR_DATA_SLIDE = '[data-slide], [data-slide-to]';
-var SELECTOR_DATA_RIDE = '[data-ride="carousel"]';
-var PointerType = {
-  TOUCH: 'touch',
-  PEN: 'pen'
+const ORDER_NEXT = 'next';
+const ORDER_PREV = 'prev';
+const DIRECTION_LEFT = 'left';
+const DIRECTION_RIGHT = 'right';
+const KEY_TO_DIRECTION = {
+  [ARROW_LEFT_KEY]: DIRECTION_RIGHT,
+  [ARROW_RIGHT_KEY]: DIRECTION_LEFT
 };
+const EVENT_SLIDE = `slide${EVENT_KEY$9}`;
+const EVENT_SLID = `slid${EVENT_KEY$9}`;
+const EVENT_KEYDOWN = `keydown${EVENT_KEY$9}`;
+const EVENT_MOUSEENTER = `mouseenter${EVENT_KEY$9}`;
+const EVENT_MOUSELEAVE = `mouseleave${EVENT_KEY$9}`;
+const EVENT_TOUCHSTART = `touchstart${EVENT_KEY$9}`;
+const EVENT_TOUCHMOVE = `touchmove${EVENT_KEY$9}`;
+const EVENT_TOUCHEND = `touchend${EVENT_KEY$9}`;
+const EVENT_POINTERDOWN = `pointerdown${EVENT_KEY$9}`;
+const EVENT_POINTERUP = `pointerup${EVENT_KEY$9}`;
+const EVENT_DRAG_START = `dragstart${EVENT_KEY$9}`;
+const EVENT_LOAD_DATA_API$2 = `load${EVENT_KEY$9}${DATA_API_KEY$6}`;
+const EVENT_CLICK_DATA_API$5 = `click${EVENT_KEY$9}${DATA_API_KEY$6}`;
+const CLASS_NAME_CAROUSEL = 'carousel';
+const CLASS_NAME_ACTIVE$2 = 'active';
+const CLASS_NAME_SLIDE = 'slide';
+const CLASS_NAME_END = 'carousel-item-end';
+const CLASS_NAME_START = 'carousel-item-start';
+const CLASS_NAME_NEXT = 'carousel-item-next';
+const CLASS_NAME_PREV = 'carousel-item-prev';
+const CLASS_NAME_POINTER_EVENT = 'pointer-event';
+const SELECTOR_ACTIVE$1 = '.active';
+const SELECTOR_ACTIVE_ITEM = '.active.carousel-item';
+const SELECTOR_ITEM = '.carousel-item';
+const SELECTOR_ITEM_IMG = '.carousel-item img';
+const SELECTOR_NEXT_PREV = '.carousel-item-next, .carousel-item-prev';
+const SELECTOR_INDICATORS = '.carousel-indicators';
+const SELECTOR_INDICATOR = '[data-bs-target]';
+const SELECTOR_DATA_SLIDE = '[data-bs-slide], [data-bs-slide-to]';
+const SELECTOR_DATA_RIDE = '[data-bs-ride="carousel"]';
+const POINTER_TYPE_TOUCH = 'touch';
+const POINTER_TYPE_PEN = 'pen';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Carousel = /*#__PURE__*/function () {
-  function Carousel(element, config) {
+class Carousel extends BaseComponent {
+  constructor(element, config) {
+    super(element);
     this._items = null;
     this._interval = null;
     this._activeElement = null;
@@ -1099,41 +4254,40 @@ var Carousel = /*#__PURE__*/function () {
     this.touchStartX = 0;
     this.touchDeltaX = 0;
     this._config = this._getConfig(config);
-    this._element = element;
     this._indicatorsElement = SelectorEngine.findOne(SELECTOR_INDICATORS, this._element);
     this._touchSupported = 'ontouchstart' in document.documentElement || navigator.maxTouchPoints > 0;
     this._pointerEvent = Boolean(window.PointerEvent);
 
     this._addEventListeners();
-
-    Data.setData(element, DATA_KEY$2, this);
   } // Getters
 
 
-  var _proto = Carousel.prototype;
+  static get Default() {
+    return Default$9;
+  }
 
-  // Public
-  _proto.next = function next() {
-    if (!this._isSliding) {
-      this._slide(DIRECTION_NEXT);
-    }
-  };
+  static get NAME() {
+    return NAME$a;
+  } // Public
 
-  _proto.nextWhenVisible = function nextWhenVisible() {
+
+  next() {
+    this._slide(ORDER_NEXT);
+  }
+
+  nextWhenVisible() {
     // Don't call next when the page isn't visible
     // or the carousel or its parent isn't visible
     if (!document.hidden && isVisible(this._element)) {
       this.next();
     }
-  };
+  }
 
-  _proto.prev = function prev() {
-    if (!this._isSliding) {
-      this._slide(DIRECTION_PREV);
-    }
-  };
+  prev() {
+    this._slide(ORDER_PREV);
+  }
 
-  _proto.pause = function pause(event) {
+  pause(event) {
     if (!event) {
       this._isPaused = true;
     }
@@ -1145,9 +4299,9 @@ var Carousel = /*#__PURE__*/function () {
 
     clearInterval(this._interval);
     this._interval = null;
-  };
+  }
 
-  _proto.cycle = function cycle(event) {
+  cycle(event) {
     if (!event) {
       this._isPaused = false;
     }
@@ -1162,23 +4316,19 @@ var Carousel = /*#__PURE__*/function () {
 
       this._interval = setInterval((document.visibilityState ? this.nextWhenVisible : this.next).bind(this), this._config.interval);
     }
-  };
+  }
 
-  _proto.to = function to(index) {
-    var _this = this;
-
+  to(index) {
     this._activeElement = SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
 
-    var activeIndex = this._getItemIndex(this._activeElement);
+    const activeIndex = this._getItemIndex(this._activeElement);
 
     if (index > this._items.length - 1 || index < 0) {
       return;
     }
 
     if (this._isSliding) {
-      EventHandler.one(this._element, EVENT_SLID, function () {
-        return _this.to(index);
-      });
+      EventHandler.one(this._element, EVENT_SLID, () => this.to(index));
       return;
     }
 
@@ -1188,102 +4338,75 @@ var Carousel = /*#__PURE__*/function () {
       return;
     }
 
-    var direction = index > activeIndex ? DIRECTION_NEXT : DIRECTION_PREV;
+    const order = index > activeIndex ? ORDER_NEXT : ORDER_PREV;
 
-    this._slide(direction, this._items[index]);
-  };
-
-  _proto.dispose = function dispose() {
-    EventHandler.off(this._element, EVENT_KEY$2);
-    Data.removeData(this._element, DATA_KEY$2);
-    this._items = null;
-    this._config = null;
-    this._element = null;
-    this._interval = null;
-    this._isPaused = null;
-    this._isSliding = null;
-    this._activeElement = null;
-    this._indicatorsElement = null;
+    this._slide(order, this._items[index]);
   } // Private
-  ;
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, Default, config);
-    typeCheckConfig(NAME$2, config, DefaultType);
+
+  _getConfig(config) {
+    config = { ...Default$9,
+      ...Manipulator.getDataAttributes(this._element),
+      ...(typeof config === 'object' ? config : {})
+    };
+    typeCheckConfig(NAME$a, config, DefaultType$9);
     return config;
-  };
+  }
 
-  _proto._handleSwipe = function _handleSwipe() {
-    var absDeltax = Math.abs(this.touchDeltaX);
+  _handleSwipe() {
+    const absDeltax = Math.abs(this.touchDeltaX);
 
     if (absDeltax <= SWIPE_THRESHOLD) {
       return;
     }
 
-    var direction = absDeltax / this.touchDeltaX;
-    this.touchDeltaX = 0; // swipe left
+    const direction = absDeltax / this.touchDeltaX;
+    this.touchDeltaX = 0;
 
-    if (direction > 0) {
-      this.prev();
-    } // swipe right
-
-
-    if (direction < 0) {
-      this.next();
+    if (!direction) {
+      return;
     }
-  };
 
-  _proto._addEventListeners = function _addEventListeners() {
-    var _this2 = this;
+    this._slide(direction > 0 ? DIRECTION_RIGHT : DIRECTION_LEFT);
+  }
 
+  _addEventListeners() {
     if (this._config.keyboard) {
-      EventHandler.on(this._element, EVENT_KEYDOWN, function (event) {
-        return _this2._keydown(event);
-      });
+      EventHandler.on(this._element, EVENT_KEYDOWN, event => this._keydown(event));
     }
 
     if (this._config.pause === 'hover') {
-      EventHandler.on(this._element, EVENT_MOUSEENTER, function (event) {
-        return _this2.pause(event);
-      });
-      EventHandler.on(this._element, EVENT_MOUSELEAVE, function (event) {
-        return _this2.cycle(event);
-      });
+      EventHandler.on(this._element, EVENT_MOUSEENTER, event => this.pause(event));
+      EventHandler.on(this._element, EVENT_MOUSELEAVE, event => this.cycle(event));
     }
 
     if (this._config.touch && this._touchSupported) {
       this._addTouchEventListeners();
     }
-  };
+  }
 
-  _proto._addTouchEventListeners = function _addTouchEventListeners() {
-    var _this3 = this;
-
-    var start = function start(event) {
-      if (_this3._pointerEvent && PointerType[event.pointerType.toUpperCase()]) {
-        _this3.touchStartX = event.clientX;
-      } else if (!_this3._pointerEvent) {
-        _this3.touchStartX = event.touches[0].clientX;
+  _addTouchEventListeners() {
+    const start = event => {
+      if (this._pointerEvent && (event.pointerType === POINTER_TYPE_PEN || event.pointerType === POINTER_TYPE_TOUCH)) {
+        this.touchStartX = event.clientX;
+      } else if (!this._pointerEvent) {
+        this.touchStartX = event.touches[0].clientX;
       }
     };
 
-    var move = function move(event) {
+    const move = event => {
       // ensure swiping with one touch and not pinching
-      if (event.touches && event.touches.length > 1) {
-        _this3.touchDeltaX = 0;
-      } else {
-        _this3.touchDeltaX = event.touches[0].clientX - _this3.touchStartX;
-      }
+      this.touchDeltaX = event.touches && event.touches.length > 1 ? 0 : event.touches[0].clientX - this.touchStartX;
     };
 
-    var end = function end(event) {
-      if (_this3._pointerEvent && PointerType[event.pointerType.toUpperCase()]) {
-        _this3.touchDeltaX = event.clientX - _this3.touchStartX;
+    const end = event => {
+      if (this._pointerEvent && (event.pointerType === POINTER_TYPE_PEN || event.pointerType === POINTER_TYPE_TOUCH)) {
+        this.touchDeltaX = event.clientX - this.touchStartX;
       }
 
-      _this3._handleSwipe();
+      this._handleSwipe();
 
-      if (_this3._config.pause === 'hover') {
+      if (this._config.pause === 'hover') {
         // If it's a touch-enabled device, mouseenter/leave are fired as
         // part of the mouse compatibility events on first tap - the carousel
         // would stop cycling until user tapped out of it;
@@ -1291,124 +4414,94 @@ var Carousel = /*#__PURE__*/function () {
         // (as if it's the second time we tap on it, mouseenter compat event
         // is NOT fired) and after a timeout (to allow for mouse compatibility
         // events to fire) we explicitly restart cycling
-        _this3.pause();
+        this.pause();
 
-        if (_this3.touchTimeout) {
-          clearTimeout(_this3.touchTimeout);
+        if (this.touchTimeout) {
+          clearTimeout(this.touchTimeout);
         }
 
-        _this3.touchTimeout = setTimeout(function (event) {
-          return _this3.cycle(event);
-        }, TOUCHEVENT_COMPAT_WAIT + _this3._config.interval);
+        this.touchTimeout = setTimeout(event => this.cycle(event), TOUCHEVENT_COMPAT_WAIT + this._config.interval);
       }
     };
 
-    SelectorEngine.find(SELECTOR_ITEM_IMG, this._element).forEach(function (itemImg) {
-      EventHandler.on(itemImg, EVENT_DRAG_START, function (e) {
-        return e.preventDefault();
-      });
+    SelectorEngine.find(SELECTOR_ITEM_IMG, this._element).forEach(itemImg => {
+      EventHandler.on(itemImg, EVENT_DRAG_START, e => e.preventDefault());
     });
 
     if (this._pointerEvent) {
-      EventHandler.on(this._element, EVENT_POINTERDOWN, function (event) {
-        return start(event);
-      });
-      EventHandler.on(this._element, EVENT_POINTERUP, function (event) {
-        return end(event);
-      });
+      EventHandler.on(this._element, EVENT_POINTERDOWN, event => start(event));
+      EventHandler.on(this._element, EVENT_POINTERUP, event => end(event));
 
       this._element.classList.add(CLASS_NAME_POINTER_EVENT);
     } else {
-      EventHandler.on(this._element, EVENT_TOUCHSTART, function (event) {
-        return start(event);
-      });
-      EventHandler.on(this._element, EVENT_TOUCHMOVE, function (event) {
-        return move(event);
-      });
-      EventHandler.on(this._element, EVENT_TOUCHEND, function (event) {
-        return end(event);
-      });
+      EventHandler.on(this._element, EVENT_TOUCHSTART, event => start(event));
+      EventHandler.on(this._element, EVENT_TOUCHMOVE, event => move(event));
+      EventHandler.on(this._element, EVENT_TOUCHEND, event => end(event));
     }
-  };
+  }
 
-  _proto._keydown = function _keydown(event) {
+  _keydown(event) {
     if (/input|textarea/i.test(event.target.tagName)) {
       return;
     }
 
-    switch (event.key) {
-      case ARROW_LEFT_KEY:
-        event.preventDefault();
-        this.prev();
-        break;
+    const direction = KEY_TO_DIRECTION[event.key];
 
-      case ARROW_RIGHT_KEY:
-        event.preventDefault();
-        this.next();
-        break;
+    if (direction) {
+      event.preventDefault();
+
+      this._slide(direction);
     }
-  };
+  }
 
-  _proto._getItemIndex = function _getItemIndex(element) {
+  _getItemIndex(element) {
     this._items = element && element.parentNode ? SelectorEngine.find(SELECTOR_ITEM, element.parentNode) : [];
     return this._items.indexOf(element);
-  };
+  }
 
-  _proto._getItemByDirection = function _getItemByDirection(direction, activeElement) {
-    var isNextDirection = direction === DIRECTION_NEXT;
-    var isPrevDirection = direction === DIRECTION_PREV;
+  _getItemByOrder(order, activeElement) {
+    const isNext = order === ORDER_NEXT;
+    return getNextActiveElement(this._items, activeElement, isNext, this._config.wrap);
+  }
 
-    var activeIndex = this._getItemIndex(activeElement);
+  _triggerSlideEvent(relatedTarget, eventDirectionName) {
+    const targetIndex = this._getItemIndex(relatedTarget);
 
-    var lastItemIndex = this._items.length - 1;
-    var isGoingToWrap = isPrevDirection && activeIndex === 0 || isNextDirection && activeIndex === lastItemIndex;
-
-    if (isGoingToWrap && !this._config.wrap) {
-      return activeElement;
-    }
-
-    var delta = direction === DIRECTION_PREV ? -1 : 1;
-    var itemIndex = (activeIndex + delta) % this._items.length;
-    return itemIndex === -1 ? this._items[this._items.length - 1] : this._items[itemIndex];
-  };
-
-  _proto._triggerSlideEvent = function _triggerSlideEvent(relatedTarget, eventDirectionName) {
-    var targetIndex = this._getItemIndex(relatedTarget);
-
-    var fromIndex = this._getItemIndex(SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element));
+    const fromIndex = this._getItemIndex(SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element));
 
     return EventHandler.trigger(this._element, EVENT_SLIDE, {
-      relatedTarget: relatedTarget,
+      relatedTarget,
       direction: eventDirectionName,
       from: fromIndex,
       to: targetIndex
     });
-  };
+  }
 
-  _proto._setActiveIndicatorElement = function _setActiveIndicatorElement(element) {
+  _setActiveIndicatorElement(element) {
     if (this._indicatorsElement) {
-      var indicators = SelectorEngine.find(SELECTOR_ACTIVE, this._indicatorsElement);
+      const activeIndicator = SelectorEngine.findOne(SELECTOR_ACTIVE$1, this._indicatorsElement);
+      activeIndicator.classList.remove(CLASS_NAME_ACTIVE$2);
+      activeIndicator.removeAttribute('aria-current');
+      const indicators = SelectorEngine.find(SELECTOR_INDICATOR, this._indicatorsElement);
 
-      for (var i = 0; i < indicators.length; i++) {
-        indicators[i].classList.remove(CLASS_NAME_ACTIVE$1);
-      }
-
-      var nextIndicator = this._indicatorsElement.children[this._getItemIndex(element)];
-
-      if (nextIndicator) {
-        nextIndicator.classList.add(CLASS_NAME_ACTIVE$1);
+      for (let i = 0; i < indicators.length; i++) {
+        if (Number.parseInt(indicators[i].getAttribute('data-bs-slide-to'), 10) === this._getItemIndex(element)) {
+          indicators[i].classList.add(CLASS_NAME_ACTIVE$2);
+          indicators[i].setAttribute('aria-current', 'true');
+          break;
+        }
       }
     }
-  };
+  }
 
-  _proto._updateInterval = function _updateInterval() {
-    var element = this._activeElement || SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
+  _updateInterval() {
+    const element = this._activeElement || SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
 
     if (!element) {
       return;
     }
 
-    var elementInterval = parseInt(element.getAttribute('data-interval'), 10);
+    const elementInterval = Number.parseInt(element.getAttribute('data-bs-interval'), 10);
 
     if (elementInterval) {
       this._config.defaultInterval = this._config.defaultInterval || this._config.interval;
@@ -1416,40 +4509,36 @@ var Carousel = /*#__PURE__*/function () {
     } else {
       this._config.interval = this._config.defaultInterval || this._config.interval;
     }
-  };
+  }
 
-  _proto._slide = function _slide(direction, element) {
-    var _this4 = this;
+  _slide(directionOrOrder, element) {
+    const order = this._directionToOrder(directionOrOrder);
 
-    var activeElement = SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
+    const activeElement = SelectorEngine.findOne(SELECTOR_ACTIVE_ITEM, this._element);
 
-    var activeElementIndex = this._getItemIndex(activeElement);
+    const activeElementIndex = this._getItemIndex(activeElement);
 
-    var nextElement = element || activeElement && this._getItemByDirection(direction, activeElement);
+    const nextElement = element || this._getItemByOrder(order, activeElement);
 
-    var nextElementIndex = this._getItemIndex(nextElement);
+    const nextElementIndex = this._getItemIndex(nextElement);
 
-    var isCycling = Boolean(this._interval);
-    var directionalClassName;
-    var orderClassName;
-    var eventDirectionName;
+    const isCycling = Boolean(this._interval);
+    const isNext = order === ORDER_NEXT;
+    const directionalClassName = isNext ? CLASS_NAME_START : CLASS_NAME_END;
+    const orderClassName = isNext ? CLASS_NAME_NEXT : CLASS_NAME_PREV;
 
-    if (direction === DIRECTION_NEXT) {
-      directionalClassName = CLASS_NAME_LEFT;
-      orderClassName = CLASS_NAME_NEXT;
-      eventDirectionName = DIRECTION_LEFT;
-    } else {
-      directionalClassName = CLASS_NAME_RIGHT;
-      orderClassName = CLASS_NAME_PREV;
-      eventDirectionName = DIRECTION_RIGHT;
-    }
+    const eventDirectionName = this._orderToDirection(order);
 
-    if (nextElement && nextElement.classList.contains(CLASS_NAME_ACTIVE$1)) {
+    if (nextElement && nextElement.classList.contains(CLASS_NAME_ACTIVE$2)) {
       this._isSliding = false;
       return;
     }
 
-    var slideEvent = this._triggerSlideEvent(nextElement, eventDirectionName);
+    if (this._isSliding) {
+      return;
+    }
+
+    const slideEvent = this._triggerSlideEvent(nextElement, eventDirectionName);
 
     if (slideEvent.defaultPrevented) {
       return;
@@ -1470,65 +4559,86 @@ var Carousel = /*#__PURE__*/function () {
 
     this._activeElement = nextElement;
 
-    if (this._element.classList.contains(CLASS_NAME_SLIDE)) {
-      nextElement.classList.add(orderClassName);
-      reflow(nextElement);
-      activeElement.classList.add(directionalClassName);
-      nextElement.classList.add(directionalClassName);
-      var transitionDuration = getTransitionDurationFromElement(activeElement);
-      EventHandler.one(activeElement, TRANSITION_END, function () {
-        nextElement.classList.remove(directionalClassName, orderClassName);
-        nextElement.classList.add(CLASS_NAME_ACTIVE$1);
-        activeElement.classList.remove(CLASS_NAME_ACTIVE$1, orderClassName, directionalClassName);
-        _this4._isSliding = false;
-        setTimeout(function () {
-          EventHandler.trigger(_this4._element, EVENT_SLID, {
-            relatedTarget: nextElement,
-            direction: eventDirectionName,
-            from: activeElementIndex,
-            to: nextElementIndex
-          });
-        }, 0);
-      });
-      emulateTransitionEnd(activeElement, transitionDuration);
-    } else {
-      activeElement.classList.remove(CLASS_NAME_ACTIVE$1);
-      nextElement.classList.add(CLASS_NAME_ACTIVE$1);
-      this._isSliding = false;
+    const triggerSlidEvent = () => {
       EventHandler.trigger(this._element, EVENT_SLID, {
         relatedTarget: nextElement,
         direction: eventDirectionName,
         from: activeElementIndex,
         to: nextElementIndex
       });
+    };
+
+    if (this._element.classList.contains(CLASS_NAME_SLIDE)) {
+      nextElement.classList.add(orderClassName);
+      reflow(nextElement);
+      activeElement.classList.add(directionalClassName);
+      nextElement.classList.add(directionalClassName);
+
+      const completeCallBack = () => {
+        nextElement.classList.remove(directionalClassName, orderClassName);
+        nextElement.classList.add(CLASS_NAME_ACTIVE$2);
+        activeElement.classList.remove(CLASS_NAME_ACTIVE$2, orderClassName, directionalClassName);
+        this._isSliding = false;
+        setTimeout(triggerSlidEvent, 0);
+      };
+
+      this._queueCallback(completeCallBack, activeElement, true);
+    } else {
+      activeElement.classList.remove(CLASS_NAME_ACTIVE$2);
+      nextElement.classList.add(CLASS_NAME_ACTIVE$2);
+      this._isSliding = false;
+      triggerSlidEvent();
     }
 
     if (isCycling) {
       this.cycle();
     }
+  }
+
+  _directionToOrder(direction) {
+    if (![DIRECTION_RIGHT, DIRECTION_LEFT].includes(direction)) {
+      return direction;
+    }
+
+    if (isRTL()) {
+      return direction === DIRECTION_LEFT ? ORDER_PREV : ORDER_NEXT;
+    }
+
+    return direction === DIRECTION_LEFT ? ORDER_NEXT : ORDER_PREV;
+  }
+
+  _orderToDirection(order) {
+    if (![ORDER_NEXT, ORDER_PREV].includes(order)) {
+      return order;
+    }
+
+    if (isRTL()) {
+      return order === ORDER_PREV ? DIRECTION_LEFT : DIRECTION_RIGHT;
+    }
+
+    return order === ORDER_PREV ? DIRECTION_RIGHT : DIRECTION_LEFT;
   } // Static
-  ;
 
-  Carousel.carouselInterface = function carouselInterface(element, config) {
-    var data = Data.getData(element, DATA_KEY$2);
 
-    var _config = _extends({}, Default, Manipulator.getDataAttributes(element));
+  static carouselInterface(element, config) {
+    const data = Carousel.getOrCreateInstance(element, config);
+    let {
+      _config
+    } = data;
 
     if (typeof config === 'object') {
-      _config = _extends({}, _config, config);
+      _config = { ..._config,
+        ...config
+      };
     }
 
-    var action = typeof config === 'string' ? config : _config.slide;
-
-    if (!data) {
-      data = new Carousel(element, _config);
-    }
+    const action = typeof config === 'string' ? config : _config.slide;
 
     if (typeof config === 'number') {
       data.to(config);
     } else if (typeof action === 'string') {
       if (typeof data[action] === 'undefined') {
-        throw new TypeError("No method named \"" + action + "\"");
+        throw new TypeError(`No method named "${action}"`);
       }
 
       data[action]();
@@ -1536,24 +4646,25 @@ var Carousel = /*#__PURE__*/function () {
       data.pause();
       data.cycle();
     }
-  };
+  }
 
-  Carousel.jQueryInterface = function jQueryInterface(config) {
+  static jQueryInterface(config) {
     return this.each(function () {
       Carousel.carouselInterface(this, config);
     });
-  };
+  }
 
-  Carousel.dataApiClickHandler = function dataApiClickHandler(event) {
-    var target = getElementFromSelector(this);
+  static dataApiClickHandler(event) {
+    const target = getElementFromSelector(this);
 
     if (!target || !target.classList.contains(CLASS_NAME_CAROUSEL)) {
       return;
     }
 
-    var config = _extends({}, Manipulator.getDataAttributes(target), Manipulator.getDataAttributes(this));
-
-    var slideIndex = this.getAttribute('data-slide-to');
+    const config = { ...Manipulator.getDataAttributes(target),
+      ...Manipulator.getDataAttributes(this)
+    };
+    const slideIndex = this.getAttribute('data-bs-slide-to');
 
     if (slideIndex) {
       config.interval = false;
@@ -1562,30 +4673,13 @@ var Carousel = /*#__PURE__*/function () {
     Carousel.carouselInterface(target, config);
 
     if (slideIndex) {
-      Data.getData(target, DATA_KEY$2).to(slideIndex);
+      Carousel.getInstance(target).to(slideIndex);
     }
 
     event.preventDefault();
-  };
+  }
 
-  Carousel.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$2);
-  };
-
-  _createClass(Carousel, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$2;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default;
-    }
-  }]);
-
-  return Carousel;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -1593,12 +4687,12 @@ var Carousel = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API$2, SELECTOR_DATA_SLIDE, Carousel.dataApiClickHandler);
-EventHandler.on(window, EVENT_LOAD_DATA_API, function () {
-  var carousels = SelectorEngine.find(SELECTOR_DATA_RIDE);
+EventHandler.on(document, EVENT_CLICK_DATA_API$5, SELECTOR_DATA_SLIDE, Carousel.dataApiClickHandler);
+EventHandler.on(window, EVENT_LOAD_DATA_API$2, () => {
+  const carousels = SelectorEngine.find(SELECTOR_DATA_RIDE);
 
-  for (var i = 0, len = carousels.length; i < len; i++) {
-    Carousel.carouselInterface(carousels[i], Data.getData(carousels[i], DATA_KEY$2));
+  for (let i = 0, len = carousels.length; i < len; i++) {
+    Carousel.carouselInterface(carousels[i], Carousel.getInstance(carousels[i]));
   }
 });
 /**
@@ -1608,74 +4702,63 @@ EventHandler.on(window, EVENT_LOAD_DATA_API, function () {
  * add .Carousel to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Carousel);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$2];
-    $.fn[NAME$2] = Carousel.jQueryInterface;
-    $.fn[NAME$2].Constructor = Carousel;
-
-    $.fn[NAME$2].noConflict = function () {
-      $.fn[NAME$2] = JQUERY_NO_CONFLICT;
-      return Carousel.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): collapse.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$3 = 'collapse';
-var VERSION$3 = '5.0.0-alpha3';
-var DATA_KEY$3 = 'bs.collapse';
-var EVENT_KEY$3 = "." + DATA_KEY$3;
-var DATA_API_KEY$3 = '.data-api';
-var Default$1 = {
+const NAME$9 = 'collapse';
+const DATA_KEY$8 = 'bs.collapse';
+const EVENT_KEY$8 = `.${DATA_KEY$8}`;
+const DATA_API_KEY$5 = '.data-api';
+const Default$8 = {
   toggle: true,
   parent: ''
 };
-var DefaultType$1 = {
+const DefaultType$8 = {
   toggle: 'boolean',
   parent: '(string|element)'
 };
-var EVENT_SHOW = "show" + EVENT_KEY$3;
-var EVENT_SHOWN = "shown" + EVENT_KEY$3;
-var EVENT_HIDE = "hide" + EVENT_KEY$3;
-var EVENT_HIDDEN = "hidden" + EVENT_KEY$3;
-var EVENT_CLICK_DATA_API$3 = "click" + EVENT_KEY$3 + DATA_API_KEY$3;
-var CLASS_NAME_SHOW = 'show';
-var CLASS_NAME_COLLAPSE = 'collapse';
-var CLASS_NAME_COLLAPSING = 'collapsing';
-var CLASS_NAME_COLLAPSED = 'collapsed';
-var WIDTH = 'width';
-var HEIGHT = 'height';
-var SELECTOR_ACTIVES = '.show, .collapsing';
-var SELECTOR_DATA_TOGGLE$1 = '[data-toggle="collapse"]';
+const EVENT_SHOW$5 = `show${EVENT_KEY$8}`;
+const EVENT_SHOWN$5 = `shown${EVENT_KEY$8}`;
+const EVENT_HIDE$5 = `hide${EVENT_KEY$8}`;
+const EVENT_HIDDEN$5 = `hidden${EVENT_KEY$8}`;
+const EVENT_CLICK_DATA_API$4 = `click${EVENT_KEY$8}${DATA_API_KEY$5}`;
+const CLASS_NAME_SHOW$8 = 'show';
+const CLASS_NAME_COLLAPSE = 'collapse';
+const CLASS_NAME_COLLAPSING = 'collapsing';
+const CLASS_NAME_COLLAPSED = 'collapsed';
+const WIDTH = 'width';
+const HEIGHT = 'height';
+const SELECTOR_ACTIVES = '.show, .collapsing';
+const SELECTOR_DATA_TOGGLE$4 = '[data-bs-toggle="collapse"]';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Collapse = /*#__PURE__*/function () {
-  function Collapse(element, config) {
+class Collapse extends BaseComponent {
+  constructor(element, config) {
+    super(element);
     this._isTransitioning = false;
-    this._element = element;
     this._config = this._getConfig(config);
-    this._triggerArray = SelectorEngine.find(SELECTOR_DATA_TOGGLE$1 + "[href=\"#" + element.id + "\"]," + (SELECTOR_DATA_TOGGLE$1 + "[data-target=\"#" + element.id + "\"]"));
-    var toggleList = SelectorEngine.find(SELECTOR_DATA_TOGGLE$1);
+    this._triggerArray = SelectorEngine.find(`${SELECTOR_DATA_TOGGLE$4}[href="#${this._element.id}"],` + `${SELECTOR_DATA_TOGGLE$4}[data-bs-target="#${this._element.id}"]`);
+    const toggleList = SelectorEngine.find(SELECTOR_DATA_TOGGLE$4);
 
-    for (var i = 0, len = toggleList.length; i < len; i++) {
-      var elem = toggleList[i];
-      var selector = getSelectorFromElement(elem);
-      var filterElement = SelectorEngine.find(selector).filter(function (foundElem) {
-        return foundElem === element;
-      });
+    for (let i = 0, len = toggleList.length; i < len; i++) {
+      const elem = toggleList[i];
+      const selector = getSelectorFromElement(elem);
+      const filterElement = SelectorEngine.find(selector).filter(foundElem => foundElem === this._element);
 
       if (selector !== null && filterElement.length) {
         this._selector = selector;
@@ -1693,36 +4776,38 @@ var Collapse = /*#__PURE__*/function () {
     if (this._config.toggle) {
       this.toggle();
     }
-
-    Data.setData(element, DATA_KEY$3, this);
   } // Getters
 
 
-  var _proto = Collapse.prototype;
+  static get Default() {
+    return Default$8;
+  }
 
-  // Public
-  _proto.toggle = function toggle() {
-    if (this._element.classList.contains(CLASS_NAME_SHOW)) {
+  static get NAME() {
+    return NAME$9;
+  } // Public
+
+
+  toggle() {
+    if (this._element.classList.contains(CLASS_NAME_SHOW$8)) {
       this.hide();
     } else {
       this.show();
     }
-  };
+  }
 
-  _proto.show = function show() {
-    var _this = this;
-
-    if (this._isTransitioning || this._element.classList.contains(CLASS_NAME_SHOW)) {
+  show() {
+    if (this._isTransitioning || this._element.classList.contains(CLASS_NAME_SHOW$8)) {
       return;
     }
 
-    var actives;
-    var activesData;
+    let actives;
+    let activesData;
 
     if (this._parent) {
-      actives = SelectorEngine.find(SELECTOR_ACTIVES, this._parent).filter(function (elem) {
-        if (typeof _this._config.parent === 'string') {
-          return elem.getAttribute('data-parent') === _this._config.parent;
+      actives = SelectorEngine.find(SELECTOR_ACTIVES, this._parent).filter(elem => {
+        if (typeof this._config.parent === 'string') {
+          return elem.getAttribute('data-bs-parent') === this._config.parent;
         }
 
         return elem.classList.contains(CLASS_NAME_COLLAPSE);
@@ -1733,38 +4818,36 @@ var Collapse = /*#__PURE__*/function () {
       }
     }
 
-    var container = SelectorEngine.findOne(this._selector);
+    const container = SelectorEngine.findOne(this._selector);
 
     if (actives) {
-      var tempActiveData = actives.filter(function (elem) {
-        return container !== elem;
-      });
-      activesData = tempActiveData[0] ? Data.getData(tempActiveData[0], DATA_KEY$3) : null;
+      const tempActiveData = actives.find(elem => container !== elem);
+      activesData = tempActiveData ? Collapse.getInstance(tempActiveData) : null;
 
       if (activesData && activesData._isTransitioning) {
         return;
       }
     }
 
-    var startEvent = EventHandler.trigger(this._element, EVENT_SHOW);
+    const startEvent = EventHandler.trigger(this._element, EVENT_SHOW$5);
 
     if (startEvent.defaultPrevented) {
       return;
     }
 
     if (actives) {
-      actives.forEach(function (elemActive) {
+      actives.forEach(elemActive => {
         if (container !== elemActive) {
           Collapse.collapseInterface(elemActive, 'hide');
         }
 
         if (!activesData) {
-          Data.setData(elemActive, DATA_KEY$3, null);
+          Data.set(elemActive, DATA_KEY$8, null);
         }
       });
     }
 
-    var dimension = this._getDimension();
+    const dimension = this._getDimension();
 
     this._element.classList.remove(CLASS_NAME_COLLAPSE);
 
@@ -1773,7 +4856,7 @@ var Collapse = /*#__PURE__*/function () {
     this._element.style[dimension] = 0;
 
     if (this._triggerArray.length) {
-      this._triggerArray.forEach(function (element) {
+      this._triggerArray.forEach(element => {
         element.classList.remove(CLASS_NAME_COLLAPSED);
         element.setAttribute('aria-expanded', true);
       });
@@ -1781,56 +4864,52 @@ var Collapse = /*#__PURE__*/function () {
 
     this.setTransitioning(true);
 
-    var complete = function complete() {
-      _this._element.classList.remove(CLASS_NAME_COLLAPSING);
+    const complete = () => {
+      this._element.classList.remove(CLASS_NAME_COLLAPSING);
 
-      _this._element.classList.add(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW);
+      this._element.classList.add(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$8);
 
-      _this._element.style[dimension] = '';
-
-      _this.setTransitioning(false);
-
-      EventHandler.trigger(_this._element, EVENT_SHOWN);
+      this._element.style[dimension] = '';
+      this.setTransitioning(false);
+      EventHandler.trigger(this._element, EVENT_SHOWN$5);
     };
 
-    var capitalizedDimension = dimension[0].toUpperCase() + dimension.slice(1);
-    var scrollSize = "scroll" + capitalizedDimension;
-    var transitionDuration = getTransitionDurationFromElement(this._element);
-    EventHandler.one(this._element, TRANSITION_END, complete);
-    emulateTransitionEnd(this._element, transitionDuration);
-    this._element.style[dimension] = this._element[scrollSize] + "px";
-  };
+    const capitalizedDimension = dimension[0].toUpperCase() + dimension.slice(1);
+    const scrollSize = `scroll${capitalizedDimension}`;
 
-  _proto.hide = function hide() {
-    var _this2 = this;
+    this._queueCallback(complete, this._element, true);
 
-    if (this._isTransitioning || !this._element.classList.contains(CLASS_NAME_SHOW)) {
+    this._element.style[dimension] = `${this._element[scrollSize]}px`;
+  }
+
+  hide() {
+    if (this._isTransitioning || !this._element.classList.contains(CLASS_NAME_SHOW$8)) {
       return;
     }
 
-    var startEvent = EventHandler.trigger(this._element, EVENT_HIDE);
+    const startEvent = EventHandler.trigger(this._element, EVENT_HIDE$5);
 
     if (startEvent.defaultPrevented) {
       return;
     }
 
-    var dimension = this._getDimension();
+    const dimension = this._getDimension();
 
-    this._element.style[dimension] = this._element.getBoundingClientRect()[dimension] + "px";
+    this._element.style[dimension] = `${this._element.getBoundingClientRect()[dimension]}px`;
     reflow(this._element);
 
     this._element.classList.add(CLASS_NAME_COLLAPSING);
 
-    this._element.classList.remove(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW);
+    this._element.classList.remove(CLASS_NAME_COLLAPSE, CLASS_NAME_SHOW$8);
 
-    var triggerArrayLength = this._triggerArray.length;
+    const triggerArrayLength = this._triggerArray.length;
 
     if (triggerArrayLength > 0) {
-      for (var i = 0; i < triggerArrayLength; i++) {
-        var trigger = this._triggerArray[i];
-        var elem = getElementFromSelector(trigger);
+      for (let i = 0; i < triggerArrayLength; i++) {
+        const trigger = this._triggerArray[i];
+        const elem = getElementFromSelector(trigger);
 
-        if (elem && !elem.classList.contains(CLASS_NAME_SHOW)) {
+        if (elem && !elem.classList.contains(CLASS_NAME_SHOW$8)) {
           trigger.classList.add(CLASS_NAME_COLLAPSED);
           trigger.setAttribute('aria-expanded', false);
         }
@@ -1839,78 +4918,61 @@ var Collapse = /*#__PURE__*/function () {
 
     this.setTransitioning(true);
 
-    var complete = function complete() {
-      _this2.setTransitioning(false);
+    const complete = () => {
+      this.setTransitioning(false);
 
-      _this2._element.classList.remove(CLASS_NAME_COLLAPSING);
+      this._element.classList.remove(CLASS_NAME_COLLAPSING);
 
-      _this2._element.classList.add(CLASS_NAME_COLLAPSE);
+      this._element.classList.add(CLASS_NAME_COLLAPSE);
 
-      EventHandler.trigger(_this2._element, EVENT_HIDDEN);
+      EventHandler.trigger(this._element, EVENT_HIDDEN$5);
     };
 
     this._element.style[dimension] = '';
-    var transitionDuration = getTransitionDurationFromElement(this._element);
-    EventHandler.one(this._element, TRANSITION_END, complete);
-    emulateTransitionEnd(this._element, transitionDuration);
-  };
 
-  _proto.setTransitioning = function setTransitioning(isTransitioning) {
+    this._queueCallback(complete, this._element, true);
+  }
+
+  setTransitioning(isTransitioning) {
     this._isTransitioning = isTransitioning;
-  };
-
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY$3);
-    this._config = null;
-    this._parent = null;
-    this._element = null;
-    this._triggerArray = null;
-    this._isTransitioning = null;
   } // Private
-  ;
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, Default$1, config);
+
+  _getConfig(config) {
+    config = { ...Default$8,
+      ...config
+    };
     config.toggle = Boolean(config.toggle); // Coerce string values
 
-    typeCheckConfig(NAME$3, config, DefaultType$1);
+    typeCheckConfig(NAME$9, config, DefaultType$8);
     return config;
-  };
+  }
 
-  _proto._getDimension = function _getDimension() {
+  _getDimension() {
     return this._element.classList.contains(WIDTH) ? WIDTH : HEIGHT;
-  };
+  }
 
-  _proto._getParent = function _getParent() {
-    var _this3 = this;
+  _getParent() {
+    let {
+      parent
+    } = this._config;
+    parent = getElement(parent);
+    const selector = `${SELECTOR_DATA_TOGGLE$4}[data-bs-parent="${parent}"]`;
+    SelectorEngine.find(selector, parent).forEach(element => {
+      const selected = getElementFromSelector(element);
 
-    var parent = this._config.parent;
-
-    if (isElement(parent)) {
-      // it's a jQuery object
-      if (typeof parent.jquery !== 'undefined' || typeof parent[0] !== 'undefined') {
-        parent = parent[0];
-      }
-    } else {
-      parent = SelectorEngine.findOne(parent);
-    }
-
-    var selector = SELECTOR_DATA_TOGGLE$1 + "[data-parent=\"" + parent + "\"]";
-    SelectorEngine.find(selector, parent).forEach(function (element) {
-      var selected = getElementFromSelector(element);
-
-      _this3._addAriaAndCollapsedClass(selected, [element]);
+      this._addAriaAndCollapsedClass(selected, [element]);
     });
     return parent;
-  };
+  }
 
-  _proto._addAriaAndCollapsedClass = function _addAriaAndCollapsedClass(element, triggerArray) {
+  _addAriaAndCollapsedClass(element, triggerArray) {
     if (!element || !triggerArray.length) {
       return;
     }
 
-    var isOpen = element.classList.contains(CLASS_NAME_SHOW);
-    triggerArray.forEach(function (elem) {
+    const isOpen = element.classList.contains(CLASS_NAME_SHOW$8);
+    triggerArray.forEach(elem => {
       if (isOpen) {
         elem.classList.remove(CLASS_NAME_COLLAPSED);
       } else {
@@ -1920,12 +4982,14 @@ var Collapse = /*#__PURE__*/function () {
       elem.setAttribute('aria-expanded', isOpen);
     });
   } // Static
-  ;
 
-  Collapse.collapseInterface = function collapseInterface(element, config) {
-    var data = Data.getData(element, DATA_KEY$3);
 
-    var _config = _extends({}, Default$1, Manipulator.getDataAttributes(element), typeof config === 'object' && config ? config : {});
+  static collapseInterface(element, config) {
+    let data = Collapse.getInstance(element);
+    const _config = { ...Default$8,
+      ...Manipulator.getDataAttributes(element),
+      ...(typeof config === 'object' && config ? config : {})
+    };
 
     if (!data && _config.toggle && typeof config === 'string' && /show|hide/.test(config)) {
       _config.toggle = false;
@@ -1937,37 +5001,20 @@ var Collapse = /*#__PURE__*/function () {
 
     if (typeof config === 'string') {
       if (typeof data[config] === 'undefined') {
-        throw new TypeError("No method named \"" + config + "\"");
+        throw new TypeError(`No method named "${config}"`);
       }
 
       data[config]();
     }
-  };
+  }
 
-  Collapse.jQueryInterface = function jQueryInterface(config) {
+  static jQueryInterface(config) {
     return this.each(function () {
       Collapse.collapseInterface(this, config);
     });
-  };
+  }
 
-  Collapse.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$3);
-  };
-
-  _createClass(Collapse, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$3;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$1;
-    }
-  }]);
-
-  return Collapse;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -1975,18 +5022,18 @@ var Collapse = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$1, function (event) {
+EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_DATA_TOGGLE$4, function (event) {
   // preventDefault only for <a> elements (which change the URL) not inside the collapsible element
-  if (event.target.tagName === 'A') {
+  if (event.target.tagName === 'A' || event.delegateTarget && event.delegateTarget.tagName === 'A') {
     event.preventDefault();
   }
 
-  var triggerData = Manipulator.getDataAttributes(this);
-  var selector = getSelectorFromElement(this);
-  var selectorElements = SelectorEngine.find(selector);
-  selectorElements.forEach(function (element) {
-    var data = Data.getData(element, DATA_KEY$3);
-    var config;
+  const triggerData = Manipulator.getDataAttributes(this);
+  const selector = getSelectorFromElement(this);
+  const selectorElements = SelectorEngine.find(selector);
+  selectorElements.forEach(element => {
+    const data = Collapse.getInstance(element);
+    let config;
 
     if (data) {
       // update parent attribute
@@ -2010,83 +5057,70 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$1, functi
  * add .Collapse to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Collapse);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$3];
-    $.fn[NAME$3] = Collapse.jQueryInterface;
-    $.fn[NAME$3].Constructor = Collapse;
-
-    $.fn[NAME$3].noConflict = function () {
-      $.fn[NAME$3] = JQUERY_NO_CONFLICT;
-      return Collapse.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): dropdown.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$4 = 'dropdown';
-var VERSION$4 = '5.0.0-alpha3';
-var DATA_KEY$4 = 'bs.dropdown';
-var EVENT_KEY$4 = "." + DATA_KEY$4;
-var DATA_API_KEY$4 = '.data-api';
-var ESCAPE_KEY = 'Escape';
-var SPACE_KEY = 'Space';
-var TAB_KEY = 'Tab';
-var ARROW_UP_KEY = 'ArrowUp';
-var ARROW_DOWN_KEY = 'ArrowDown';
-var RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
+const NAME$8 = 'dropdown';
+const DATA_KEY$7 = 'bs.dropdown';
+const EVENT_KEY$7 = `.${DATA_KEY$7}`;
+const DATA_API_KEY$4 = '.data-api';
+const ESCAPE_KEY$2 = 'Escape';
+const SPACE_KEY = 'Space';
+const TAB_KEY = 'Tab';
+const ARROW_UP_KEY = 'ArrowUp';
+const ARROW_DOWN_KEY = 'ArrowDown';
+const RIGHT_MOUSE_BUTTON = 2; // MouseEvent.button value for the secondary button, usually the right button
 
-var REGEXP_KEYDOWN = new RegExp(ARROW_UP_KEY + "|" + ARROW_DOWN_KEY + "|" + ESCAPE_KEY);
-var EVENT_HIDE$1 = "hide" + EVENT_KEY$4;
-var EVENT_HIDDEN$1 = "hidden" + EVENT_KEY$4;
-var EVENT_SHOW$1 = "show" + EVENT_KEY$4;
-var EVENT_SHOWN$1 = "shown" + EVENT_KEY$4;
-var EVENT_CLICK = "click" + EVENT_KEY$4;
-var EVENT_CLICK_DATA_API$4 = "click" + EVENT_KEY$4 + DATA_API_KEY$4;
-var EVENT_KEYDOWN_DATA_API = "keydown" + EVENT_KEY$4 + DATA_API_KEY$4;
-var EVENT_KEYUP_DATA_API = "keyup" + EVENT_KEY$4 + DATA_API_KEY$4;
-var CLASS_NAME_DISABLED = 'disabled';
-var CLASS_NAME_SHOW$1 = 'show';
-var CLASS_NAME_DROPUP = 'dropup';
-var CLASS_NAME_DROPRIGHT = 'dropright';
-var CLASS_NAME_DROPLEFT = 'dropleft';
-var CLASS_NAME_MENURIGHT = 'dropdown-menu-right';
-var CLASS_NAME_NAVBAR = 'navbar';
-var CLASS_NAME_POSITION_STATIC = 'position-static';
-var SELECTOR_DATA_TOGGLE$2 = '[data-toggle="dropdown"]';
-var SELECTOR_FORM_CHILD = '.dropdown form';
-var SELECTOR_MENU = '.dropdown-menu';
-var SELECTOR_NAVBAR_NAV = '.navbar-nav';
-var SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
-var PLACEMENT_TOP = 'top-start';
-var PLACEMENT_TOPEND = 'top-end';
-var PLACEMENT_BOTTOM = 'bottom-start';
-var PLACEMENT_BOTTOMEND = 'bottom-end';
-var PLACEMENT_RIGHT = 'right-start';
-var PLACEMENT_LEFT = 'left-start';
-var Default$2 = {
-  offset: 0,
-  flip: true,
-  boundary: 'scrollParent',
+const REGEXP_KEYDOWN = new RegExp(`${ARROW_UP_KEY}|${ARROW_DOWN_KEY}|${ESCAPE_KEY$2}`);
+const EVENT_HIDE$4 = `hide${EVENT_KEY$7}`;
+const EVENT_HIDDEN$4 = `hidden${EVENT_KEY$7}`;
+const EVENT_SHOW$4 = `show${EVENT_KEY$7}`;
+const EVENT_SHOWN$4 = `shown${EVENT_KEY$7}`;
+const EVENT_CLICK = `click${EVENT_KEY$7}`;
+const EVENT_CLICK_DATA_API$3 = `click${EVENT_KEY$7}${DATA_API_KEY$4}`;
+const EVENT_KEYDOWN_DATA_API = `keydown${EVENT_KEY$7}${DATA_API_KEY$4}`;
+const EVENT_KEYUP_DATA_API = `keyup${EVENT_KEY$7}${DATA_API_KEY$4}`;
+const CLASS_NAME_SHOW$7 = 'show';
+const CLASS_NAME_DROPUP = 'dropup';
+const CLASS_NAME_DROPEND = 'dropend';
+const CLASS_NAME_DROPSTART = 'dropstart';
+const CLASS_NAME_NAVBAR = 'navbar';
+const SELECTOR_DATA_TOGGLE$3 = '[data-bs-toggle="dropdown"]';
+const SELECTOR_MENU = '.dropdown-menu';
+const SELECTOR_NAVBAR_NAV = '.navbar-nav';
+const SELECTOR_VISIBLE_ITEMS = '.dropdown-menu .dropdown-item:not(.disabled):not(:disabled)';
+const PLACEMENT_TOP = isRTL() ? 'top-end' : 'top-start';
+const PLACEMENT_TOPEND = isRTL() ? 'top-start' : 'top-end';
+const PLACEMENT_BOTTOM = isRTL() ? 'bottom-end' : 'bottom-start';
+const PLACEMENT_BOTTOMEND = isRTL() ? 'bottom-start' : 'bottom-end';
+const PLACEMENT_RIGHT = isRTL() ? 'left-start' : 'right-start';
+const PLACEMENT_LEFT = isRTL() ? 'right-start' : 'left-start';
+const Default$7 = {
+  offset: [0, 2],
+  boundary: 'clippingParents',
   reference: 'toggle',
   display: 'dynamic',
-  popperConfig: null
+  popperConfig: null,
+  autoClose: true
 };
-var DefaultType$2 = {
-  offset: '(number|string|function)',
-  flip: 'boolean',
+const DefaultType$7 = {
+  offset: '(array|string|function)',
   boundary: '(string|element)',
-  reference: '(string|element)',
+  reference: '(string|element|object)',
   display: 'string',
-  popperConfig: '(null|object)'
+  popperConfig: '(null|object|function)',
+  autoClose: '(boolean|string)'
 };
 /**
  * ------------------------------------------------------------------------
@@ -2094,80 +5128,87 @@ var DefaultType$2 = {
  * ------------------------------------------------------------------------
  */
 
-var Dropdown = /*#__PURE__*/function () {
-  function Dropdown(element, config) {
-    this._element = element;
+class Dropdown extends BaseComponent {
+  constructor(element, config) {
+    super(element);
     this._popper = null;
     this._config = this._getConfig(config);
     this._menu = this._getMenuElement();
     this._inNavbar = this._detectNavbar();
 
     this._addEventListeners();
-
-    Data.setData(element, DATA_KEY$4, this);
   } // Getters
 
 
-  var _proto = Dropdown.prototype;
+  static get Default() {
+    return Default$7;
+  }
 
-  // Public
-  _proto.toggle = function toggle() {
-    if (this._element.disabled || this._element.classList.contains(CLASS_NAME_DISABLED)) {
+  static get DefaultType() {
+    return DefaultType$7;
+  }
+
+  static get NAME() {
+    return NAME$8;
+  } // Public
+
+
+  toggle() {
+    if (isDisabled(this._element)) {
       return;
     }
 
-    var isActive = this._element.classList.contains(CLASS_NAME_SHOW$1);
-
-    Dropdown.clearMenus();
+    const isActive = this._element.classList.contains(CLASS_NAME_SHOW$7);
 
     if (isActive) {
+      this.hide();
       return;
     }
 
     this.show();
-  };
+  }
 
-  _proto.show = function show() {
-    if (this._element.disabled || this._element.classList.contains(CLASS_NAME_DISABLED) || this._menu.classList.contains(CLASS_NAME_SHOW$1)) {
+  show() {
+    if (isDisabled(this._element) || this._menu.classList.contains(CLASS_NAME_SHOW$7)) {
       return;
     }
 
-    var parent = Dropdown.getParentFromElement(this._element);
-    var relatedTarget = {
+    const parent = Dropdown.getParentFromElement(this._element);
+    const relatedTarget = {
       relatedTarget: this._element
     };
-    var showEvent = EventHandler.trigger(this._element, EVENT_SHOW$1, relatedTarget);
+    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$4, relatedTarget);
 
     if (showEvent.defaultPrevented) {
       return;
-    } // Disable totally Popper.js for Dropdown in Navbar
+    } // Totally disable Popper for Dropdowns in Navbar
 
 
-    if (!this._inNavbar) {
-      if (typeof popper_js__WEBPACK_IMPORTED_MODULE_0__["default"] === 'undefined') {
-        throw new TypeError('Bootstrap\'s dropdowns require Popper.js (https://popper.js.org)');
+    if (this._inNavbar) {
+      Manipulator.setDataAttribute(this._menu, 'popper', 'none');
+    } else {
+      if (typeof _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ === 'undefined') {
+        throw new TypeError('Bootstrap\'s dropdowns require Popper (https://popper.js.org)');
       }
 
-      var referenceElement = this._element;
+      let referenceElement = this._element;
 
       if (this._config.reference === 'parent') {
         referenceElement = parent;
       } else if (isElement(this._config.reference)) {
-        referenceElement = this._config.reference; // Check if it's jQuery element
-
-        if (typeof this._config.reference.jquery !== 'undefined') {
-          referenceElement = this._config.reference[0];
-        }
-      } // If boundary is not `scrollParent`, then set position to `static`
-      // to allow the menu to "escape" the scroll parent's boundaries
-      // https://github.com/twbs/bootstrap/issues/24251
-
-
-      if (this._config.boundary !== 'scrollParent') {
-        parent.classList.add(CLASS_NAME_POSITION_STATIC);
+        referenceElement = getElement(this._config.reference);
+      } else if (typeof this._config.reference === 'object') {
+        referenceElement = this._config.reference;
       }
 
-      this._popper = new popper_js__WEBPACK_IMPORTED_MODULE_0__["default"](referenceElement, this._menu, this._getPopperConfig());
+      const popperConfig = this._getPopperConfig();
+
+      const isDisplayStatic = popperConfig.modifiers.find(modifier => modifier.name === 'applyStyles' && modifier.enabled === false);
+      this._popper = _popperjs_core__WEBPACK_IMPORTED_MODULE_0__["createPopper"](referenceElement, this._menu, popperConfig);
+
+      if (isDisplayStatic) {
+        Manipulator.setDataAttribute(this._menu, 'popper', 'static');
+      }
     } // If this is a touch-enabled device we add extra
     // empty mouseover listeners to the body's immediate children;
     // only needed because of broken event delegation on iOS
@@ -2175,244 +5216,254 @@ var Dropdown = /*#__PURE__*/function () {
 
 
     if ('ontouchstart' in document.documentElement && !parent.closest(SELECTOR_NAVBAR_NAV)) {
-      var _ref;
-
-      (_ref = []).concat.apply(_ref, document.body.children).forEach(function (elem) {
-        return EventHandler.on(elem, 'mouseover', null, noop());
-      });
+      [].concat(...document.body.children).forEach(elem => EventHandler.on(elem, 'mouseover', noop));
     }
 
     this._element.focus();
 
     this._element.setAttribute('aria-expanded', true);
 
-    this._menu.classList.toggle(CLASS_NAME_SHOW$1);
+    this._menu.classList.toggle(CLASS_NAME_SHOW$7);
 
-    this._element.classList.toggle(CLASS_NAME_SHOW$1);
+    this._element.classList.toggle(CLASS_NAME_SHOW$7);
 
-    EventHandler.trigger(parent, EVENT_SHOWN$1, relatedTarget);
-  };
+    EventHandler.trigger(this._element, EVENT_SHOWN$4, relatedTarget);
+  }
 
-  _proto.hide = function hide() {
-    if (this._element.disabled || this._element.classList.contains(CLASS_NAME_DISABLED) || !this._menu.classList.contains(CLASS_NAME_SHOW$1)) {
+  hide() {
+    if (isDisabled(this._element) || !this._menu.classList.contains(CLASS_NAME_SHOW$7)) {
       return;
     }
 
-    var parent = Dropdown.getParentFromElement(this._element);
-    var relatedTarget = {
+    const relatedTarget = {
       relatedTarget: this._element
     };
-    var hideEvent = EventHandler.trigger(parent, EVENT_HIDE$1, relatedTarget);
 
-    if (hideEvent.defaultPrevented) {
-      return;
-    }
+    this._completeHide(relatedTarget);
+  }
 
+  dispose() {
     if (this._popper) {
       this._popper.destroy();
     }
 
-    this._menu.classList.toggle(CLASS_NAME_SHOW$1);
+    super.dispose();
+  }
 
-    this._element.classList.toggle(CLASS_NAME_SHOW$1);
-
-    EventHandler.trigger(parent, EVENT_HIDDEN$1, relatedTarget);
-  };
-
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY$4);
-    EventHandler.off(this._element, EVENT_KEY$4);
-    this._element = null;
-    this._menu = null;
-
-    if (this._popper) {
-      this._popper.destroy();
-
-      this._popper = null;
-    }
-  };
-
-  _proto.update = function update() {
+  update() {
     this._inNavbar = this._detectNavbar();
 
     if (this._popper) {
-      this._popper.scheduleUpdate();
+      this._popper.update();
     }
   } // Private
-  ;
 
-  _proto._addEventListeners = function _addEventListeners() {
-    var _this = this;
 
-    EventHandler.on(this._element, EVENT_CLICK, function (event) {
+  _addEventListeners() {
+    EventHandler.on(this._element, EVENT_CLICK, event => {
       event.preventDefault();
-      event.stopPropagation();
-
-      _this.toggle();
+      this.toggle();
     });
-  };
+  }
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, this.constructor.Default, Manipulator.getDataAttributes(this._element), config);
-    typeCheckConfig(NAME$4, config, this.constructor.DefaultType);
-    return config;
-  };
+  _completeHide(relatedTarget) {
+    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$4, relatedTarget);
 
-  _proto._getMenuElement = function _getMenuElement() {
-    return SelectorEngine.next(this._element, SELECTOR_MENU)[0];
-  };
+    if (hideEvent.defaultPrevented) {
+      return;
+    } // If this is a touch-enabled device we remove the extra
+    // empty mouseover listeners we added for iOS support
 
-  _proto._getPlacement = function _getPlacement() {
-    var parentDropdown = this._element.parentNode;
-    var placement = PLACEMENT_BOTTOM; // Handle dropup
 
-    if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
-      placement = this._menu.classList.contains(CLASS_NAME_MENURIGHT) ? PLACEMENT_TOPEND : PLACEMENT_TOP;
-    } else if (parentDropdown.classList.contains(CLASS_NAME_DROPRIGHT)) {
-      placement = PLACEMENT_RIGHT;
-    } else if (parentDropdown.classList.contains(CLASS_NAME_DROPLEFT)) {
-      placement = PLACEMENT_LEFT;
-    } else if (this._menu.classList.contains(CLASS_NAME_MENURIGHT)) {
-      placement = PLACEMENT_BOTTOMEND;
+    if ('ontouchstart' in document.documentElement) {
+      [].concat(...document.body.children).forEach(elem => EventHandler.off(elem, 'mouseover', noop));
     }
 
-    return placement;
-  };
+    if (this._popper) {
+      this._popper.destroy();
+    }
 
-  _proto._detectNavbar = function _detectNavbar() {
-    return Boolean(this._element.closest("." + CLASS_NAME_NAVBAR));
-  };
+    this._menu.classList.remove(CLASS_NAME_SHOW$7);
 
-  _proto._getOffset = function _getOffset() {
-    var _this2 = this;
+    this._element.classList.remove(CLASS_NAME_SHOW$7);
 
-    var offset = {};
+    this._element.setAttribute('aria-expanded', 'false');
 
-    if (typeof this._config.offset === 'function') {
-      offset.fn = function (data) {
-        data.offsets = _extends({}, data.offsets, _this2._config.offset(data.offsets, _this2._element) || {});
-        return data;
-      };
-    } else {
-      offset.offset = this._config.offset;
+    Manipulator.removeDataAttribute(this._menu, 'popper');
+    EventHandler.trigger(this._element, EVENT_HIDDEN$4, relatedTarget);
+  }
+
+  _getConfig(config) {
+    config = { ...this.constructor.Default,
+      ...Manipulator.getDataAttributes(this._element),
+      ...config
+    };
+    typeCheckConfig(NAME$8, config, this.constructor.DefaultType);
+
+    if (typeof config.reference === 'object' && !isElement(config.reference) && typeof config.reference.getBoundingClientRect !== 'function') {
+      // Popper virtual elements require a getBoundingClientRect method
+      throw new TypeError(`${NAME$8.toUpperCase()}: Option "reference" provided type "object" without a required "getBoundingClientRect" method.`);
+    }
+
+    return config;
+  }
+
+  _getMenuElement() {
+    return SelectorEngine.next(this._element, SELECTOR_MENU)[0];
+  }
+
+  _getPlacement() {
+    const parentDropdown = this._element.parentNode;
+
+    if (parentDropdown.classList.contains(CLASS_NAME_DROPEND)) {
+      return PLACEMENT_RIGHT;
+    }
+
+    if (parentDropdown.classList.contains(CLASS_NAME_DROPSTART)) {
+      return PLACEMENT_LEFT;
+    } // We need to trim the value because custom properties can also include spaces
+
+
+    const isEnd = getComputedStyle(this._menu).getPropertyValue('--bs-position').trim() === 'end';
+
+    if (parentDropdown.classList.contains(CLASS_NAME_DROPUP)) {
+      return isEnd ? PLACEMENT_TOPEND : PLACEMENT_TOP;
+    }
+
+    return isEnd ? PLACEMENT_BOTTOMEND : PLACEMENT_BOTTOM;
+  }
+
+  _detectNavbar() {
+    return this._element.closest(`.${CLASS_NAME_NAVBAR}`) !== null;
+  }
+
+  _getOffset() {
+    const {
+      offset
+    } = this._config;
+
+    if (typeof offset === 'string') {
+      return offset.split(',').map(val => Number.parseInt(val, 10));
+    }
+
+    if (typeof offset === 'function') {
+      return popperData => offset(popperData, this._element);
     }
 
     return offset;
-  };
+  }
 
-  _proto._getPopperConfig = function _getPopperConfig() {
-    var popperConfig = {
+  _getPopperConfig() {
+    const defaultBsPopperConfig = {
       placement: this._getPlacement(),
-      modifiers: {
-        offset: this._getOffset(),
-        flip: {
-          enabled: this._config.flip
-        },
-        preventOverflow: {
-          boundariesElement: this._config.boundary
+      modifiers: [{
+        name: 'preventOverflow',
+        options: {
+          boundary: this._config.boundary
         }
-      }
-    }; // Disable Popper.js if we have a static display
+      }, {
+        name: 'offset',
+        options: {
+          offset: this._getOffset()
+        }
+      }]
+    }; // Disable Popper if we have a static display
 
     if (this._config.display === 'static') {
-      popperConfig.modifiers.applyStyle = {
+      defaultBsPopperConfig.modifiers = [{
+        name: 'applyStyles',
         enabled: false
-      };
+      }];
     }
 
-    return _extends({}, popperConfig, this._config.popperConfig);
+    return { ...defaultBsPopperConfig,
+      ...(typeof this._config.popperConfig === 'function' ? this._config.popperConfig(defaultBsPopperConfig) : this._config.popperConfig)
+    };
+  }
+
+  _selectMenuItem({
+    key,
+    target
+  }) {
+    const items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, this._menu).filter(isVisible);
+
+    if (!items.length) {
+      return;
+    } // if target isn't included in items (e.g. when expanding the dropdown)
+    // allow cycling to get the last item in case key equals ARROW_UP_KEY
+
+
+    getNextActiveElement(items, target, key === ARROW_DOWN_KEY, !items.includes(target)).focus();
   } // Static
-  ;
 
-  Dropdown.dropdownInterface = function dropdownInterface(element, config) {
-    var data = Data.getData(element, DATA_KEY$4);
 
-    var _config = typeof config === 'object' ? config : null;
-
-    if (!data) {
-      data = new Dropdown(element, _config);
-    }
+  static dropdownInterface(element, config) {
+    const data = Dropdown.getOrCreateInstance(element, config);
 
     if (typeof config === 'string') {
       if (typeof data[config] === 'undefined') {
-        throw new TypeError("No method named \"" + config + "\"");
+        throw new TypeError(`No method named "${config}"`);
       }
 
       data[config]();
     }
-  };
+  }
 
-  Dropdown.jQueryInterface = function jQueryInterface(config) {
+  static jQueryInterface(config) {
     return this.each(function () {
       Dropdown.dropdownInterface(this, config);
     });
-  };
+  }
 
-  Dropdown.clearMenus = function clearMenus(event) {
+  static clearMenus(event) {
     if (event && (event.button === RIGHT_MOUSE_BUTTON || event.type === 'keyup' && event.key !== TAB_KEY)) {
       return;
     }
 
-    var toggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE$2);
+    const toggles = SelectorEngine.find(SELECTOR_DATA_TOGGLE$3);
 
-    for (var i = 0, len = toggles.length; i < len; i++) {
-      var parent = Dropdown.getParentFromElement(toggles[i]);
-      var context = Data.getData(toggles[i], DATA_KEY$4);
-      var relatedTarget = {
-        relatedTarget: toggles[i]
+    for (let i = 0, len = toggles.length; i < len; i++) {
+      const context = Dropdown.getInstance(toggles[i]);
+
+      if (!context || context._config.autoClose === false) {
+        continue;
+      }
+
+      if (!context._element.classList.contains(CLASS_NAME_SHOW$7)) {
+        continue;
+      }
+
+      const relatedTarget = {
+        relatedTarget: context._element
       };
 
-      if (event && event.type === 'click') {
-        relatedTarget.clickEvent = event;
+      if (event) {
+        const composedPath = event.composedPath();
+        const isMenuTarget = composedPath.includes(context._menu);
+
+        if (composedPath.includes(context._element) || context._config.autoClose === 'inside' && !isMenuTarget || context._config.autoClose === 'outside' && isMenuTarget) {
+          continue;
+        } // Tab navigation through the dropdown menu or events from contained inputs shouldn't close the menu
+
+
+        if (context._menu.contains(event.target) && (event.type === 'keyup' && event.key === TAB_KEY || /input|select|option|textarea|form/i.test(event.target.tagName))) {
+          continue;
+        }
+
+        if (event.type === 'click') {
+          relatedTarget.clickEvent = event;
+        }
       }
 
-      if (!context) {
-        continue;
-      }
-
-      var dropdownMenu = context._menu;
-
-      if (!toggles[i].classList.contains(CLASS_NAME_SHOW$1)) {
-        continue;
-      }
-
-      if (event && (event.type === 'click' && /input|textarea/i.test(event.target.tagName) || event.type === 'keyup' && event.key === TAB_KEY) && dropdownMenu.contains(event.target)) {
-        continue;
-      }
-
-      var hideEvent = EventHandler.trigger(parent, EVENT_HIDE$1, relatedTarget);
-
-      if (hideEvent.defaultPrevented) {
-        continue;
-      } // If this is a touch-enabled device we remove the extra
-      // empty mouseover listeners we added for iOS support
-
-
-      if ('ontouchstart' in document.documentElement) {
-        var _ref2;
-
-        (_ref2 = []).concat.apply(_ref2, document.body.children).forEach(function (elem) {
-          return EventHandler.off(elem, 'mouseover', null, noop());
-        });
-      }
-
-      toggles[i].setAttribute('aria-expanded', 'false');
-
-      if (context._popper) {
-        context._popper.destroy();
-      }
-
-      dropdownMenu.classList.remove(CLASS_NAME_SHOW$1);
-      toggles[i].classList.remove(CLASS_NAME_SHOW$1);
-      EventHandler.trigger(parent, EVENT_HIDDEN$1, relatedTarget);
+      context._completeHide(relatedTarget);
     }
-  };
+  }
 
-  Dropdown.getParentFromElement = function getParentFromElement(element) {
+  static getParentFromElement(element) {
     return getElementFromSelector(element) || element.parentNode;
-  };
+  }
 
-  Dropdown.dataApiKeydownHandler = function dataApiKeydownHandler(event) {
+  static dataApiKeydownHandler(event) {
     // If not input/textarea:
     //  - And not a key in REGEXP_KEYDOWN => not a dropdown command
     // If input/textarea:
@@ -2420,78 +5471,47 @@ var Dropdown = /*#__PURE__*/function () {
     //  - If key is other than escape
     //    - If key is not up or down => not a dropdown command
     //    - If trigger inside the menu => not a dropdown command
-    if (/input|textarea/i.test(event.target.tagName) ? event.key === SPACE_KEY || event.key !== ESCAPE_KEY && (event.key !== ARROW_DOWN_KEY && event.key !== ARROW_UP_KEY || event.target.closest(SELECTOR_MENU)) : !REGEXP_KEYDOWN.test(event.key)) {
+    if (/input|textarea/i.test(event.target.tagName) ? event.key === SPACE_KEY || event.key !== ESCAPE_KEY$2 && (event.key !== ARROW_DOWN_KEY && event.key !== ARROW_UP_KEY || event.target.closest(SELECTOR_MENU)) : !REGEXP_KEYDOWN.test(event.key)) {
+      return;
+    }
+
+    const isActive = this.classList.contains(CLASS_NAME_SHOW$7);
+
+    if (!isActive && event.key === ESCAPE_KEY$2) {
       return;
     }
 
     event.preventDefault();
     event.stopPropagation();
 
-    if (this.disabled || this.classList.contains(CLASS_NAME_DISABLED)) {
+    if (isDisabled(this)) {
       return;
     }
 
-    var parent = Dropdown.getParentFromElement(this);
-    var isActive = this.classList.contains(CLASS_NAME_SHOW$1);
+    const getToggleButton = () => this.matches(SELECTOR_DATA_TOGGLE$3) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$3)[0];
 
-    if (event.key === ESCAPE_KEY) {
-      var button = this.matches(SELECTOR_DATA_TOGGLE$2) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$2)[0];
-      button.focus();
+    if (event.key === ESCAPE_KEY$2) {
+      getToggleButton().focus();
       Dropdown.clearMenus();
+      return;
+    }
+
+    if (event.key === ARROW_UP_KEY || event.key === ARROW_DOWN_KEY) {
+      if (!isActive) {
+        getToggleButton().click();
+      }
+
+      Dropdown.getInstance(getToggleButton())._selectMenuItem(event);
+
       return;
     }
 
     if (!isActive || event.key === SPACE_KEY) {
       Dropdown.clearMenus();
-      return;
     }
+  }
 
-    var items = SelectorEngine.find(SELECTOR_VISIBLE_ITEMS, parent).filter(isVisible);
-
-    if (!items.length) {
-      return;
-    }
-
-    var index = items.indexOf(event.target);
-
-    if (event.key === ARROW_UP_KEY && index > 0) {
-      // Up
-      index--;
-    }
-
-    if (event.key === ARROW_DOWN_KEY && index < items.length - 1) {
-      // Down
-      index++;
-    } // index is -1 if the first keydown is an ArrowUp
-
-
-    index = index === -1 ? 0 : index;
-    items[index].focus();
-  };
-
-  Dropdown.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$4);
-  };
-
-  _createClass(Dropdown, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$4;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$2;
-    }
-  }, {
-    key: "DefaultType",
-    get: function get() {
-      return DefaultType$2;
-    }
-  }]);
-
-  return Dropdown;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -2499,17 +5519,13 @@ var Dropdown = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE$2, Dropdown.dataApiKeydownHandler);
+EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_DATA_TOGGLE$3, Dropdown.dataApiKeydownHandler);
 EventHandler.on(document, EVENT_KEYDOWN_DATA_API, SELECTOR_MENU, Dropdown.dataApiKeydownHandler);
-EventHandler.on(document, EVENT_CLICK_DATA_API$4, Dropdown.clearMenus);
+EventHandler.on(document, EVENT_CLICK_DATA_API$3, Dropdown.clearMenus);
 EventHandler.on(document, EVENT_KEYUP_DATA_API, Dropdown.clearMenus);
-EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_DATA_TOGGLE$2, function (event) {
+EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$3, function (event) {
   event.preventDefault();
-  event.stopPropagation();
-  Dropdown.dropdownInterface(this, 'toggle');
-});
-EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_FORM_CHILD, function (e) {
-  return e.stopPropagation();
+  Dropdown.dropdownInterface(this);
 });
 /**
  * ------------------------------------------------------------------------
@@ -2518,122 +5534,336 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$4, SELECTOR_FORM_CHILD, function 
  * add .Dropdown to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Dropdown);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$4];
-    $.fn[NAME$4] = Dropdown.jQueryInterface;
-    $.fn[NAME$4].Constructor = Dropdown;
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): util/scrollBar.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+const SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
+const SELECTOR_STICKY_CONTENT = '.sticky-top';
 
-    $.fn[NAME$4].noConflict = function () {
-      $.fn[NAME$4] = JQUERY_NO_CONFLICT;
-      return Dropdown.jQueryInterface;
-    };
+class ScrollBarHelper {
+  constructor() {
+    this._element = document.body;
   }
-});
 
+  getWidth() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth#usage_notes
+    const documentWidth = document.documentElement.clientWidth;
+    return Math.abs(window.innerWidth - documentWidth);
+  }
+
+  hide() {
+    const width = this.getWidth();
+
+    this._disableOverFlow(); // give padding to element to balance the hidden scrollbar width
+
+
+    this._setElementAttributes(this._element, 'paddingRight', calculatedValue => calculatedValue + width); // trick: We adjust positive paddingRight and negative marginRight to sticky-top elements to keep showing fullwidth
+
+
+    this._setElementAttributes(SELECTOR_FIXED_CONTENT, 'paddingRight', calculatedValue => calculatedValue + width);
+
+    this._setElementAttributes(SELECTOR_STICKY_CONTENT, 'marginRight', calculatedValue => calculatedValue - width);
+  }
+
+  _disableOverFlow() {
+    this._saveInitialAttribute(this._element, 'overflow');
+
+    this._element.style.overflow = 'hidden';
+  }
+
+  _setElementAttributes(selector, styleProp, callback) {
+    const scrollbarWidth = this.getWidth();
+
+    const manipulationCallBack = element => {
+      if (element !== this._element && window.innerWidth > element.clientWidth + scrollbarWidth) {
+        return;
+      }
+
+      this._saveInitialAttribute(element, styleProp);
+
+      const calculatedValue = window.getComputedStyle(element)[styleProp];
+      element.style[styleProp] = `${callback(Number.parseFloat(calculatedValue))}px`;
+    };
+
+    this._applyManipulationCallback(selector, manipulationCallBack);
+  }
+
+  reset() {
+    this._resetElementAttributes(this._element, 'overflow');
+
+    this._resetElementAttributes(this._element, 'paddingRight');
+
+    this._resetElementAttributes(SELECTOR_FIXED_CONTENT, 'paddingRight');
+
+    this._resetElementAttributes(SELECTOR_STICKY_CONTENT, 'marginRight');
+  }
+
+  _saveInitialAttribute(element, styleProp) {
+    const actualValue = element.style[styleProp];
+
+    if (actualValue) {
+      Manipulator.setDataAttribute(element, styleProp, actualValue);
+    }
+  }
+
+  _resetElementAttributes(selector, styleProp) {
+    const manipulationCallBack = element => {
+      const value = Manipulator.getDataAttribute(element, styleProp);
+
+      if (typeof value === 'undefined') {
+        element.style.removeProperty(styleProp);
+      } else {
+        Manipulator.removeDataAttribute(element, styleProp);
+        element.style[styleProp] = value;
+      }
+    };
+
+    this._applyManipulationCallback(selector, manipulationCallBack);
+  }
+
+  _applyManipulationCallback(selector, callBack) {
+    if (isElement(selector)) {
+      callBack(selector);
+    } else {
+      SelectorEngine.find(selector, this._element).forEach(callBack);
+    }
+  }
+
+  isOverflowing() {
+    return this.getWidth() > 0;
+  }
+
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): util/backdrop.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+const Default$6 = {
+  isVisible: true,
+  // if false, we use the backdrop helper without adding any element to the dom
+  isAnimated: false,
+  rootElement: 'body',
+  // give the choice to place backdrop under different elements
+  clickCallback: null
+};
+const DefaultType$6 = {
+  isVisible: 'boolean',
+  isAnimated: 'boolean',
+  rootElement: '(element|string)',
+  clickCallback: '(function|null)'
+};
+const NAME$7 = 'backdrop';
+const CLASS_NAME_BACKDROP = 'modal-backdrop';
+const CLASS_NAME_FADE$5 = 'fade';
+const CLASS_NAME_SHOW$6 = 'show';
+const EVENT_MOUSEDOWN = `mousedown.bs.${NAME$7}`;
+
+class Backdrop {
+  constructor(config) {
+    this._config = this._getConfig(config);
+    this._isAppended = false;
+    this._element = null;
+  }
+
+  show(callback) {
+    if (!this._config.isVisible) {
+      execute(callback);
+      return;
+    }
+
+    this._append();
+
+    if (this._config.isAnimated) {
+      reflow(this._getElement());
+    }
+
+    this._getElement().classList.add(CLASS_NAME_SHOW$6);
+
+    this._emulateAnimation(() => {
+      execute(callback);
+    });
+  }
+
+  hide(callback) {
+    if (!this._config.isVisible) {
+      execute(callback);
+      return;
+    }
+
+    this._getElement().classList.remove(CLASS_NAME_SHOW$6);
+
+    this._emulateAnimation(() => {
+      this.dispose();
+      execute(callback);
+    });
+  } // Private
+
+
+  _getElement() {
+    if (!this._element) {
+      const backdrop = document.createElement('div');
+      backdrop.className = CLASS_NAME_BACKDROP;
+
+      if (this._config.isAnimated) {
+        backdrop.classList.add(CLASS_NAME_FADE$5);
+      }
+
+      this._element = backdrop;
+    }
+
+    return this._element;
+  }
+
+  _getConfig(config) {
+    config = { ...Default$6,
+      ...(typeof config === 'object' ? config : {})
+    }; // use getElement() with the default "body" to get a fresh Element on each instantiation
+
+    config.rootElement = getElement(config.rootElement);
+    typeCheckConfig(NAME$7, config, DefaultType$6);
+    return config;
+  }
+
+  _append() {
+    if (this._isAppended) {
+      return;
+    }
+
+    this._config.rootElement.appendChild(this._getElement());
+
+    EventHandler.on(this._getElement(), EVENT_MOUSEDOWN, () => {
+      execute(this._config.clickCallback);
+    });
+    this._isAppended = true;
+  }
+
+  dispose() {
+    if (!this._isAppended) {
+      return;
+    }
+
+    EventHandler.off(this._element, EVENT_MOUSEDOWN);
+
+    this._element.remove();
+
+    this._isAppended = false;
+  }
+
+  _emulateAnimation(callback) {
+    executeAfterTransition(callback, this._getElement(), this._config.isAnimated);
+  }
+
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): modal.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$5 = 'modal';
-var VERSION$5 = '5.0.0-alpha3';
-var DATA_KEY$5 = 'bs.modal';
-var EVENT_KEY$5 = "." + DATA_KEY$5;
-var DATA_API_KEY$5 = '.data-api';
-var ESCAPE_KEY$1 = 'Escape';
-var Default$3 = {
+const NAME$6 = 'modal';
+const DATA_KEY$6 = 'bs.modal';
+const EVENT_KEY$6 = `.${DATA_KEY$6}`;
+const DATA_API_KEY$3 = '.data-api';
+const ESCAPE_KEY$1 = 'Escape';
+const Default$5 = {
   backdrop: true,
   keyboard: true,
-  focus: true,
-  show: true
+  focus: true
 };
-var DefaultType$3 = {
+const DefaultType$5 = {
   backdrop: '(boolean|string)',
   keyboard: 'boolean',
-  focus: 'boolean',
-  show: 'boolean'
+  focus: 'boolean'
 };
-var EVENT_HIDE$2 = "hide" + EVENT_KEY$5;
-var EVENT_HIDE_PREVENTED = "hidePrevented" + EVENT_KEY$5;
-var EVENT_HIDDEN$2 = "hidden" + EVENT_KEY$5;
-var EVENT_SHOW$2 = "show" + EVENT_KEY$5;
-var EVENT_SHOWN$2 = "shown" + EVENT_KEY$5;
-var EVENT_FOCUSIN = "focusin" + EVENT_KEY$5;
-var EVENT_RESIZE = "resize" + EVENT_KEY$5;
-var EVENT_CLICK_DISMISS = "click.dismiss" + EVENT_KEY$5;
-var EVENT_KEYDOWN_DISMISS = "keydown.dismiss" + EVENT_KEY$5;
-var EVENT_MOUSEUP_DISMISS = "mouseup.dismiss" + EVENT_KEY$5;
-var EVENT_MOUSEDOWN_DISMISS = "mousedown.dismiss" + EVENT_KEY$5;
-var EVENT_CLICK_DATA_API$5 = "click" + EVENT_KEY$5 + DATA_API_KEY$5;
-var CLASS_NAME_SCROLLBAR_MEASURER = 'modal-scrollbar-measure';
-var CLASS_NAME_BACKDROP = 'modal-backdrop';
-var CLASS_NAME_OPEN = 'modal-open';
-var CLASS_NAME_FADE = 'fade';
-var CLASS_NAME_SHOW$2 = 'show';
-var CLASS_NAME_STATIC = 'modal-static';
-var SELECTOR_DIALOG = '.modal-dialog';
-var SELECTOR_MODAL_BODY = '.modal-body';
-var SELECTOR_DATA_TOGGLE$3 = '[data-toggle="modal"]';
-var SELECTOR_DATA_DISMISS = '[data-dismiss="modal"]';
-var SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top';
-var SELECTOR_STICKY_CONTENT = '.sticky-top';
+const EVENT_HIDE$3 = `hide${EVENT_KEY$6}`;
+const EVENT_HIDE_PREVENTED = `hidePrevented${EVENT_KEY$6}`;
+const EVENT_HIDDEN$3 = `hidden${EVENT_KEY$6}`;
+const EVENT_SHOW$3 = `show${EVENT_KEY$6}`;
+const EVENT_SHOWN$3 = `shown${EVENT_KEY$6}`;
+const EVENT_FOCUSIN$2 = `focusin${EVENT_KEY$6}`;
+const EVENT_RESIZE = `resize${EVENT_KEY$6}`;
+const EVENT_CLICK_DISMISS$2 = `click.dismiss${EVENT_KEY$6}`;
+const EVENT_KEYDOWN_DISMISS$1 = `keydown.dismiss${EVENT_KEY$6}`;
+const EVENT_MOUSEUP_DISMISS = `mouseup.dismiss${EVENT_KEY$6}`;
+const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY$6}`;
+const EVENT_CLICK_DATA_API$2 = `click${EVENT_KEY$6}${DATA_API_KEY$3}`;
+const CLASS_NAME_OPEN = 'modal-open';
+const CLASS_NAME_FADE$4 = 'fade';
+const CLASS_NAME_SHOW$5 = 'show';
+const CLASS_NAME_STATIC = 'modal-static';
+const SELECTOR_DIALOG = '.modal-dialog';
+const SELECTOR_MODAL_BODY = '.modal-body';
+const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="modal"]';
+const SELECTOR_DATA_DISMISS$2 = '[data-bs-dismiss="modal"]';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Modal = /*#__PURE__*/function () {
-  function Modal(element, config) {
+class Modal extends BaseComponent {
+  constructor(element, config) {
+    super(element);
     this._config = this._getConfig(config);
-    this._element = element;
-    this._dialog = SelectorEngine.findOne(SELECTOR_DIALOG, element);
-    this._backdrop = null;
+    this._dialog = SelectorEngine.findOne(SELECTOR_DIALOG, this._element);
+    this._backdrop = this._initializeBackDrop();
     this._isShown = false;
-    this._isBodyOverflowing = false;
     this._ignoreBackdropClick = false;
     this._isTransitioning = false;
-    this._scrollbarWidth = 0;
-    Data.setData(element, DATA_KEY$5, this);
+    this._scrollBar = new ScrollBarHelper();
   } // Getters
 
 
-  var _proto = Modal.prototype;
+  static get Default() {
+    return Default$5;
+  }
 
-  // Public
-  _proto.toggle = function toggle(relatedTarget) {
+  static get NAME() {
+    return NAME$6;
+  } // Public
+
+
+  toggle(relatedTarget) {
     return this._isShown ? this.hide() : this.show(relatedTarget);
-  };
+  }
 
-  _proto.show = function show(relatedTarget) {
-    var _this = this;
-
+  show(relatedTarget) {
     if (this._isShown || this._isTransitioning) {
       return;
     }
 
-    if (this._element.classList.contains(CLASS_NAME_FADE)) {
-      this._isTransitioning = true;
-    }
-
-    var showEvent = EventHandler.trigger(this._element, EVENT_SHOW$2, {
-      relatedTarget: relatedTarget
+    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$3, {
+      relatedTarget
     });
 
-    if (this._isShown || showEvent.defaultPrevented) {
+    if (showEvent.defaultPrevented) {
       return;
     }
 
     this._isShown = true;
 
-    this._checkScrollbar();
+    if (this._isAnimated()) {
+      this._isTransitioning = true;
+    }
 
-    this._setScrollbar();
+    this._scrollBar.hide();
+
+    document.body.classList.add(CLASS_NAME_OPEN);
 
     this._adjustDialog();
 
@@ -2641,26 +5871,20 @@ var Modal = /*#__PURE__*/function () {
 
     this._setResizeEvent();
 
-    EventHandler.on(this._element, EVENT_CLICK_DISMISS, SELECTOR_DATA_DISMISS, function (event) {
-      return _this.hide(event);
-    });
-    EventHandler.on(this._dialog, EVENT_MOUSEDOWN_DISMISS, function () {
-      EventHandler.one(_this._element, EVENT_MOUSEUP_DISMISS, function (event) {
-        if (event.target === _this._element) {
-          _this._ignoreBackdropClick = true;
+    EventHandler.on(this._element, EVENT_CLICK_DISMISS$2, SELECTOR_DATA_DISMISS$2, event => this.hide(event));
+    EventHandler.on(this._dialog, EVENT_MOUSEDOWN_DISMISS, () => {
+      EventHandler.one(this._element, EVENT_MOUSEUP_DISMISS, event => {
+        if (event.target === this._element) {
+          this._ignoreBackdropClick = true;
         }
       });
     });
 
-    this._showBackdrop(function () {
-      return _this._showElement(relatedTarget);
-    });
-  };
+    this._showBackdrop(() => this._showElement(relatedTarget));
+  }
 
-  _proto.hide = function hide(event) {
-    var _this2 = this;
-
-    if (event) {
+  hide(event) {
+    if (event && ['A', 'AREA'].includes(event.target.tagName)) {
       event.preventDefault();
     }
 
@@ -2668,7 +5892,7 @@ var Modal = /*#__PURE__*/function () {
       return;
     }
 
-    var hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$2);
+    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$3);
 
     if (hideEvent.defaultPrevented) {
       return;
@@ -2676,9 +5900,9 @@ var Modal = /*#__PURE__*/function () {
 
     this._isShown = false;
 
-    var transition = this._element.classList.contains(CLASS_NAME_FADE);
+    const isAnimated = this._isAnimated();
 
-    if (transition) {
+    if (isAnimated) {
       this._isTransitioning = true;
     }
 
@@ -2686,64 +5910,57 @@ var Modal = /*#__PURE__*/function () {
 
     this._setResizeEvent();
 
-    EventHandler.off(document, EVENT_FOCUSIN);
+    EventHandler.off(document, EVENT_FOCUSIN$2);
 
-    this._element.classList.remove(CLASS_NAME_SHOW$2);
+    this._element.classList.remove(CLASS_NAME_SHOW$5);
 
-    EventHandler.off(this._element, EVENT_CLICK_DISMISS);
+    EventHandler.off(this._element, EVENT_CLICK_DISMISS$2);
     EventHandler.off(this._dialog, EVENT_MOUSEDOWN_DISMISS);
 
-    if (transition) {
-      var transitionDuration = getTransitionDurationFromElement(this._element);
-      EventHandler.one(this._element, TRANSITION_END, function (event) {
-        return _this2._hideModal(event);
-      });
-      emulateTransitionEnd(this._element, transitionDuration);
-    } else {
-      this._hideModal();
-    }
-  };
+    this._queueCallback(() => this._hideModal(), this._element, isAnimated);
+  }
 
-  _proto.dispose = function dispose() {
-    [window, this._element, this._dialog].forEach(function (htmlElement) {
-      return EventHandler.off(htmlElement, EVENT_KEY$5);
-    });
+  dispose() {
+    [window, this._dialog].forEach(htmlElement => EventHandler.off(htmlElement, EVENT_KEY$6));
+
+    this._backdrop.dispose();
+
+    super.dispose();
     /**
      * `document` has 2 events `EVENT_FOCUSIN` and `EVENT_CLICK_DATA_API`
      * Do not move `document` in `htmlElements` array
      * It will remove `EVENT_CLICK_DATA_API` event that should remain
      */
 
-    EventHandler.off(document, EVENT_FOCUSIN);
-    Data.removeData(this._element, DATA_KEY$5);
-    this._config = null;
-    this._element = null;
-    this._dialog = null;
-    this._backdrop = null;
-    this._isShown = null;
-    this._isBodyOverflowing = null;
-    this._ignoreBackdropClick = null;
-    this._isTransitioning = null;
-    this._scrollbarWidth = null;
-  };
+    EventHandler.off(document, EVENT_FOCUSIN$2);
+  }
 
-  _proto.handleUpdate = function handleUpdate() {
+  handleUpdate() {
     this._adjustDialog();
   } // Private
-  ;
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, Default$3, config);
-    typeCheckConfig(NAME$5, config, DefaultType$3);
+
+  _initializeBackDrop() {
+    return new Backdrop({
+      isVisible: Boolean(this._config.backdrop),
+      // 'static' option will be translated to true, and booleans will keep their value
+      isAnimated: this._isAnimated()
+    });
+  }
+
+  _getConfig(config) {
+    config = { ...Default$5,
+      ...Manipulator.getDataAttributes(this._element),
+      ...(typeof config === 'object' ? config : {})
+    };
+    typeCheckConfig(NAME$6, config, DefaultType$5);
     return config;
-  };
+  }
 
-  _proto._showElement = function _showElement(relatedTarget) {
-    var _this3 = this;
+  _showElement(relatedTarget) {
+    const isAnimated = this._isAnimated();
 
-    var transition = this._element.classList.contains(CLASS_NAME_FADE);
-
-    var modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
+    const modalBody = SelectorEngine.findOne(SELECTOR_MODAL_BODY, this._dialog);
 
     if (!this._element.parentNode || this._element.parentNode.nodeType !== Node.ELEMENT_NODE) {
       // Don't move modal's DOM position
@@ -2764,81 +5981,64 @@ var Modal = /*#__PURE__*/function () {
       modalBody.scrollTop = 0;
     }
 
-    if (transition) {
+    if (isAnimated) {
       reflow(this._element);
     }
 
-    this._element.classList.add(CLASS_NAME_SHOW$2);
+    this._element.classList.add(CLASS_NAME_SHOW$5);
 
     if (this._config.focus) {
       this._enforceFocus();
     }
 
-    var transitionComplete = function transitionComplete() {
-      if (_this3._config.focus) {
-        _this3._element.focus();
+    const transitionComplete = () => {
+      if (this._config.focus) {
+        this._element.focus();
       }
 
-      _this3._isTransitioning = false;
-      EventHandler.trigger(_this3._element, EVENT_SHOWN$2, {
-        relatedTarget: relatedTarget
+      this._isTransitioning = false;
+      EventHandler.trigger(this._element, EVENT_SHOWN$3, {
+        relatedTarget
       });
     };
 
-    if (transition) {
-      var transitionDuration = getTransitionDurationFromElement(this._dialog);
-      EventHandler.one(this._dialog, TRANSITION_END, transitionComplete);
-      emulateTransitionEnd(this._dialog, transitionDuration);
-    } else {
-      transitionComplete();
-    }
-  };
+    this._queueCallback(transitionComplete, this._dialog, isAnimated);
+  }
 
-  _proto._enforceFocus = function _enforceFocus() {
-    var _this4 = this;
+  _enforceFocus() {
+    EventHandler.off(document, EVENT_FOCUSIN$2); // guard against infinite focus loop
 
-    EventHandler.off(document, EVENT_FOCUSIN); // guard against infinite focus loop
-
-    EventHandler.on(document, EVENT_FOCUSIN, function (event) {
-      if (document !== event.target && _this4._element !== event.target && !_this4._element.contains(event.target)) {
-        _this4._element.focus();
+    EventHandler.on(document, EVENT_FOCUSIN$2, event => {
+      if (document !== event.target && this._element !== event.target && !this._element.contains(event.target)) {
+        this._element.focus();
       }
     });
-  };
+  }
 
-  _proto._setEscapeEvent = function _setEscapeEvent() {
-    var _this5 = this;
-
+  _setEscapeEvent() {
     if (this._isShown) {
-      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, function (event) {
-        if (_this5._config.keyboard && event.key === ESCAPE_KEY$1) {
+      EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS$1, event => {
+        if (this._config.keyboard && event.key === ESCAPE_KEY$1) {
           event.preventDefault();
-
-          _this5.hide();
-        } else if (!_this5._config.keyboard && event.key === ESCAPE_KEY$1) {
-          _this5._triggerBackdropTransition();
+          this.hide();
+        } else if (!this._config.keyboard && event.key === ESCAPE_KEY$1) {
+          this._triggerBackdropTransition();
         }
       });
     } else {
-      EventHandler.off(this._element, EVENT_KEYDOWN_DISMISS);
+      EventHandler.off(this._element, EVENT_KEYDOWN_DISMISS$1);
     }
-  };
+  }
 
-  _proto._setResizeEvent = function _setResizeEvent() {
-    var _this6 = this;
-
+  _setResizeEvent() {
     if (this._isShown) {
-      EventHandler.on(window, EVENT_RESIZE, function () {
-        return _this6._adjustDialog();
-      });
+      EventHandler.on(window, EVENT_RESIZE, () => this._adjustDialog());
     } else {
       EventHandler.off(window, EVENT_RESIZE);
     }
-  };
+  }
 
-  _proto._hideModal = function _hideModal() {
-    var _this7 = this;
-
+  _hideModal() {
     this._element.style.display = 'none';
 
     this._element.setAttribute('aria-hidden', true);
@@ -2849,261 +6049,121 @@ var Modal = /*#__PURE__*/function () {
 
     this._isTransitioning = false;
 
-    this._showBackdrop(function () {
+    this._backdrop.hide(() => {
       document.body.classList.remove(CLASS_NAME_OPEN);
 
-      _this7._resetAdjustments();
+      this._resetAdjustments();
 
-      _this7._resetScrollbar();
+      this._scrollBar.reset();
 
-      EventHandler.trigger(_this7._element, EVENT_HIDDEN$2);
+      EventHandler.trigger(this._element, EVENT_HIDDEN$3);
     });
-  };
+  }
 
-  _proto._removeBackdrop = function _removeBackdrop() {
-    this._backdrop.parentNode.removeChild(this._backdrop);
-
-    this._backdrop = null;
-  };
-
-  _proto._showBackdrop = function _showBackdrop(callback) {
-    var _this8 = this;
-
-    var animate = this._element.classList.contains(CLASS_NAME_FADE) ? CLASS_NAME_FADE : '';
-
-    if (this._isShown && this._config.backdrop) {
-      this._backdrop = document.createElement('div');
-      this._backdrop.className = CLASS_NAME_BACKDROP;
-
-      if (animate) {
-        this._backdrop.classList.add(animate);
-      }
-
-      document.body.appendChild(this._backdrop);
-      EventHandler.on(this._element, EVENT_CLICK_DISMISS, function (event) {
-        if (_this8._ignoreBackdropClick) {
-          _this8._ignoreBackdropClick = false;
-          return;
-        }
-
-        if (event.target !== event.currentTarget) {
-          return;
-        }
-
-        _this8._triggerBackdropTransition();
-      });
-
-      if (animate) {
-        reflow(this._backdrop);
-      }
-
-      this._backdrop.classList.add(CLASS_NAME_SHOW$2);
-
-      if (!animate) {
-        callback();
+  _showBackdrop(callback) {
+    EventHandler.on(this._element, EVENT_CLICK_DISMISS$2, event => {
+      if (this._ignoreBackdropClick) {
+        this._ignoreBackdropClick = false;
         return;
       }
 
-      var backdropTransitionDuration = getTransitionDurationFromElement(this._backdrop);
-      EventHandler.one(this._backdrop, TRANSITION_END, callback);
-      emulateTransitionEnd(this._backdrop, backdropTransitionDuration);
-    } else if (!this._isShown && this._backdrop) {
-      this._backdrop.classList.remove(CLASS_NAME_SHOW$2);
-
-      var callbackRemove = function callbackRemove() {
-        _this8._removeBackdrop();
-
-        callback();
-      };
-
-      if (this._element.classList.contains(CLASS_NAME_FADE)) {
-        var _backdropTransitionDuration = getTransitionDurationFromElement(this._backdrop);
-
-        EventHandler.one(this._backdrop, TRANSITION_END, callbackRemove);
-        emulateTransitionEnd(this._backdrop, _backdropTransitionDuration);
-      } else {
-        callbackRemove();
+      if (event.target !== event.currentTarget) {
+        return;
       }
-    } else {
-      callback();
+
+      if (this._config.backdrop === true) {
+        this.hide();
+      } else if (this._config.backdrop === 'static') {
+        this._triggerBackdropTransition();
+      }
+    });
+
+    this._backdrop.show(callback);
+  }
+
+  _isAnimated() {
+    return this._element.classList.contains(CLASS_NAME_FADE$4);
+  }
+
+  _triggerBackdropTransition() {
+    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+
+    if (hideEvent.defaultPrevented) {
+      return;
     }
-  };
 
-  _proto._triggerBackdropTransition = function _triggerBackdropTransition() {
-    var _this9 = this;
+    const {
+      classList,
+      scrollHeight,
+      style
+    } = this._element;
+    const isModalOverflowing = scrollHeight > document.documentElement.clientHeight; // return if the following background transition hasn't yet completed
 
-    if (this._config.backdrop === 'static') {
-      var hideEvent = EventHandler.trigger(this._element, EVENT_HIDE_PREVENTED);
+    if (!isModalOverflowing && style.overflowY === 'hidden' || classList.contains(CLASS_NAME_STATIC)) {
+      return;
+    }
 
-      if (hideEvent.defaultPrevented) {
-        return;
-      }
+    if (!isModalOverflowing) {
+      style.overflowY = 'hidden';
+    }
 
-      var isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
+    classList.add(CLASS_NAME_STATIC);
+
+    this._queueCallback(() => {
+      classList.remove(CLASS_NAME_STATIC);
 
       if (!isModalOverflowing) {
-        this._element.style.overflowY = 'hidden';
+        this._queueCallback(() => {
+          style.overflowY = '';
+        }, this._dialog);
       }
+    }, this._dialog);
 
-      this._element.classList.add(CLASS_NAME_STATIC);
-
-      var modalTransitionDuration = getTransitionDurationFromElement(this._dialog);
-      EventHandler.off(this._element, TRANSITION_END);
-      EventHandler.one(this._element, TRANSITION_END, function () {
-        _this9._element.classList.remove(CLASS_NAME_STATIC);
-
-        if (!isModalOverflowing) {
-          EventHandler.one(_this9._element, TRANSITION_END, function () {
-            _this9._element.style.overflowY = '';
-          });
-          emulateTransitionEnd(_this9._element, modalTransitionDuration);
-        }
-      });
-      emulateTransitionEnd(this._element, modalTransitionDuration);
-
-      this._element.focus();
-    } else {
-      this.hide();
-    }
+    this._element.focus();
   } // ----------------------------------------------------------------------
   // the following methods are used to handle overflowing modals
   // ----------------------------------------------------------------------
-  ;
 
-  _proto._adjustDialog = function _adjustDialog() {
-    var isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
 
-    if (!this._isBodyOverflowing && isModalOverflowing) {
-      this._element.style.paddingLeft = this._scrollbarWidth + "px";
+  _adjustDialog() {
+    const isModalOverflowing = this._element.scrollHeight > document.documentElement.clientHeight;
+
+    const scrollbarWidth = this._scrollBar.getWidth();
+
+    const isBodyOverflowing = scrollbarWidth > 0;
+
+    if (!isBodyOverflowing && isModalOverflowing && !isRTL() || isBodyOverflowing && !isModalOverflowing && isRTL()) {
+      this._element.style.paddingLeft = `${scrollbarWidth}px`;
     }
 
-    if (this._isBodyOverflowing && !isModalOverflowing) {
-      this._element.style.paddingRight = this._scrollbarWidth + "px";
+    if (isBodyOverflowing && !isModalOverflowing && !isRTL() || !isBodyOverflowing && isModalOverflowing && isRTL()) {
+      this._element.style.paddingRight = `${scrollbarWidth}px`;
     }
-  };
+  }
 
-  _proto._resetAdjustments = function _resetAdjustments() {
+  _resetAdjustments() {
     this._element.style.paddingLeft = '';
     this._element.style.paddingRight = '';
-  };
-
-  _proto._checkScrollbar = function _checkScrollbar() {
-    var rect = document.body.getBoundingClientRect();
-    this._isBodyOverflowing = Math.round(rect.left + rect.right) < window.innerWidth;
-    this._scrollbarWidth = this._getScrollbarWidth();
-  };
-
-  _proto._setScrollbar = function _setScrollbar() {
-    var _this10 = this;
-
-    if (this._isBodyOverflowing) {
-      // Note: DOMNode.style.paddingRight returns the actual value or '' if not set
-      //   while $(DOMNode).css('padding-right') returns the calculated value or 0 if not set
-      // Adjust fixed content padding
-      SelectorEngine.find(SELECTOR_FIXED_CONTENT).forEach(function (element) {
-        var actualPadding = element.style.paddingRight;
-        var calculatedPadding = window.getComputedStyle(element)['padding-right'];
-        Manipulator.setDataAttribute(element, 'padding-right', actualPadding);
-        element.style.paddingRight = parseFloat(calculatedPadding) + _this10._scrollbarWidth + "px";
-      }); // Adjust sticky content margin
-
-      SelectorEngine.find(SELECTOR_STICKY_CONTENT).forEach(function (element) {
-        var actualMargin = element.style.marginRight;
-        var calculatedMargin = window.getComputedStyle(element)['margin-right'];
-        Manipulator.setDataAttribute(element, 'margin-right', actualMargin);
-        element.style.marginRight = parseFloat(calculatedMargin) - _this10._scrollbarWidth + "px";
-      }); // Adjust body padding
-
-      var actualPadding = document.body.style.paddingRight;
-      var calculatedPadding = window.getComputedStyle(document.body)['padding-right'];
-      Manipulator.setDataAttribute(document.body, 'padding-right', actualPadding);
-      document.body.style.paddingRight = parseFloat(calculatedPadding) + this._scrollbarWidth + "px";
-    }
-
-    document.body.classList.add(CLASS_NAME_OPEN);
-  };
-
-  _proto._resetScrollbar = function _resetScrollbar() {
-    // Restore fixed content padding
-    SelectorEngine.find(SELECTOR_FIXED_CONTENT).forEach(function (element) {
-      var padding = Manipulator.getDataAttribute(element, 'padding-right');
-
-      if (typeof padding !== 'undefined') {
-        Manipulator.removeDataAttribute(element, 'padding-right');
-        element.style.paddingRight = padding;
-      }
-    }); // Restore sticky content and navbar-toggler margin
-
-    SelectorEngine.find("" + SELECTOR_STICKY_CONTENT).forEach(function (element) {
-      var margin = Manipulator.getDataAttribute(element, 'margin-right');
-
-      if (typeof margin !== 'undefined') {
-        Manipulator.removeDataAttribute(element, 'margin-right');
-        element.style.marginRight = margin;
-      }
-    }); // Restore body padding
-
-    var padding = Manipulator.getDataAttribute(document.body, 'padding-right');
-
-    if (typeof padding === 'undefined') {
-      document.body.style.paddingRight = '';
-    } else {
-      Manipulator.removeDataAttribute(document.body, 'padding-right');
-      document.body.style.paddingRight = padding;
-    }
-  };
-
-  _proto._getScrollbarWidth = function _getScrollbarWidth() {
-    // thx d.walsh
-    var scrollDiv = document.createElement('div');
-    scrollDiv.className = CLASS_NAME_SCROLLBAR_MEASURER;
-    document.body.appendChild(scrollDiv);
-    var scrollbarWidth = scrollDiv.getBoundingClientRect().width - scrollDiv.clientWidth;
-    document.body.removeChild(scrollDiv);
-    return scrollbarWidth;
   } // Static
-  ;
 
-  Modal.jQueryInterface = function jQueryInterface(config, relatedTarget) {
+
+  static jQueryInterface(config, relatedTarget) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$5);
+      const data = Modal.getOrCreateInstance(this, config);
 
-      var _config = _extends({}, Default$3, Manipulator.getDataAttributes(this), typeof config === 'object' && config ? config : {});
-
-      if (!data) {
-        data = new Modal(this, _config);
+      if (typeof config !== 'string') {
+        return;
       }
 
-      if (typeof config === 'string') {
-        if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
-        }
-
-        data[config](relatedTarget);
-      } else if (_config.show) {
-        data.show(relatedTarget);
+      if (typeof data[config] === 'undefined') {
+        throw new TypeError(`No method named "${config}"`);
       }
+
+      data[config](relatedTarget);
     });
-  };
+  }
 
-  Modal.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$5);
-  };
-
-  _createClass(Modal, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$5;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$3;
-    }
-  }]);
-
-  return Modal;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -3111,36 +6171,27 @@ var Modal = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API$5, SELECTOR_DATA_TOGGLE$3, function (event) {
-  var _this11 = this;
+EventHandler.on(document, EVENT_CLICK_DATA_API$2, SELECTOR_DATA_TOGGLE$2, function (event) {
+  const target = getElementFromSelector(this);
 
-  var target = getElementFromSelector(this);
-
-  if (this.tagName === 'A' || this.tagName === 'AREA') {
+  if (['A', 'AREA'].includes(this.tagName)) {
     event.preventDefault();
   }
 
-  EventHandler.one(target, EVENT_SHOW$2, function (showEvent) {
+  EventHandler.one(target, EVENT_SHOW$3, showEvent => {
     if (showEvent.defaultPrevented) {
       // only register focus restorer if modal will actually get shown
       return;
     }
 
-    EventHandler.one(target, EVENT_HIDDEN$2, function () {
-      if (isVisible(_this11)) {
-        _this11.focus();
+    EventHandler.one(target, EVENT_HIDDEN$3, () => {
+      if (isVisible(this)) {
+        this.focus();
       }
     });
   });
-  var data = Data.getData(target, DATA_KEY$5);
-
-  if (!data) {
-    var config = _extends({}, Manipulator.getDataAttributes(target), Manipulator.getDataAttributes(this));
-
-    data = new Modal(target, config);
-  }
-
-  data.show(this);
+  const data = Modal.getOrCreateInstance(target);
+  data.toggle(this);
 });
 /**
  * ------------------------------------------------------------------------
@@ -3149,62 +6200,304 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$5, SELECTOR_DATA_TOGGLE$3, functi
  * add .Modal to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
-
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$5];
-    $.fn[NAME$5] = Modal.jQueryInterface;
-    $.fn[NAME$5].Constructor = Modal;
-
-    $.fn[NAME$5].noConflict = function () {
-      $.fn[NAME$5] = JQUERY_NO_CONFLICT;
-      return Modal.jQueryInterface;
-    };
-  }
-});
+defineJQueryPlugin(Modal);
 
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.0.0-alpha3): util/sanitizer.js
+ * Bootstrap (v5.0.2): offcanvas.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+/**
+ * ------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------
+ */
+
+const NAME$5 = 'offcanvas';
+const DATA_KEY$5 = 'bs.offcanvas';
+const EVENT_KEY$5 = `.${DATA_KEY$5}`;
+const DATA_API_KEY$2 = '.data-api';
+const EVENT_LOAD_DATA_API$1 = `load${EVENT_KEY$5}${DATA_API_KEY$2}`;
+const ESCAPE_KEY = 'Escape';
+const Default$4 = {
+  backdrop: true,
+  keyboard: true,
+  scroll: false
+};
+const DefaultType$4 = {
+  backdrop: 'boolean',
+  keyboard: 'boolean',
+  scroll: 'boolean'
+};
+const CLASS_NAME_SHOW$4 = 'show';
+const OPEN_SELECTOR = '.offcanvas.show';
+const EVENT_SHOW$2 = `show${EVENT_KEY$5}`;
+const EVENT_SHOWN$2 = `shown${EVENT_KEY$5}`;
+const EVENT_HIDE$2 = `hide${EVENT_KEY$5}`;
+const EVENT_HIDDEN$2 = `hidden${EVENT_KEY$5}`;
+const EVENT_FOCUSIN$1 = `focusin${EVENT_KEY$5}`;
+const EVENT_CLICK_DATA_API$1 = `click${EVENT_KEY$5}${DATA_API_KEY$2}`;
+const EVENT_CLICK_DISMISS$1 = `click.dismiss${EVENT_KEY$5}`;
+const EVENT_KEYDOWN_DISMISS = `keydown.dismiss${EVENT_KEY$5}`;
+const SELECTOR_DATA_DISMISS$1 = '[data-bs-dismiss="offcanvas"]';
+const SELECTOR_DATA_TOGGLE$1 = '[data-bs-toggle="offcanvas"]';
+/**
+ * ------------------------------------------------------------------------
+ * Class Definition
+ * ------------------------------------------------------------------------
+ */
+
+class Offcanvas extends BaseComponent {
+  constructor(element, config) {
+    super(element);
+    this._config = this._getConfig(config);
+    this._isShown = false;
+    this._backdrop = this._initializeBackDrop();
+
+    this._addEventListeners();
+  } // Getters
+
+
+  static get NAME() {
+    return NAME$5;
+  }
+
+  static get Default() {
+    return Default$4;
+  } // Public
+
+
+  toggle(relatedTarget) {
+    return this._isShown ? this.hide() : this.show(relatedTarget);
+  }
+
+  show(relatedTarget) {
+    if (this._isShown) {
+      return;
+    }
+
+    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$2, {
+      relatedTarget
+    });
+
+    if (showEvent.defaultPrevented) {
+      return;
+    }
+
+    this._isShown = true;
+    this._element.style.visibility = 'visible';
+
+    this._backdrop.show();
+
+    if (!this._config.scroll) {
+      new ScrollBarHelper().hide();
+
+      this._enforceFocusOnElement(this._element);
+    }
+
+    this._element.removeAttribute('aria-hidden');
+
+    this._element.setAttribute('aria-modal', true);
+
+    this._element.setAttribute('role', 'dialog');
+
+    this._element.classList.add(CLASS_NAME_SHOW$4);
+
+    const completeCallBack = () => {
+      EventHandler.trigger(this._element, EVENT_SHOWN$2, {
+        relatedTarget
+      });
+    };
+
+    this._queueCallback(completeCallBack, this._element, true);
+  }
+
+  hide() {
+    if (!this._isShown) {
+      return;
+    }
+
+    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$2);
+
+    if (hideEvent.defaultPrevented) {
+      return;
+    }
+
+    EventHandler.off(document, EVENT_FOCUSIN$1);
+
+    this._element.blur();
+
+    this._isShown = false;
+
+    this._element.classList.remove(CLASS_NAME_SHOW$4);
+
+    this._backdrop.hide();
+
+    const completeCallback = () => {
+      this._element.setAttribute('aria-hidden', true);
+
+      this._element.removeAttribute('aria-modal');
+
+      this._element.removeAttribute('role');
+
+      this._element.style.visibility = 'hidden';
+
+      if (!this._config.scroll) {
+        new ScrollBarHelper().reset();
+      }
+
+      EventHandler.trigger(this._element, EVENT_HIDDEN$2);
+    };
+
+    this._queueCallback(completeCallback, this._element, true);
+  }
+
+  dispose() {
+    this._backdrop.dispose();
+
+    super.dispose();
+    EventHandler.off(document, EVENT_FOCUSIN$1);
+  } // Private
+
+
+  _getConfig(config) {
+    config = { ...Default$4,
+      ...Manipulator.getDataAttributes(this._element),
+      ...(typeof config === 'object' ? config : {})
+    };
+    typeCheckConfig(NAME$5, config, DefaultType$4);
+    return config;
+  }
+
+  _initializeBackDrop() {
+    return new Backdrop({
+      isVisible: this._config.backdrop,
+      isAnimated: true,
+      rootElement: this._element.parentNode,
+      clickCallback: () => this.hide()
+    });
+  }
+
+  _enforceFocusOnElement(element) {
+    EventHandler.off(document, EVENT_FOCUSIN$1); // guard against infinite focus loop
+
+    EventHandler.on(document, EVENT_FOCUSIN$1, event => {
+      if (document !== event.target && element !== event.target && !element.contains(event.target)) {
+        element.focus();
+      }
+    });
+    element.focus();
+  }
+
+  _addEventListeners() {
+    EventHandler.on(this._element, EVENT_CLICK_DISMISS$1, SELECTOR_DATA_DISMISS$1, () => this.hide());
+    EventHandler.on(this._element, EVENT_KEYDOWN_DISMISS, event => {
+      if (this._config.keyboard && event.key === ESCAPE_KEY) {
+        this.hide();
+      }
+    });
+  } // Static
+
+
+  static jQueryInterface(config) {
+    return this.each(function () {
+      const data = Offcanvas.getOrCreateInstance(this, config);
+
+      if (typeof config !== 'string') {
+        return;
+      }
+
+      if (data[config] === undefined || config.startsWith('_') || config === 'constructor') {
+        throw new TypeError(`No method named "${config}"`);
+      }
+
+      data[config](this);
+    });
+  }
+
+}
+/**
+ * ------------------------------------------------------------------------
+ * Data Api implementation
+ * ------------------------------------------------------------------------
+ */
+
+
+EventHandler.on(document, EVENT_CLICK_DATA_API$1, SELECTOR_DATA_TOGGLE$1, function (event) {
+  const target = getElementFromSelector(this);
+
+  if (['A', 'AREA'].includes(this.tagName)) {
+    event.preventDefault();
+  }
+
+  if (isDisabled(this)) {
+    return;
+  }
+
+  EventHandler.one(target, EVENT_HIDDEN$2, () => {
+    // focus on trigger when it is closed
+    if (isVisible(this)) {
+      this.focus();
+    }
+  }); // avoid conflict when clicking a toggler of an offcanvas, while another is open
+
+  const allReadyOpen = SelectorEngine.findOne(OPEN_SELECTOR);
+
+  if (allReadyOpen && allReadyOpen !== target) {
+    Offcanvas.getInstance(allReadyOpen).hide();
+  }
+
+  const data = Offcanvas.getOrCreateInstance(target);
+  data.toggle(this);
+});
+EventHandler.on(window, EVENT_LOAD_DATA_API$1, () => SelectorEngine.find(OPEN_SELECTOR).forEach(el => Offcanvas.getOrCreateInstance(el).show()));
+/**
+ * ------------------------------------------------------------------------
+ * jQuery
+ * ------------------------------------------------------------------------
+ */
+
+defineJQueryPlugin(Offcanvas);
+
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): util/sanitizer.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */
-var uriAttrs = ['background', 'cite', 'href', 'itemtype', 'longdesc', 'poster', 'src', 'xlink:href'];
-var ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
+const uriAttrs = new Set(['background', 'cite', 'href', 'itemtype', 'longdesc', 'poster', 'src', 'xlink:href']);
+const ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
 /**
  * A pattern that recognizes a commonly useful subset of URLs that are safe.
  *
  * Shoutout to Angular 7 https://github.com/angular/angular/blob/7.2.4/packages/core/src/sanitization/url_sanitizer.ts
  */
 
-var SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file):|[^#&/:?]*(?:[#/?]|$))/gi;
+const SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file):|[^#&/:?]*(?:[#/?]|$))/i;
 /**
  * A pattern that matches safe data URLs. Only matches image, video and audio types.
  *
  * Shoutout to Angular 7 https://github.com/angular/angular/blob/7.2.4/packages/core/src/sanitization/url_sanitizer.ts
  */
 
-var DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[\d+/a-z]+=*$/i;
+const DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[\d+/a-z]+=*$/i;
 
-var allowedAttribute = function allowedAttribute(attr, allowedAttributeList) {
-  var attrName = attr.nodeName.toLowerCase();
+const allowedAttribute = (attr, allowedAttributeList) => {
+  const attrName = attr.nodeName.toLowerCase();
 
-  if (allowedAttributeList.indexOf(attrName) !== -1) {
-    if (uriAttrs.indexOf(attrName) !== -1) {
-      return Boolean(attr.nodeValue.match(SAFE_URL_PATTERN) || attr.nodeValue.match(DATA_URL_PATTERN));
+  if (allowedAttributeList.includes(attrName)) {
+    if (uriAttrs.has(attrName)) {
+      return Boolean(SAFE_URL_PATTERN.test(attr.nodeValue) || DATA_URL_PATTERN.test(attr.nodeValue));
     }
 
     return true;
   }
 
-  var regExp = allowedAttributeList.filter(function (attrRegex) {
-    return attrRegex instanceof RegExp;
-  }); // Check if a regular expression validates the attribute.
+  const regExp = allowedAttributeList.filter(attrRegex => attrRegex instanceof RegExp); // Check if a regular expression validates the attribute.
 
-  for (var i = 0, len = regExp.length; i < len; i++) {
-    if (attrName.match(regExp[i])) {
+  for (let i = 0, len = regExp.length; i < len; i++) {
+    if (regExp[i].test(attrName)) {
       return true;
     }
   }
@@ -3212,7 +6505,7 @@ var allowedAttribute = function allowedAttribute(attr, allowedAttributeList) {
   return false;
 };
 
-var DefaultAllowlist = {
+const DefaultAllowlist = {
   // Global attributes allowed on any supplied element below.
   '*': ['class', 'dir', 'id', 'lang', 'role', ARIA_ATTRIBUTE_PATTERN],
   a: ['target', 'href', 'title', 'rel'],
@@ -3246,8 +6539,6 @@ var DefaultAllowlist = {
   ul: []
 };
 function sanitizeHtml(unsafeHtml, allowList, sanitizeFn) {
-  var _ref;
-
   if (!unsafeHtml.length) {
     return unsafeHtml;
   }
@@ -3256,56 +6547,51 @@ function sanitizeHtml(unsafeHtml, allowList, sanitizeFn) {
     return sanitizeFn(unsafeHtml);
   }
 
-  var domParser = new window.DOMParser();
-  var createdDocument = domParser.parseFromString(unsafeHtml, 'text/html');
-  var allowlistKeys = Object.keys(allowList);
+  const domParser = new window.DOMParser();
+  const createdDocument = domParser.parseFromString(unsafeHtml, 'text/html');
+  const allowlistKeys = Object.keys(allowList);
+  const elements = [].concat(...createdDocument.body.querySelectorAll('*'));
 
-  var elements = (_ref = []).concat.apply(_ref, createdDocument.body.querySelectorAll('*'));
+  for (let i = 0, len = elements.length; i < len; i++) {
+    const el = elements[i];
+    const elName = el.nodeName.toLowerCase();
 
-  var _loop = function _loop(i, len) {
-    var _ref2;
-
-    var el = elements[i];
-    var elName = el.nodeName.toLowerCase();
-
-    if (allowlistKeys.indexOf(elName) === -1) {
-      el.parentNode.removeChild(el);
-      return "continue";
+    if (!allowlistKeys.includes(elName)) {
+      el.remove();
+      continue;
     }
 
-    var attributeList = (_ref2 = []).concat.apply(_ref2, el.attributes);
-
-    var allowedAttributes = [].concat(allowList['*'] || [], allowList[elName] || []);
-    attributeList.forEach(function (attr) {
+    const attributeList = [].concat(...el.attributes);
+    const allowedAttributes = [].concat(allowList['*'] || [], allowList[elName] || []);
+    attributeList.forEach(attr => {
       if (!allowedAttribute(attr, allowedAttributes)) {
         el.removeAttribute(attr.nodeName);
       }
     });
-  };
-
-  for (var i = 0, len = elements.length; i < len; i++) {
-    var _ret = _loop(i);
-
-    if (_ret === "continue") continue;
   }
 
   return createdDocument.body.innerHTML;
 }
 
 /**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): tooltip.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
+/**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$6 = 'tooltip';
-var VERSION$6 = '5.0.0-alpha3';
-var DATA_KEY$6 = 'bs.tooltip';
-var EVENT_KEY$6 = "." + DATA_KEY$6;
-var CLASS_PREFIX = 'bs-tooltip';
-var BSCLS_PREFIX_REGEX = new RegExp("(^|\\s)" + CLASS_PREFIX + "\\S+", 'g');
-var DISALLOWED_ATTRIBUTES = ['sanitize', 'allowList', 'sanitizeFn'];
-var DefaultType$4 = {
+const NAME$4 = 'tooltip';
+const DATA_KEY$4 = 'bs.tooltip';
+const EVENT_KEY$4 = `.${DATA_KEY$4}`;
+const CLASS_PREFIX$1 = 'bs-tooltip';
+const BSCLS_PREFIX_REGEX$1 = new RegExp(`(^|\\s)${CLASS_PREFIX$1}\\S+`, 'g');
+const DISALLOWED_ATTRIBUTES = new Set(['sanitize', 'allowList', 'sanitizeFn']);
+const DefaultType$3 = {
   animation: 'boolean',
   template: 'string',
   title: '(string|element|function)',
@@ -3314,74 +6600,77 @@ var DefaultType$4 = {
   html: 'boolean',
   selector: '(string|boolean)',
   placement: '(string|function)',
-  offset: '(number|string|function)',
+  offset: '(array|string|function)',
   container: '(string|element|boolean)',
-  fallbackPlacement: '(string|array)',
+  fallbackPlacements: 'array',
   boundary: '(string|element)',
+  customClass: '(string|function)',
   sanitize: 'boolean',
   sanitizeFn: '(null|function)',
   allowList: 'object',
-  popperConfig: '(null|object)'
+  popperConfig: '(null|object|function)'
 };
-var AttachmentMap = {
+const AttachmentMap = {
   AUTO: 'auto',
   TOP: 'top',
-  RIGHT: 'right',
+  RIGHT: isRTL() ? 'left' : 'right',
   BOTTOM: 'bottom',
-  LEFT: 'left'
+  LEFT: isRTL() ? 'right' : 'left'
 };
-var Default$4 = {
+const Default$3 = {
   animation: true,
-  template: '<div class="tooltip" role="tooltip">' + '<div class="tooltip-arrow"></div>' + '<div class="tooltip-inner"></div></div>',
+  template: '<div class="tooltip" role="tooltip">' + '<div class="tooltip-arrow"></div>' + '<div class="tooltip-inner"></div>' + '</div>',
   trigger: 'hover focus',
   title: '',
   delay: 0,
   html: false,
   selector: false,
   placement: 'top',
-  offset: 0,
+  offset: [0, 0],
   container: false,
-  fallbackPlacement: 'flip',
-  boundary: 'scrollParent',
+  fallbackPlacements: ['top', 'right', 'bottom', 'left'],
+  boundary: 'clippingParents',
+  customClass: '',
   sanitize: true,
   sanitizeFn: null,
   allowList: DefaultAllowlist,
   popperConfig: null
 };
-var Event$1 = {
-  HIDE: "hide" + EVENT_KEY$6,
-  HIDDEN: "hidden" + EVENT_KEY$6,
-  SHOW: "show" + EVENT_KEY$6,
-  SHOWN: "shown" + EVENT_KEY$6,
-  INSERTED: "inserted" + EVENT_KEY$6,
-  CLICK: "click" + EVENT_KEY$6,
-  FOCUSIN: "focusin" + EVENT_KEY$6,
-  FOCUSOUT: "focusout" + EVENT_KEY$6,
-  MOUSEENTER: "mouseenter" + EVENT_KEY$6,
-  MOUSELEAVE: "mouseleave" + EVENT_KEY$6
+const Event$2 = {
+  HIDE: `hide${EVENT_KEY$4}`,
+  HIDDEN: `hidden${EVENT_KEY$4}`,
+  SHOW: `show${EVENT_KEY$4}`,
+  SHOWN: `shown${EVENT_KEY$4}`,
+  INSERTED: `inserted${EVENT_KEY$4}`,
+  CLICK: `click${EVENT_KEY$4}`,
+  FOCUSIN: `focusin${EVENT_KEY$4}`,
+  FOCUSOUT: `focusout${EVENT_KEY$4}`,
+  MOUSEENTER: `mouseenter${EVENT_KEY$4}`,
+  MOUSELEAVE: `mouseleave${EVENT_KEY$4}`
 };
-var CLASS_NAME_FADE$1 = 'fade';
-var CLASS_NAME_MODAL = 'modal';
-var CLASS_NAME_SHOW$3 = 'show';
-var HOVER_STATE_SHOW = 'show';
-var HOVER_STATE_OUT = 'out';
-var SELECTOR_TOOLTIP_INNER = '.tooltip-inner';
-var TRIGGER_HOVER = 'hover';
-var TRIGGER_FOCUS = 'focus';
-var TRIGGER_CLICK = 'click';
-var TRIGGER_MANUAL = 'manual';
+const CLASS_NAME_FADE$3 = 'fade';
+const CLASS_NAME_MODAL = 'modal';
+const CLASS_NAME_SHOW$3 = 'show';
+const HOVER_STATE_SHOW = 'show';
+const HOVER_STATE_OUT = 'out';
+const SELECTOR_TOOLTIP_INNER = '.tooltip-inner';
+const TRIGGER_HOVER = 'hover';
+const TRIGGER_FOCUS = 'focus';
+const TRIGGER_CLICK = 'click';
+const TRIGGER_MANUAL = 'manual';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Tooltip = /*#__PURE__*/function () {
-  function Tooltip(element, config) {
-    if (typeof popper_js__WEBPACK_IMPORTED_MODULE_0__["default"] === 'undefined') {
-      throw new TypeError('Bootstrap\'s tooltips require Popper.js (https://popper.js.org)');
-    } // private
+class Tooltip extends BaseComponent {
+  constructor(element, config) {
+    if (typeof _popperjs_core__WEBPACK_IMPORTED_MODULE_0__ === 'undefined') {
+      throw new TypeError('Bootstrap\'s tooltips require Popper (https://popper.js.org)');
+    }
 
+    super(element); // private
 
     this._isEnabled = true;
     this._timeout = 0;
@@ -3389,44 +6678,49 @@ var Tooltip = /*#__PURE__*/function () {
     this._activeTrigger = {};
     this._popper = null; // Protected
 
-    this.element = element;
-    this.config = this._getConfig(config);
+    this._config = this._getConfig(config);
     this.tip = null;
 
     this._setListeners();
-
-    Data.setData(element, this.constructor.DATA_KEY, this);
   } // Getters
 
 
-  var _proto = Tooltip.prototype;
+  static get Default() {
+    return Default$3;
+  }
 
-  // Public
-  _proto.enable = function enable() {
+  static get NAME() {
+    return NAME$4;
+  }
+
+  static get Event() {
+    return Event$2;
+  }
+
+  static get DefaultType() {
+    return DefaultType$3;
+  } // Public
+
+
+  enable() {
     this._isEnabled = true;
-  };
+  }
 
-  _proto.disable = function disable() {
+  disable() {
     this._isEnabled = false;
-  };
+  }
 
-  _proto.toggleEnabled = function toggleEnabled() {
+  toggleEnabled() {
     this._isEnabled = !this._isEnabled;
-  };
+  }
 
-  _proto.toggle = function toggle(event) {
+  toggle(event) {
     if (!this._isEnabled) {
       return;
     }
 
     if (event) {
-      var dataKey = this.constructor.DATA_KEY;
-      var context = Data.getData(event.delegateTarget, dataKey);
-
-      if (!context) {
-        context = new this.constructor(event.delegateTarget, this._getDelegateConfig());
-        Data.setData(event.delegateTarget, dataKey, context);
-      }
+      const context = this._initializeOnDelegatedTarget(event);
 
       context._activeTrigger.click = !context._activeTrigger.click;
 
@@ -3444,136 +6738,136 @@ var Tooltip = /*#__PURE__*/function () {
 
       this._enter(null, this);
     }
-  };
+  }
 
-  _proto.dispose = function dispose() {
+  dispose() {
     clearTimeout(this._timeout);
-    Data.removeData(this.element, this.constructor.DATA_KEY);
-    EventHandler.off(this.element, this.constructor.EVENT_KEY);
-    EventHandler.off(this.element.closest("." + CLASS_NAME_MODAL), 'hide.bs.modal', this._hideModalHandler);
+    EventHandler.off(this._element.closest(`.${CLASS_NAME_MODAL}`), 'hide.bs.modal', this._hideModalHandler);
 
     if (this.tip) {
-      this.tip.parentNode.removeChild(this.tip);
+      this.tip.remove();
     }
-
-    this._isEnabled = null;
-    this._timeout = null;
-    this._hoverState = null;
-    this._activeTrigger = null;
 
     if (this._popper) {
       this._popper.destroy();
     }
 
-    this._popper = null;
-    this.element = null;
-    this.config = null;
-    this.tip = null;
-  };
+    super.dispose();
+  }
 
-  _proto.show = function show() {
-    var _this = this;
-
-    if (this.element.style.display === 'none') {
+  show() {
+    if (this._element.style.display === 'none') {
       throw new Error('Please use show on visible elements');
     }
 
-    if (this.isWithContent() && this._isEnabled) {
-      var showEvent = EventHandler.trigger(this.element, this.constructor.Event.SHOW);
-      var shadowRoot = findShadowRoot(this.element);
-      var isInTheDom = shadowRoot === null ? this.element.ownerDocument.documentElement.contains(this.element) : shadowRoot.contains(this.element);
-
-      if (showEvent.defaultPrevented || !isInTheDom) {
-        return;
-      }
-
-      var tip = this.getTipElement();
-      var tipId = getUID(this.constructor.NAME);
-      tip.setAttribute('id', tipId);
-      this.element.setAttribute('aria-describedby', tipId);
-      this.setContent();
-
-      if (this.config.animation) {
-        tip.classList.add(CLASS_NAME_FADE$1);
-      }
-
-      var placement = typeof this.config.placement === 'function' ? this.config.placement.call(this, tip, this.element) : this.config.placement;
-
-      var attachment = this._getAttachment(placement);
-
-      this._addAttachmentClass(attachment);
-
-      var container = this._getContainer();
-
-      Data.setData(tip, this.constructor.DATA_KEY, this);
-
-      if (!this.element.ownerDocument.documentElement.contains(this.tip)) {
-        container.appendChild(tip);
-      }
-
-      EventHandler.trigger(this.element, this.constructor.Event.INSERTED);
-      this._popper = new popper_js__WEBPACK_IMPORTED_MODULE_0__["default"](this.element, tip, this._getPopperConfig(attachment));
-      tip.classList.add(CLASS_NAME_SHOW$3); // If this is a touch-enabled device we add extra
-      // empty mouseover listeners to the body's immediate children;
-      // only needed because of broken event delegation on iOS
-      // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
-
-      if ('ontouchstart' in document.documentElement) {
-        var _ref;
-
-        (_ref = []).concat.apply(_ref, document.body.children).forEach(function (element) {
-          EventHandler.on(element, 'mouseover', noop());
-        });
-      }
-
-      var complete = function complete() {
-        if (_this.config.animation) {
-          _this._fixTransition();
-        }
-
-        var prevHoverState = _this._hoverState;
-        _this._hoverState = null;
-        EventHandler.trigger(_this.element, _this.constructor.Event.SHOWN);
-
-        if (prevHoverState === HOVER_STATE_OUT) {
-          _this._leave(null, _this);
-        }
-      };
-
-      if (this.tip.classList.contains(CLASS_NAME_FADE$1)) {
-        var transitionDuration = getTransitionDurationFromElement(this.tip);
-        EventHandler.one(this.tip, TRANSITION_END, complete);
-        emulateTransitionEnd(this.tip, transitionDuration);
-      } else {
-        complete();
-      }
+    if (!(this.isWithContent() && this._isEnabled)) {
+      return;
     }
-  };
 
-  _proto.hide = function hide() {
-    var _this2 = this;
+    const showEvent = EventHandler.trigger(this._element, this.constructor.Event.SHOW);
+    const shadowRoot = findShadowRoot(this._element);
+    const isInTheDom = shadowRoot === null ? this._element.ownerDocument.documentElement.contains(this._element) : shadowRoot.contains(this._element);
 
+    if (showEvent.defaultPrevented || !isInTheDom) {
+      return;
+    }
+
+    const tip = this.getTipElement();
+    const tipId = getUID(this.constructor.NAME);
+    tip.setAttribute('id', tipId);
+
+    this._element.setAttribute('aria-describedby', tipId);
+
+    this.setContent();
+
+    if (this._config.animation) {
+      tip.classList.add(CLASS_NAME_FADE$3);
+    }
+
+    const placement = typeof this._config.placement === 'function' ? this._config.placement.call(this, tip, this._element) : this._config.placement;
+
+    const attachment = this._getAttachment(placement);
+
+    this._addAttachmentClass(attachment);
+
+    const {
+      container
+    } = this._config;
+    Data.set(tip, this.constructor.DATA_KEY, this);
+
+    if (!this._element.ownerDocument.documentElement.contains(this.tip)) {
+      container.appendChild(tip);
+      EventHandler.trigger(this._element, this.constructor.Event.INSERTED);
+    }
+
+    if (this._popper) {
+      this._popper.update();
+    } else {
+      this._popper = _popperjs_core__WEBPACK_IMPORTED_MODULE_0__["createPopper"](this._element, tip, this._getPopperConfig(attachment));
+    }
+
+    tip.classList.add(CLASS_NAME_SHOW$3);
+    const customClass = typeof this._config.customClass === 'function' ? this._config.customClass() : this._config.customClass;
+
+    if (customClass) {
+      tip.classList.add(...customClass.split(' '));
+    } // If this is a touch-enabled device we add extra
+    // empty mouseover listeners to the body's immediate children;
+    // only needed because of broken event delegation on iOS
+    // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
+
+
+    if ('ontouchstart' in document.documentElement) {
+      [].concat(...document.body.children).forEach(element => {
+        EventHandler.on(element, 'mouseover', noop);
+      });
+    }
+
+    const complete = () => {
+      const prevHoverState = this._hoverState;
+      this._hoverState = null;
+      EventHandler.trigger(this._element, this.constructor.Event.SHOWN);
+
+      if (prevHoverState === HOVER_STATE_OUT) {
+        this._leave(null, this);
+      }
+    };
+
+    const isAnimated = this.tip.classList.contains(CLASS_NAME_FADE$3);
+
+    this._queueCallback(complete, this.tip, isAnimated);
+  }
+
+  hide() {
     if (!this._popper) {
       return;
     }
 
-    var tip = this.getTipElement();
+    const tip = this.getTipElement();
 
-    var complete = function complete() {
-      if (_this2._hoverState !== HOVER_STATE_SHOW && tip.parentNode) {
-        tip.parentNode.removeChild(tip);
+    const complete = () => {
+      if (this._isWithActiveTrigger()) {
+        return;
       }
 
-      _this2._cleanTipClass();
+      if (this._hoverState !== HOVER_STATE_SHOW) {
+        tip.remove();
+      }
 
-      _this2.element.removeAttribute('aria-describedby');
+      this._cleanTipClass();
 
-      EventHandler.trigger(_this2.element, _this2.constructor.Event.HIDDEN);
+      this._element.removeAttribute('aria-describedby');
 
-      _this2._popper.destroy();
+      EventHandler.trigger(this._element, this.constructor.Event.HIDDEN);
+
+      if (this._popper) {
+        this._popper.destroy();
+
+        this._popper = null;
+      }
     };
 
-    var hideEvent = EventHandler.trigger(this.element, this.constructor.Event.HIDE);
+    const hideEvent = EventHandler.trigger(this._element, this.constructor.Event.HIDE);
 
     if (hideEvent.defaultPrevented) {
       return;
@@ -3583,68 +6877,56 @@ var Tooltip = /*#__PURE__*/function () {
     // empty mouseover listeners we added for iOS support
 
     if ('ontouchstart' in document.documentElement) {
-      var _ref2;
-
-      (_ref2 = []).concat.apply(_ref2, document.body.children).forEach(function (element) {
-        return EventHandler.off(element, 'mouseover', noop);
-      });
+      [].concat(...document.body.children).forEach(element => EventHandler.off(element, 'mouseover', noop));
     }
 
     this._activeTrigger[TRIGGER_CLICK] = false;
     this._activeTrigger[TRIGGER_FOCUS] = false;
     this._activeTrigger[TRIGGER_HOVER] = false;
+    const isAnimated = this.tip.classList.contains(CLASS_NAME_FADE$3);
 
-    if (this.tip.classList.contains(CLASS_NAME_FADE$1)) {
-      var transitionDuration = getTransitionDurationFromElement(tip);
-      EventHandler.one(tip, TRANSITION_END, complete);
-      emulateTransitionEnd(tip, transitionDuration);
-    } else {
-      complete();
-    }
+    this._queueCallback(complete, this.tip, isAnimated);
 
     this._hoverState = '';
-  };
+  }
 
-  _proto.update = function update() {
+  update() {
     if (this._popper !== null) {
-      this._popper.scheduleUpdate();
+      this._popper.update();
     }
   } // Protected
-  ;
 
-  _proto.isWithContent = function isWithContent() {
+
+  isWithContent() {
     return Boolean(this.getTitle());
-  };
+  }
 
-  _proto.getTipElement = function getTipElement() {
+  getTipElement() {
     if (this.tip) {
       return this.tip;
     }
 
-    var element = document.createElement('div');
-    element.innerHTML = this.config.template;
+    const element = document.createElement('div');
+    element.innerHTML = this._config.template;
     this.tip = element.children[0];
     return this.tip;
-  };
+  }
 
-  _proto.setContent = function setContent() {
-    var tip = this.getTipElement();
+  setContent() {
+    const tip = this.getTipElement();
     this.setElementContent(SelectorEngine.findOne(SELECTOR_TOOLTIP_INNER, tip), this.getTitle());
-    tip.classList.remove(CLASS_NAME_FADE$1, CLASS_NAME_SHOW$3);
-  };
+    tip.classList.remove(CLASS_NAME_FADE$3, CLASS_NAME_SHOW$3);
+  }
 
-  _proto.setElementContent = function setElementContent(element, content) {
+  setElementContent(element, content) {
     if (element === null) {
       return;
     }
 
-    if (typeof content === 'object' && isElement(content)) {
-      if (content.jquery) {
-        content = content[0];
-      } // content is a DOM node or a jQuery
+    if (isElement(content)) {
+      content = getElement(content); // content is a DOM node or a jQuery
 
-
-      if (this.config.html) {
+      if (this._config.html) {
         if (content.parentNode !== element) {
           element.innerHTML = '';
           element.appendChild(content);
@@ -3656,150 +6938,166 @@ var Tooltip = /*#__PURE__*/function () {
       return;
     }
 
-    if (this.config.html) {
-      if (this.config.sanitize) {
-        content = sanitizeHtml(content, this.config.allowList, this.config.sanitizeFn);
+    if (this._config.html) {
+      if (this._config.sanitize) {
+        content = sanitizeHtml(content, this._config.allowList, this._config.sanitizeFn);
       }
 
       element.innerHTML = content;
     } else {
       element.textContent = content;
     }
-  };
+  }
 
-  _proto.getTitle = function getTitle() {
-    var title = this.element.getAttribute('data-original-title');
+  getTitle() {
+    let title = this._element.getAttribute('data-bs-original-title');
 
     if (!title) {
-      title = typeof this.config.title === 'function' ? this.config.title.call(this.element) : this.config.title;
+      title = typeof this._config.title === 'function' ? this._config.title.call(this._element) : this._config.title;
     }
 
     return title;
+  }
+
+  updateAttachment(attachment) {
+    if (attachment === 'right') {
+      return 'end';
+    }
+
+    if (attachment === 'left') {
+      return 'start';
+    }
+
+    return attachment;
   } // Private
-  ;
 
-  _proto._getPopperConfig = function _getPopperConfig(attachment) {
-    var _this3 = this;
 
-    var defaultBsConfig = {
-      placement: attachment,
-      modifiers: {
-        offset: this._getOffset(),
-        flip: {
-          behavior: this.config.fallbackPlacement
-        },
-        arrow: {
-          element: "." + this.constructor.NAME + "-arrow"
-        },
-        preventOverflow: {
-          boundariesElement: this.config.boundary
-        }
-      },
-      onCreate: function onCreate(data) {
-        if (data.originalPlacement !== data.placement) {
-          _this3._handlePopperPlacementChange(data);
-        }
-      },
-      onUpdate: function onUpdate(data) {
-        return _this3._handlePopperPlacementChange(data);
-      }
-    };
-    return _extends({}, defaultBsConfig, this.config.popperConfig);
-  };
-
-  _proto._addAttachmentClass = function _addAttachmentClass(attachment) {
-    this.getTipElement().classList.add(CLASS_PREFIX + "-" + attachment);
-  };
-
-  _proto._getOffset = function _getOffset() {
-    var _this4 = this;
-
-    var offset = {};
-
-    if (typeof this.config.offset === 'function') {
-      offset.fn = function (data) {
-        data.offsets = _extends({}, data.offsets, _this4.config.offset(data.offsets, _this4.element) || {});
-        return data;
-      };
-    } else {
-      offset.offset = this.config.offset;
-    }
-
-    return offset;
-  };
-
-  _proto._getContainer = function _getContainer() {
-    if (this.config.container === false) {
-      return document.body;
-    }
-
-    if (isElement(this.config.container)) {
-      return this.config.container;
-    }
-
-    return SelectorEngine.findOne(this.config.container);
-  };
-
-  _proto._getAttachment = function _getAttachment(placement) {
-    return AttachmentMap[placement.toUpperCase()];
-  };
-
-  _proto._setListeners = function _setListeners() {
-    var _this5 = this;
-
-    var triggers = this.config.trigger.split(' ');
-    triggers.forEach(function (trigger) {
-      if (trigger === 'click') {
-        EventHandler.on(_this5.element, _this5.constructor.Event.CLICK, _this5.config.selector, function (event) {
-          return _this5.toggle(event);
-        });
-      } else if (trigger !== TRIGGER_MANUAL) {
-        var eventIn = trigger === TRIGGER_HOVER ? _this5.constructor.Event.MOUSEENTER : _this5.constructor.Event.FOCUSIN;
-        var eventOut = trigger === TRIGGER_HOVER ? _this5.constructor.Event.MOUSELEAVE : _this5.constructor.Event.FOCUSOUT;
-        EventHandler.on(_this5.element, eventIn, _this5.config.selector, function (event) {
-          return _this5._enter(event);
-        });
-        EventHandler.on(_this5.element, eventOut, _this5.config.selector, function (event) {
-          return _this5._leave(event);
-        });
-      }
-    });
-
-    this._hideModalHandler = function () {
-      if (_this5.element) {
-        _this5.hide();
-      }
-    };
-
-    EventHandler.on(this.element.closest("." + CLASS_NAME_MODAL), 'hide.bs.modal', this._hideModalHandler);
-
-    if (this.config.selector) {
-      this.config = _extends({}, this.config, {
-        trigger: 'manual',
-        selector: ''
-      });
-    } else {
-      this._fixTitle();
-    }
-  };
-
-  _proto._fixTitle = function _fixTitle() {
-    var titleType = typeof this.element.getAttribute('data-original-title');
-
-    if (this.element.getAttribute('title') || titleType !== 'string') {
-      this.element.setAttribute('data-original-title', this.element.getAttribute('title') || '');
-      this.element.setAttribute('title', '');
-    }
-  };
-
-  _proto._enter = function _enter(event, context) {
-    var dataKey = this.constructor.DATA_KEY;
-    context = context || Data.getData(event.delegateTarget, dataKey);
+  _initializeOnDelegatedTarget(event, context) {
+    const dataKey = this.constructor.DATA_KEY;
+    context = context || Data.get(event.delegateTarget, dataKey);
 
     if (!context) {
       context = new this.constructor(event.delegateTarget, this._getDelegateConfig());
-      Data.setData(event.delegateTarget, dataKey, context);
+      Data.set(event.delegateTarget, dataKey, context);
     }
+
+    return context;
+  }
+
+  _getOffset() {
+    const {
+      offset
+    } = this._config;
+
+    if (typeof offset === 'string') {
+      return offset.split(',').map(val => Number.parseInt(val, 10));
+    }
+
+    if (typeof offset === 'function') {
+      return popperData => offset(popperData, this._element);
+    }
+
+    return offset;
+  }
+
+  _getPopperConfig(attachment) {
+    const defaultBsPopperConfig = {
+      placement: attachment,
+      modifiers: [{
+        name: 'flip',
+        options: {
+          fallbackPlacements: this._config.fallbackPlacements
+        }
+      }, {
+        name: 'offset',
+        options: {
+          offset: this._getOffset()
+        }
+      }, {
+        name: 'preventOverflow',
+        options: {
+          boundary: this._config.boundary
+        }
+      }, {
+        name: 'arrow',
+        options: {
+          element: `.${this.constructor.NAME}-arrow`
+        }
+      }, {
+        name: 'onChange',
+        enabled: true,
+        phase: 'afterWrite',
+        fn: data => this._handlePopperPlacementChange(data)
+      }],
+      onFirstUpdate: data => {
+        if (data.options.placement !== data.placement) {
+          this._handlePopperPlacementChange(data);
+        }
+      }
+    };
+    return { ...defaultBsPopperConfig,
+      ...(typeof this._config.popperConfig === 'function' ? this._config.popperConfig(defaultBsPopperConfig) : this._config.popperConfig)
+    };
+  }
+
+  _addAttachmentClass(attachment) {
+    this.getTipElement().classList.add(`${CLASS_PREFIX$1}-${this.updateAttachment(attachment)}`);
+  }
+
+  _getAttachment(placement) {
+    return AttachmentMap[placement.toUpperCase()];
+  }
+
+  _setListeners() {
+    const triggers = this._config.trigger.split(' ');
+
+    triggers.forEach(trigger => {
+      if (trigger === 'click') {
+        EventHandler.on(this._element, this.constructor.Event.CLICK, this._config.selector, event => this.toggle(event));
+      } else if (trigger !== TRIGGER_MANUAL) {
+        const eventIn = trigger === TRIGGER_HOVER ? this.constructor.Event.MOUSEENTER : this.constructor.Event.FOCUSIN;
+        const eventOut = trigger === TRIGGER_HOVER ? this.constructor.Event.MOUSELEAVE : this.constructor.Event.FOCUSOUT;
+        EventHandler.on(this._element, eventIn, this._config.selector, event => this._enter(event));
+        EventHandler.on(this._element, eventOut, this._config.selector, event => this._leave(event));
+      }
+    });
+
+    this._hideModalHandler = () => {
+      if (this._element) {
+        this.hide();
+      }
+    };
+
+    EventHandler.on(this._element.closest(`.${CLASS_NAME_MODAL}`), 'hide.bs.modal', this._hideModalHandler);
+
+    if (this._config.selector) {
+      this._config = { ...this._config,
+        trigger: 'manual',
+        selector: ''
+      };
+    } else {
+      this._fixTitle();
+    }
+  }
+
+  _fixTitle() {
+    const title = this._element.getAttribute('title');
+
+    const originalTitleType = typeof this._element.getAttribute('data-bs-original-title');
+
+    if (title || originalTitleType !== 'string') {
+      this._element.setAttribute('data-bs-original-title', title || '');
+
+      if (title && !this._element.getAttribute('aria-label') && !this._element.textContent) {
+        this._element.setAttribute('aria-label', title);
+      }
+
+      this._element.setAttribute('title', '');
+    }
+  }
+
+  _enter(event, context) {
+    context = this._initializeOnDelegatedTarget(event, context);
 
     if (event) {
       context._activeTrigger[event.type === 'focusin' ? TRIGGER_FOCUS : TRIGGER_HOVER] = true;
@@ -3813,29 +7111,23 @@ var Tooltip = /*#__PURE__*/function () {
     clearTimeout(context._timeout);
     context._hoverState = HOVER_STATE_SHOW;
 
-    if (!context.config.delay || !context.config.delay.show) {
+    if (!context._config.delay || !context._config.delay.show) {
       context.show();
       return;
     }
 
-    context._timeout = setTimeout(function () {
+    context._timeout = setTimeout(() => {
       if (context._hoverState === HOVER_STATE_SHOW) {
         context.show();
       }
-    }, context.config.delay.show);
-  };
+    }, context._config.delay.show);
+  }
 
-  _proto._leave = function _leave(event, context) {
-    var dataKey = this.constructor.DATA_KEY;
-    context = context || Data.getData(event.delegateTarget, dataKey);
-
-    if (!context) {
-      context = new this.constructor(event.delegateTarget, this._getDelegateConfig());
-      Data.setData(event.delegateTarget, dataKey, context);
-    }
+  _leave(event, context) {
+    context = this._initializeOnDelegatedTarget(event, context);
 
     if (event) {
-      context._activeTrigger[event.type === 'focusout' ? TRIGGER_FOCUS : TRIGGER_HOVER] = false;
+      context._activeTrigger[event.type === 'focusout' ? TRIGGER_FOCUS : TRIGGER_HOVER] = context._element.contains(event.relatedTarget);
     }
 
     if (context._isWithActiveTrigger()) {
@@ -3845,41 +7137,40 @@ var Tooltip = /*#__PURE__*/function () {
     clearTimeout(context._timeout);
     context._hoverState = HOVER_STATE_OUT;
 
-    if (!context.config.delay || !context.config.delay.hide) {
+    if (!context._config.delay || !context._config.delay.hide) {
       context.hide();
       return;
     }
 
-    context._timeout = setTimeout(function () {
+    context._timeout = setTimeout(() => {
       if (context._hoverState === HOVER_STATE_OUT) {
         context.hide();
       }
-    }, context.config.delay.hide);
-  };
+    }, context._config.delay.hide);
+  }
 
-  _proto._isWithActiveTrigger = function _isWithActiveTrigger() {
-    for (var trigger in this._activeTrigger) {
+  _isWithActiveTrigger() {
+    for (const trigger in this._activeTrigger) {
       if (this._activeTrigger[trigger]) {
         return true;
       }
     }
 
     return false;
-  };
+  }
 
-  _proto._getConfig = function _getConfig(config) {
-    var dataAttributes = Manipulator.getDataAttributes(this.element);
-    Object.keys(dataAttributes).forEach(function (dataAttr) {
-      if (DISALLOWED_ATTRIBUTES.indexOf(dataAttr) !== -1) {
+  _getConfig(config) {
+    const dataAttributes = Manipulator.getDataAttributes(this._element);
+    Object.keys(dataAttributes).forEach(dataAttr => {
+      if (DISALLOWED_ATTRIBUTES.has(dataAttr)) {
         delete dataAttributes[dataAttr];
       }
     });
-
-    if (config && typeof config.container === 'object' && config.container.jquery) {
-      config.container = config.container[0];
-    }
-
-    config = _extends({}, this.constructor.Default, dataAttributes, typeof config === 'object' && config ? config : {});
+    config = { ...this.constructor.Default,
+      ...dataAttributes,
+      ...(typeof config === 'object' && config ? config : {})
+    };
+    config.container = config.container === false ? document.body : getElement(config.container);
 
     if (typeof config.delay === 'number') {
       config.delay = {
@@ -3896,133 +7187,70 @@ var Tooltip = /*#__PURE__*/function () {
       config.content = config.content.toString();
     }
 
-    typeCheckConfig(NAME$6, config, this.constructor.DefaultType);
+    typeCheckConfig(NAME$4, config, this.constructor.DefaultType);
 
     if (config.sanitize) {
       config.template = sanitizeHtml(config.template, config.allowList, config.sanitizeFn);
     }
 
     return config;
-  };
+  }
 
-  _proto._getDelegateConfig = function _getDelegateConfig() {
-    var config = {};
+  _getDelegateConfig() {
+    const config = {};
 
-    if (this.config) {
-      for (var key in this.config) {
-        if (this.constructor.Default[key] !== this.config[key]) {
-          config[key] = this.config[key];
+    if (this._config) {
+      for (const key in this._config) {
+        if (this.constructor.Default[key] !== this._config[key]) {
+          config[key] = this._config[key];
         }
       }
     }
 
     return config;
-  };
+  }
 
-  _proto._cleanTipClass = function _cleanTipClass() {
-    var tip = this.getTipElement();
-    var tabClass = tip.getAttribute('class').match(BSCLS_PREFIX_REGEX);
+  _cleanTipClass() {
+    const tip = this.getTipElement();
+    const tabClass = tip.getAttribute('class').match(BSCLS_PREFIX_REGEX$1);
 
     if (tabClass !== null && tabClass.length > 0) {
-      tabClass.map(function (token) {
-        return token.trim();
-      }).forEach(function (tClass) {
-        return tip.classList.remove(tClass);
-      });
+      tabClass.map(token => token.trim()).forEach(tClass => tip.classList.remove(tClass));
     }
-  };
+  }
 
-  _proto._handlePopperPlacementChange = function _handlePopperPlacementChange(popperData) {
-    this.tip = popperData.instance.popper;
+  _handlePopperPlacementChange(popperData) {
+    const {
+      state
+    } = popperData;
 
-    this._cleanTipClass();
-
-    this._addAttachmentClass(this._getAttachment(popperData.placement));
-  };
-
-  _proto._fixTransition = function _fixTransition() {
-    var tip = this.getTipElement();
-    var initConfigAnimation = this.config.animation;
-
-    if (tip.getAttribute('x-placement') !== null) {
+    if (!state) {
       return;
     }
 
-    tip.classList.remove(CLASS_NAME_FADE$1);
-    this.config.animation = false;
-    this.hide();
-    this.show();
-    this.config.animation = initConfigAnimation;
+    this.tip = state.elements.popper;
+
+    this._cleanTipClass();
+
+    this._addAttachmentClass(this._getAttachment(state.placement));
   } // Static
-  ;
 
-  Tooltip.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$6);
-
-      var _config = typeof config === 'object' && config;
-
-      if (!data && /dispose|hide/.test(config)) {
-        return;
-      }
-
-      if (!data) {
-        data = new Tooltip(this, _config);
-      }
+      const data = Tooltip.getOrCreateInstance(this, config);
 
       if (typeof config === 'string') {
         if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
+          throw new TypeError(`No method named "${config}"`);
         }
 
         data[config]();
       }
     });
-  };
+  }
 
-  Tooltip.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$6);
-  };
-
-  _createClass(Tooltip, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$6;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$4;
-    }
-  }, {
-    key: "NAME",
-    get: function get() {
-      return NAME$6;
-    }
-  }, {
-    key: "DATA_KEY",
-    get: function get() {
-      return DATA_KEY$6;
-    }
-  }, {
-    key: "Event",
-    get: function get() {
-      return Event$1;
-    }
-  }, {
-    key: "EVENT_KEY",
-    get: function get() {
-      return EVENT_KEY$6;
-    }
-  }, {
-    key: "DefaultType",
-    get: function get() {
-      return DefaultType$4;
-    }
-  }]);
-
-  return Tooltip;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * jQuery
@@ -4031,189 +7259,147 @@ var Tooltip = /*#__PURE__*/function () {
  */
 
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Tooltip);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$6];
-    $.fn[NAME$6] = Tooltip.jQueryInterface;
-    $.fn[NAME$6].Constructor = Tooltip;
-
-    $.fn[NAME$6].noConflict = function () {
-      $.fn[NAME$6] = JQUERY_NO_CONFLICT;
-      return Tooltip.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): popover.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$7 = 'popover';
-var VERSION$7 = '5.0.0-alpha3';
-var DATA_KEY$7 = 'bs.popover';
-var EVENT_KEY$7 = "." + DATA_KEY$7;
-var CLASS_PREFIX$1 = 'bs-popover';
-var BSCLS_PREFIX_REGEX$1 = new RegExp("(^|\\s)" + CLASS_PREFIX$1 + "\\S+", 'g');
-
-var Default$5 = _extends({}, Tooltip.Default, {
+const NAME$3 = 'popover';
+const DATA_KEY$3 = 'bs.popover';
+const EVENT_KEY$3 = `.${DATA_KEY$3}`;
+const CLASS_PREFIX = 'bs-popover';
+const BSCLS_PREFIX_REGEX = new RegExp(`(^|\\s)${CLASS_PREFIX}\\S+`, 'g');
+const Default$2 = { ...Tooltip.Default,
   placement: 'right',
+  offset: [0, 8],
   trigger: 'click',
   content: '',
-  template: '<div class="popover" role="tooltip">' + '<div class="popover-arrow"></div>' + '<h3 class="popover-header"></h3>' + '<div class="popover-body"></div></div>'
-});
-
-var DefaultType$5 = _extends({}, Tooltip.DefaultType, {
-  content: '(string|element|function)'
-});
-
-var Event$2 = {
-  HIDE: "hide" + EVENT_KEY$7,
-  HIDDEN: "hidden" + EVENT_KEY$7,
-  SHOW: "show" + EVENT_KEY$7,
-  SHOWN: "shown" + EVENT_KEY$7,
-  INSERTED: "inserted" + EVENT_KEY$7,
-  CLICK: "click" + EVENT_KEY$7,
-  FOCUSIN: "focusin" + EVENT_KEY$7,
-  FOCUSOUT: "focusout" + EVENT_KEY$7,
-  MOUSEENTER: "mouseenter" + EVENT_KEY$7,
-  MOUSELEAVE: "mouseleave" + EVENT_KEY$7
+  template: '<div class="popover" role="tooltip">' + '<div class="popover-arrow"></div>' + '<h3 class="popover-header"></h3>' + '<div class="popover-body"></div>' + '</div>'
 };
-var CLASS_NAME_FADE$2 = 'fade';
-var CLASS_NAME_SHOW$4 = 'show';
-var SELECTOR_TITLE = '.popover-header';
-var SELECTOR_CONTENT = '.popover-body';
+const DefaultType$2 = { ...Tooltip.DefaultType,
+  content: '(string|element|function)'
+};
+const Event$1 = {
+  HIDE: `hide${EVENT_KEY$3}`,
+  HIDDEN: `hidden${EVENT_KEY$3}`,
+  SHOW: `show${EVENT_KEY$3}`,
+  SHOWN: `shown${EVENT_KEY$3}`,
+  INSERTED: `inserted${EVENT_KEY$3}`,
+  CLICK: `click${EVENT_KEY$3}`,
+  FOCUSIN: `focusin${EVENT_KEY$3}`,
+  FOCUSOUT: `focusout${EVENT_KEY$3}`,
+  MOUSEENTER: `mouseenter${EVENT_KEY$3}`,
+  MOUSELEAVE: `mouseleave${EVENT_KEY$3}`
+};
+const CLASS_NAME_FADE$2 = 'fade';
+const CLASS_NAME_SHOW$2 = 'show';
+const SELECTOR_TITLE = '.popover-header';
+const SELECTOR_CONTENT = '.popover-body';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Popover = /*#__PURE__*/function (_Tooltip) {
-  _inheritsLoose(Popover, _Tooltip);
-
-  function Popover() {
-    return _Tooltip.apply(this, arguments) || this;
+class Popover extends Tooltip {
+  // Getters
+  static get Default() {
+    return Default$2;
   }
 
-  var _proto = Popover.prototype;
+  static get NAME() {
+    return NAME$3;
+  }
 
-  // Overrides
-  _proto.isWithContent = function isWithContent() {
+  static get Event() {
+    return Event$1;
+  }
+
+  static get DefaultType() {
+    return DefaultType$2;
+  } // Overrides
+
+
+  isWithContent() {
     return this.getTitle() || this._getContent();
-  };
+  }
 
-  _proto.setContent = function setContent() {
-    var tip = this.getTipElement(); // we use append for html objects to maintain js events
+  getTipElement() {
+    if (this.tip) {
+      return this.tip;
+    }
+
+    this.tip = super.getTipElement();
+
+    if (!this.getTitle()) {
+      SelectorEngine.findOne(SELECTOR_TITLE, this.tip).remove();
+    }
+
+    if (!this._getContent()) {
+      SelectorEngine.findOne(SELECTOR_CONTENT, this.tip).remove();
+    }
+
+    return this.tip;
+  }
+
+  setContent() {
+    const tip = this.getTipElement(); // we use append for html objects to maintain js events
 
     this.setElementContent(SelectorEngine.findOne(SELECTOR_TITLE, tip), this.getTitle());
 
-    var content = this._getContent();
+    let content = this._getContent();
 
     if (typeof content === 'function') {
-      content = content.call(this.element);
+      content = content.call(this._element);
     }
 
     this.setElementContent(SelectorEngine.findOne(SELECTOR_CONTENT, tip), content);
-    tip.classList.remove(CLASS_NAME_FADE$2, CLASS_NAME_SHOW$4);
+    tip.classList.remove(CLASS_NAME_FADE$2, CLASS_NAME_SHOW$2);
   } // Private
-  ;
 
-  _proto._addAttachmentClass = function _addAttachmentClass(attachment) {
-    this.getTipElement().classList.add(CLASS_PREFIX$1 + "-" + attachment);
-  };
 
-  _proto._getContent = function _getContent() {
-    return this.element.getAttribute('data-content') || this.config.content;
-  };
+  _addAttachmentClass(attachment) {
+    this.getTipElement().classList.add(`${CLASS_PREFIX}-${this.updateAttachment(attachment)}`);
+  }
 
-  _proto._cleanTipClass = function _cleanTipClass() {
-    var tip = this.getTipElement();
-    var tabClass = tip.getAttribute('class').match(BSCLS_PREFIX_REGEX$1);
+  _getContent() {
+    return this._element.getAttribute('data-bs-content') || this._config.content;
+  }
+
+  _cleanTipClass() {
+    const tip = this.getTipElement();
+    const tabClass = tip.getAttribute('class').match(BSCLS_PREFIX_REGEX);
 
     if (tabClass !== null && tabClass.length > 0) {
-      tabClass.map(function (token) {
-        return token.trim();
-      }).forEach(function (tClass) {
-        return tip.classList.remove(tClass);
-      });
+      tabClass.map(token => token.trim()).forEach(tClass => tip.classList.remove(tClass));
     }
   } // Static
-  ;
 
-  Popover.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$7);
-
-      var _config = typeof config === 'object' ? config : null;
-
-      if (!data && /dispose|hide/.test(config)) {
-        return;
-      }
-
-      if (!data) {
-        data = new Popover(this, _config);
-        Data.setData(this, DATA_KEY$7, data);
-      }
+      const data = Popover.getOrCreateInstance(this, config);
 
       if (typeof config === 'string') {
         if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
+          throw new TypeError(`No method named "${config}"`);
         }
 
         data[config]();
       }
     });
-  };
+  }
 
-  Popover.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$7);
-  };
-
-  _createClass(Popover, null, [{
-    key: "VERSION",
-    // Getters
-    get: function get() {
-      return VERSION$7;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$5;
-    }
-  }, {
-    key: "NAME",
-    get: function get() {
-      return NAME$7;
-    }
-  }, {
-    key: "DATA_KEY",
-    get: function get() {
-      return DATA_KEY$7;
-    }
-  }, {
-    key: "Event",
-    get: function get() {
-      return Event$2;
-    }
-  }, {
-    key: "EVENT_KEY",
-    get: function get() {
-      return EVENT_KEY$7;
-    }
-  }, {
-    key: "DefaultType",
-    get: function get() {
-      return DefaultType$5;
-    }
-  }]);
-
-  return Popover;
-}(Tooltip);
+}
 /**
  * ------------------------------------------------------------------------
  * jQuery
@@ -4222,105 +7408,94 @@ var Popover = /*#__PURE__*/function (_Tooltip) {
  */
 
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Popover);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$7];
-    $.fn[NAME$7] = Popover.jQueryInterface;
-    $.fn[NAME$7].Constructor = Popover;
-
-    $.fn[NAME$7].noConflict = function () {
-      $.fn[NAME$7] = JQUERY_NO_CONFLICT;
-      return Popover.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): scrollspy.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$8 = 'scrollspy';
-var VERSION$8 = '5.0.0-alpha3';
-var DATA_KEY$8 = 'bs.scrollspy';
-var EVENT_KEY$8 = "." + DATA_KEY$8;
-var DATA_API_KEY$6 = '.data-api';
-var Default$6 = {
+const NAME$2 = 'scrollspy';
+const DATA_KEY$2 = 'bs.scrollspy';
+const EVENT_KEY$2 = `.${DATA_KEY$2}`;
+const DATA_API_KEY$1 = '.data-api';
+const Default$1 = {
   offset: 10,
   method: 'auto',
   target: ''
 };
-var DefaultType$6 = {
+const DefaultType$1 = {
   offset: 'number',
   method: 'string',
   target: '(string|element)'
 };
-var EVENT_ACTIVATE = "activate" + EVENT_KEY$8;
-var EVENT_SCROLL = "scroll" + EVENT_KEY$8;
-var EVENT_LOAD_DATA_API$1 = "load" + EVENT_KEY$8 + DATA_API_KEY$6;
-var CLASS_NAME_DROPDOWN_ITEM = 'dropdown-item';
-var CLASS_NAME_ACTIVE$2 = 'active';
-var SELECTOR_DATA_SPY = '[data-spy="scroll"]';
-var SELECTOR_NAV_LIST_GROUP = '.nav, .list-group';
-var SELECTOR_NAV_LINKS = '.nav-link';
-var SELECTOR_NAV_ITEMS = '.nav-item';
-var SELECTOR_LIST_ITEMS = '.list-group-item';
-var SELECTOR_DROPDOWN = '.dropdown';
-var SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
-var METHOD_OFFSET = 'offset';
-var METHOD_POSITION = 'position';
+const EVENT_ACTIVATE = `activate${EVENT_KEY$2}`;
+const EVENT_SCROLL = `scroll${EVENT_KEY$2}`;
+const EVENT_LOAD_DATA_API = `load${EVENT_KEY$2}${DATA_API_KEY$1}`;
+const CLASS_NAME_DROPDOWN_ITEM = 'dropdown-item';
+const CLASS_NAME_ACTIVE$1 = 'active';
+const SELECTOR_DATA_SPY = '[data-bs-spy="scroll"]';
+const SELECTOR_NAV_LIST_GROUP$1 = '.nav, .list-group';
+const SELECTOR_NAV_LINKS = '.nav-link';
+const SELECTOR_NAV_ITEMS = '.nav-item';
+const SELECTOR_LIST_ITEMS = '.list-group-item';
+const SELECTOR_DROPDOWN$1 = '.dropdown';
+const SELECTOR_DROPDOWN_TOGGLE$1 = '.dropdown-toggle';
+const METHOD_OFFSET = 'offset';
+const METHOD_POSITION = 'position';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var ScrollSpy = /*#__PURE__*/function () {
-  function ScrollSpy(element, config) {
-    var _this = this;
-
-    this._element = element;
-    this._scrollElement = element.tagName === 'BODY' ? window : element;
+class ScrollSpy extends BaseComponent {
+  constructor(element, config) {
+    super(element);
+    this._scrollElement = this._element.tagName === 'BODY' ? window : this._element;
     this._config = this._getConfig(config);
-    this._selector = this._config.target + " " + SELECTOR_NAV_LINKS + ", " + this._config.target + " " + SELECTOR_LIST_ITEMS + ", " + this._config.target + " ." + CLASS_NAME_DROPDOWN_ITEM;
+    this._selector = `${this._config.target} ${SELECTOR_NAV_LINKS}, ${this._config.target} ${SELECTOR_LIST_ITEMS}, ${this._config.target} .${CLASS_NAME_DROPDOWN_ITEM}`;
     this._offsets = [];
     this._targets = [];
     this._activeTarget = null;
     this._scrollHeight = 0;
-    EventHandler.on(this._scrollElement, EVENT_SCROLL, function (event) {
-      return _this._process(event);
-    });
+    EventHandler.on(this._scrollElement, EVENT_SCROLL, () => this._process());
     this.refresh();
 
     this._process();
-
-    Data.setData(element, DATA_KEY$8, this);
   } // Getters
 
 
-  var _proto = ScrollSpy.prototype;
+  static get Default() {
+    return Default$1;
+  }
 
-  // Public
-  _proto.refresh = function refresh() {
-    var _this2 = this;
+  static get NAME() {
+    return NAME$2;
+  } // Public
 
-    var autoMethod = this._scrollElement === this._scrollElement.window ? METHOD_OFFSET : METHOD_POSITION;
-    var offsetMethod = this._config.method === 'auto' ? autoMethod : this._config.method;
-    var offsetBase = offsetMethod === METHOD_POSITION ? this._getScrollTop() : 0;
+
+  refresh() {
+    const autoMethod = this._scrollElement === this._scrollElement.window ? METHOD_OFFSET : METHOD_POSITION;
+    const offsetMethod = this._config.method === 'auto' ? autoMethod : this._config.method;
+    const offsetBase = offsetMethod === METHOD_POSITION ? this._getScrollTop() : 0;
     this._offsets = [];
     this._targets = [];
     this._scrollHeight = this._getScrollHeight();
-    var targets = SelectorEngine.find(this._selector);
-    targets.map(function (element) {
-      var targetSelector = getSelectorFromElement(element);
-      var target = targetSelector ? SelectorEngine.findOne(targetSelector) : null;
+    const targets = SelectorEngine.find(this._selector);
+    targets.map(element => {
+      const targetSelector = getSelectorFromElement(element);
+      const target = targetSelector ? SelectorEngine.findOne(targetSelector) : null;
 
       if (target) {
-        var targetBCR = target.getBoundingClientRect();
+        const targetBCR = target.getBoundingClientRect();
 
         if (targetBCR.width || targetBCR.height) {
           return [Manipulator[offsetMethod](target).top + offsetBase, targetSelector];
@@ -4328,74 +7503,67 @@ var ScrollSpy = /*#__PURE__*/function () {
       }
 
       return null;
-    }).filter(function (item) {
-      return item;
-    }).sort(function (a, b) {
-      return a[0] - b[0];
-    }).forEach(function (item) {
-      _this2._offsets.push(item[0]);
+    }).filter(item => item).sort((a, b) => a[0] - b[0]).forEach(item => {
+      this._offsets.push(item[0]);
 
-      _this2._targets.push(item[1]);
+      this._targets.push(item[1]);
     });
-  };
+  }
 
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY$8);
-    EventHandler.off(this._scrollElement, EVENT_KEY$8);
-    this._element = null;
-    this._scrollElement = null;
-    this._config = null;
-    this._selector = null;
-    this._offsets = null;
-    this._targets = null;
-    this._activeTarget = null;
-    this._scrollHeight = null;
+  dispose() {
+    EventHandler.off(this._scrollElement, EVENT_KEY$2);
+    super.dispose();
   } // Private
-  ;
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, Default$6, typeof config === 'object' && config ? config : {});
+
+  _getConfig(config) {
+    config = { ...Default$1,
+      ...Manipulator.getDataAttributes(this._element),
+      ...(typeof config === 'object' && config ? config : {})
+    };
 
     if (typeof config.target !== 'string' && isElement(config.target)) {
-      var id = config.target.id;
+      let {
+        id
+      } = config.target;
 
       if (!id) {
-        id = getUID(NAME$8);
+        id = getUID(NAME$2);
         config.target.id = id;
       }
 
-      config.target = "#" + id;
+      config.target = `#${id}`;
     }
 
-    typeCheckConfig(NAME$8, config, DefaultType$6);
+    typeCheckConfig(NAME$2, config, DefaultType$1);
     return config;
-  };
+  }
 
-  _proto._getScrollTop = function _getScrollTop() {
+  _getScrollTop() {
     return this._scrollElement === window ? this._scrollElement.pageYOffset : this._scrollElement.scrollTop;
-  };
+  }
 
-  _proto._getScrollHeight = function _getScrollHeight() {
+  _getScrollHeight() {
     return this._scrollElement.scrollHeight || Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-  };
+  }
 
-  _proto._getOffsetHeight = function _getOffsetHeight() {
+  _getOffsetHeight() {
     return this._scrollElement === window ? window.innerHeight : this._scrollElement.getBoundingClientRect().height;
-  };
+  }
 
-  _proto._process = function _process() {
-    var scrollTop = this._getScrollTop() + this._config.offset;
+  _process() {
+    const scrollTop = this._getScrollTop() + this._config.offset;
 
-    var scrollHeight = this._getScrollHeight();
+    const scrollHeight = this._getScrollHeight();
 
-    var maxScroll = this._config.offset + scrollHeight - this._getOffsetHeight();
+    const maxScroll = this._config.offset + scrollHeight - this._getOffsetHeight();
 
     if (this._scrollHeight !== scrollHeight) {
       this.refresh();
     }
 
     if (scrollTop >= maxScroll) {
-      var target = this._targets[this._targets.length - 1];
+      const target = this._targets[this._targets.length - 1];
 
       if (this._activeTarget !== target) {
         this._activate(target);
@@ -4412,43 +7580,37 @@ var ScrollSpy = /*#__PURE__*/function () {
       return;
     }
 
-    for (var i = this._offsets.length; i--;) {
-      var isActiveTarget = this._activeTarget !== this._targets[i] && scrollTop >= this._offsets[i] && (typeof this._offsets[i + 1] === 'undefined' || scrollTop < this._offsets[i + 1]);
+    for (let i = this._offsets.length; i--;) {
+      const isActiveTarget = this._activeTarget !== this._targets[i] && scrollTop >= this._offsets[i] && (typeof this._offsets[i + 1] === 'undefined' || scrollTop < this._offsets[i + 1]);
 
       if (isActiveTarget) {
         this._activate(this._targets[i]);
       }
     }
-  };
+  }
 
-  _proto._activate = function _activate(target) {
+  _activate(target) {
     this._activeTarget = target;
 
     this._clear();
 
-    var queries = this._selector.split(',').map(function (selector) {
-      return selector + "[data-target=\"" + target + "\"]," + selector + "[href=\"" + target + "\"]";
-    });
+    const queries = this._selector.split(',').map(selector => `${selector}[data-bs-target="${target}"],${selector}[href="${target}"]`);
 
-    var link = SelectorEngine.findOne(queries.join(','));
+    const link = SelectorEngine.findOne(queries.join(','));
 
     if (link.classList.contains(CLASS_NAME_DROPDOWN_ITEM)) {
-      SelectorEngine.findOne(SELECTOR_DROPDOWN_TOGGLE, link.closest(SELECTOR_DROPDOWN)).classList.add(CLASS_NAME_ACTIVE$2);
-      link.classList.add(CLASS_NAME_ACTIVE$2);
+      SelectorEngine.findOne(SELECTOR_DROPDOWN_TOGGLE$1, link.closest(SELECTOR_DROPDOWN$1)).classList.add(CLASS_NAME_ACTIVE$1);
+      link.classList.add(CLASS_NAME_ACTIVE$1);
     } else {
       // Set triggered link as active
-      link.classList.add(CLASS_NAME_ACTIVE$2);
-      SelectorEngine.parents(link, SELECTOR_NAV_LIST_GROUP).forEach(function (listGroup) {
+      link.classList.add(CLASS_NAME_ACTIVE$1);
+      SelectorEngine.parents(link, SELECTOR_NAV_LIST_GROUP$1).forEach(listGroup => {
         // Set triggered links parents as active
         // With both <ul> and <nav> markup a parent is the previous sibling of any nav ancestor
-        SelectorEngine.prev(listGroup, SELECTOR_NAV_LINKS + ", " + SELECTOR_LIST_ITEMS).forEach(function (item) {
-          return item.classList.add(CLASS_NAME_ACTIVE$2);
-        }); // Handle special case when .nav-link is inside .nav-item
+        SelectorEngine.prev(listGroup, `${SELECTOR_NAV_LINKS}, ${SELECTOR_LIST_ITEMS}`).forEach(item => item.classList.add(CLASS_NAME_ACTIVE$1)); // Handle special case when .nav-link is inside .nav-item
 
-        SelectorEngine.prev(listGroup, SELECTOR_NAV_ITEMS).forEach(function (navItem) {
-          SelectorEngine.children(navItem, SELECTOR_NAV_LINKS).forEach(function (item) {
-            return item.classList.add(CLASS_NAME_ACTIVE$2);
-          });
+        SelectorEngine.prev(listGroup, SELECTOR_NAV_ITEMS).forEach(navItem => {
+          SelectorEngine.children(navItem, SELECTOR_NAV_LINKS).forEach(item => item.classList.add(CLASS_NAME_ACTIVE$1));
         });
       });
     }
@@ -4456,55 +7618,30 @@ var ScrollSpy = /*#__PURE__*/function () {
     EventHandler.trigger(this._scrollElement, EVENT_ACTIVATE, {
       relatedTarget: target
     });
-  };
+  }
 
-  _proto._clear = function _clear() {
-    SelectorEngine.find(this._selector).filter(function (node) {
-      return node.classList.contains(CLASS_NAME_ACTIVE$2);
-    }).forEach(function (node) {
-      return node.classList.remove(CLASS_NAME_ACTIVE$2);
-    });
+  _clear() {
+    SelectorEngine.find(this._selector).filter(node => node.classList.contains(CLASS_NAME_ACTIVE$1)).forEach(node => node.classList.remove(CLASS_NAME_ACTIVE$1));
   } // Static
-  ;
 
-  ScrollSpy.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$8);
+      const data = ScrollSpy.getOrCreateInstance(this, config);
 
-      var _config = typeof config === 'object' && config;
-
-      if (!data) {
-        data = new ScrollSpy(this, _config);
+      if (typeof config !== 'string') {
+        return;
       }
 
-      if (typeof config === 'string') {
-        if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
-        }
-
-        data[config]();
+      if (typeof data[config] === 'undefined') {
+        throw new TypeError(`No method named "${config}"`);
       }
+
+      data[config]();
     });
-  };
+  }
 
-  ScrollSpy.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$8);
-  };
-
-  _createClass(ScrollSpy, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$8;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$6;
-    }
-  }]);
-
-  return ScrollSpy;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -4512,10 +7649,8 @@ var ScrollSpy = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(window, EVENT_LOAD_DATA_API$1, function () {
-  SelectorEngine.find(SELECTOR_DATA_SPY).forEach(function (spy) {
-    return new ScrollSpy(spy, Manipulator.getDataAttributes(spy));
-  });
+EventHandler.on(window, EVENT_LOAD_DATA_API, () => {
+  SelectorEngine.find(SELECTOR_DATA_SPY).forEach(spy => new ScrollSpy(spy));
 });
 /**
  * ------------------------------------------------------------------------
@@ -4524,93 +7659,73 @@ EventHandler.on(window, EVENT_LOAD_DATA_API$1, function () {
  * add .ScrollSpy to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(ScrollSpy);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$8];
-    $.fn[NAME$8] = ScrollSpy.jQueryInterface;
-    $.fn[NAME$8].Constructor = ScrollSpy;
-
-    $.fn[NAME$8].noConflict = function () {
-      $.fn[NAME$8] = JQUERY_NO_CONFLICT;
-      return ScrollSpy.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): tab.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$9 = 'tab';
-var VERSION$9 = '5.0.0-alpha3';
-var DATA_KEY$9 = 'bs.tab';
-var EVENT_KEY$9 = "." + DATA_KEY$9;
-var DATA_API_KEY$7 = '.data-api';
-var EVENT_HIDE$3 = "hide" + EVENT_KEY$9;
-var EVENT_HIDDEN$3 = "hidden" + EVENT_KEY$9;
-var EVENT_SHOW$3 = "show" + EVENT_KEY$9;
-var EVENT_SHOWN$3 = "shown" + EVENT_KEY$9;
-var EVENT_CLICK_DATA_API$6 = "click" + EVENT_KEY$9 + DATA_API_KEY$7;
-var CLASS_NAME_DROPDOWN_MENU = 'dropdown-menu';
-var CLASS_NAME_ACTIVE$3 = 'active';
-var CLASS_NAME_DISABLED$1 = 'disabled';
-var CLASS_NAME_FADE$3 = 'fade';
-var CLASS_NAME_SHOW$5 = 'show';
-var SELECTOR_DROPDOWN$1 = '.dropdown';
-var SELECTOR_NAV_LIST_GROUP$1 = '.nav, .list-group';
-var SELECTOR_ACTIVE$1 = '.active';
-var SELECTOR_ACTIVE_UL = ':scope > li > .active';
-var SELECTOR_DATA_TOGGLE$4 = '[data-toggle="tab"], [data-toggle="pill"], [data-toggle="list"]';
-var SELECTOR_DROPDOWN_TOGGLE$1 = '.dropdown-toggle';
-var SELECTOR_DROPDOWN_ACTIVE_CHILD = ':scope > .dropdown-menu .active';
+const NAME$1 = 'tab';
+const DATA_KEY$1 = 'bs.tab';
+const EVENT_KEY$1 = `.${DATA_KEY$1}`;
+const DATA_API_KEY = '.data-api';
+const EVENT_HIDE$1 = `hide${EVENT_KEY$1}`;
+const EVENT_HIDDEN$1 = `hidden${EVENT_KEY$1}`;
+const EVENT_SHOW$1 = `show${EVENT_KEY$1}`;
+const EVENT_SHOWN$1 = `shown${EVENT_KEY$1}`;
+const EVENT_CLICK_DATA_API = `click${EVENT_KEY$1}${DATA_API_KEY}`;
+const CLASS_NAME_DROPDOWN_MENU = 'dropdown-menu';
+const CLASS_NAME_ACTIVE = 'active';
+const CLASS_NAME_FADE$1 = 'fade';
+const CLASS_NAME_SHOW$1 = 'show';
+const SELECTOR_DROPDOWN = '.dropdown';
+const SELECTOR_NAV_LIST_GROUP = '.nav, .list-group';
+const SELECTOR_ACTIVE = '.active';
+const SELECTOR_ACTIVE_UL = ':scope > li > .active';
+const SELECTOR_DATA_TOGGLE = '[data-bs-toggle="tab"], [data-bs-toggle="pill"], [data-bs-toggle="list"]';
+const SELECTOR_DROPDOWN_TOGGLE = '.dropdown-toggle';
+const SELECTOR_DROPDOWN_ACTIVE_CHILD = ':scope > .dropdown-menu .active';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Tab = /*#__PURE__*/function () {
-  function Tab(element) {
-    this._element = element;
-    Data.setData(this._element, DATA_KEY$9, this);
-  } // Getters
+class Tab extends BaseComponent {
+  // Getters
+  static get NAME() {
+    return NAME$1;
+  } // Public
 
 
-  var _proto = Tab.prototype;
-
-  // Public
-  _proto.show = function show() {
-    var _this = this;
-
-    if (this._element.parentNode && this._element.parentNode.nodeType === Node.ELEMENT_NODE && this._element.classList.contains(CLASS_NAME_ACTIVE$3) || this._element.classList.contains(CLASS_NAME_DISABLED$1)) {
+  show() {
+    if (this._element.parentNode && this._element.parentNode.nodeType === Node.ELEMENT_NODE && this._element.classList.contains(CLASS_NAME_ACTIVE)) {
       return;
     }
 
-    var previous;
-    var target = getElementFromSelector(this._element);
+    let previous;
+    const target = getElementFromSelector(this._element);
 
-    var listElement = this._element.closest(SELECTOR_NAV_LIST_GROUP$1);
+    const listElement = this._element.closest(SELECTOR_NAV_LIST_GROUP);
 
     if (listElement) {
-      var itemSelector = listElement.nodeName === 'UL' || listElement.nodeName === 'OL' ? SELECTOR_ACTIVE_UL : SELECTOR_ACTIVE$1;
+      const itemSelector = listElement.nodeName === 'UL' || listElement.nodeName === 'OL' ? SELECTOR_ACTIVE_UL : SELECTOR_ACTIVE;
       previous = SelectorEngine.find(itemSelector, listElement);
       previous = previous[previous.length - 1];
     }
 
-    var hideEvent = null;
-
-    if (previous) {
-      hideEvent = EventHandler.trigger(previous, EVENT_HIDE$3, {
-        relatedTarget: this._element
-      });
-    }
-
-    var showEvent = EventHandler.trigger(this._element, EVENT_SHOW$3, {
+    const hideEvent = previous ? EventHandler.trigger(previous, EVENT_HIDE$1, {
+      relatedTarget: this._element
+    }) : null;
+    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW$1, {
       relatedTarget: previous
     });
 
@@ -4620,11 +7735,11 @@ var Tab = /*#__PURE__*/function () {
 
     this._activate(this._element, listElement);
 
-    var complete = function complete() {
-      EventHandler.trigger(previous, EVENT_HIDDEN$3, {
-        relatedTarget: _this._element
+    const complete = () => {
+      EventHandler.trigger(previous, EVENT_HIDDEN$1, {
+        relatedTarget: this._element
       });
-      EventHandler.trigger(_this._element, EVENT_SHOWN$3, {
+      EventHandler.trigger(this._element, EVENT_SHOWN$1, {
         relatedTarget: previous
       });
     };
@@ -4634,42 +7749,32 @@ var Tab = /*#__PURE__*/function () {
     } else {
       complete();
     }
-  };
-
-  _proto.dispose = function dispose() {
-    Data.removeData(this._element, DATA_KEY$9);
-    this._element = null;
   } // Private
-  ;
 
-  _proto._activate = function _activate(element, container, callback) {
-    var _this2 = this;
 
-    var activeElements = container && (container.nodeName === 'UL' || container.nodeName === 'OL') ? SelectorEngine.find(SELECTOR_ACTIVE_UL, container) : SelectorEngine.children(container, SELECTOR_ACTIVE$1);
-    var active = activeElements[0];
-    var isTransitioning = callback && active && active.classList.contains(CLASS_NAME_FADE$3);
+  _activate(element, container, callback) {
+    const activeElements = container && (container.nodeName === 'UL' || container.nodeName === 'OL') ? SelectorEngine.find(SELECTOR_ACTIVE_UL, container) : SelectorEngine.children(container, SELECTOR_ACTIVE);
+    const active = activeElements[0];
+    const isTransitioning = callback && active && active.classList.contains(CLASS_NAME_FADE$1);
 
-    var complete = function complete() {
-      return _this2._transitionComplete(element, active, callback);
-    };
+    const complete = () => this._transitionComplete(element, active, callback);
 
     if (active && isTransitioning) {
-      var transitionDuration = getTransitionDurationFromElement(active);
-      active.classList.remove(CLASS_NAME_SHOW$5);
-      EventHandler.one(active, TRANSITION_END, complete);
-      emulateTransitionEnd(active, transitionDuration);
+      active.classList.remove(CLASS_NAME_SHOW$1);
+
+      this._queueCallback(complete, element, true);
     } else {
       complete();
     }
-  };
+  }
 
-  _proto._transitionComplete = function _transitionComplete(element, active, callback) {
+  _transitionComplete(element, active, callback) {
     if (active) {
-      active.classList.remove(CLASS_NAME_ACTIVE$3);
-      var dropdownChild = SelectorEngine.findOne(SELECTOR_DROPDOWN_ACTIVE_CHILD, active.parentNode);
+      active.classList.remove(CLASS_NAME_ACTIVE);
+      const dropdownChild = SelectorEngine.findOne(SELECTOR_DROPDOWN_ACTIVE_CHILD, active.parentNode);
 
       if (dropdownChild) {
-        dropdownChild.classList.remove(CLASS_NAME_ACTIVE$3);
+        dropdownChild.classList.remove(CLASS_NAME_ACTIVE);
       }
 
       if (active.getAttribute('role') === 'tab') {
@@ -4677,7 +7782,7 @@ var Tab = /*#__PURE__*/function () {
       }
     }
 
-    element.classList.add(CLASS_NAME_ACTIVE$3);
+    element.classList.add(CLASS_NAME_ACTIVE);
 
     if (element.getAttribute('role') === 'tab') {
       element.setAttribute('aria-selected', true);
@@ -4685,17 +7790,21 @@ var Tab = /*#__PURE__*/function () {
 
     reflow(element);
 
-    if (element.classList.contains(CLASS_NAME_FADE$3)) {
-      element.classList.add(CLASS_NAME_SHOW$5);
+    if (element.classList.contains(CLASS_NAME_FADE$1)) {
+      element.classList.add(CLASS_NAME_SHOW$1);
     }
 
-    if (element.parentNode && element.parentNode.classList.contains(CLASS_NAME_DROPDOWN_MENU)) {
-      var dropdownElement = element.closest(SELECTOR_DROPDOWN$1);
+    let parent = element.parentNode;
+
+    if (parent && parent.nodeName === 'LI') {
+      parent = parent.parentNode;
+    }
+
+    if (parent && parent.classList.contains(CLASS_NAME_DROPDOWN_MENU)) {
+      const dropdownElement = element.closest(SELECTOR_DROPDOWN);
 
       if (dropdownElement) {
-        SelectorEngine.find(SELECTOR_DROPDOWN_TOGGLE$1).forEach(function (dropdown) {
-          return dropdown.classList.add(CLASS_NAME_ACTIVE$3);
-        });
+        SelectorEngine.find(SELECTOR_DROPDOWN_TOGGLE, dropdownElement).forEach(dropdown => dropdown.classList.add(CLASS_NAME_ACTIVE));
       }
 
       element.setAttribute('aria-expanded', true);
@@ -4705,35 +7814,23 @@ var Tab = /*#__PURE__*/function () {
       callback();
     }
   } // Static
-  ;
 
-  Tab.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$9) || new Tab(this);
+      const data = Tab.getOrCreateInstance(this);
 
       if (typeof config === 'string') {
         if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
+          throw new TypeError(`No method named "${config}"`);
         }
 
         data[config]();
       }
     });
-  };
+  }
 
-  Tab.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$9);
-  };
-
-  _createClass(Tab, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$9;
-    }
-  }]);
-
-  return Tab;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * Data Api implementation
@@ -4741,9 +7838,16 @@ var Tab = /*#__PURE__*/function () {
  */
 
 
-EventHandler.on(document, EVENT_CLICK_DATA_API$6, SELECTOR_DATA_TOGGLE$4, function (event) {
-  event.preventDefault();
-  var data = Data.getData(this, DATA_KEY$9) || new Tab(this);
+EventHandler.on(document, EVENT_CLICK_DATA_API, SELECTOR_DATA_TOGGLE, function (event) {
+  if (['A', 'AREA'].includes(this.tagName)) {
+    event.preventDefault();
+  }
+
+  if (isDisabled(this)) {
+    return;
+  }
+
+  const data = Tab.getOrCreateInstance(this);
   data.show();
 });
 /**
@@ -4753,77 +7857,80 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$6, SELECTOR_DATA_TOGGLE$4, functi
  * add .Tab to jQuery only if jQuery is present
  */
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
+defineJQueryPlugin(Tab);
 
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$9];
-    $.fn[NAME$9] = Tab.jQueryInterface;
-    $.fn[NAME$9].Constructor = Tab;
-
-    $.fn[NAME$9].noConflict = function () {
-      $.fn[NAME$9] = JQUERY_NO_CONFLICT;
-      return Tab.jQueryInterface;
-    };
-  }
-});
-
+/**
+ * --------------------------------------------------------------------------
+ * Bootstrap (v5.0.2): toast.js
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ * --------------------------------------------------------------------------
+ */
 /**
  * ------------------------------------------------------------------------
  * Constants
  * ------------------------------------------------------------------------
  */
 
-var NAME$a = 'toast';
-var VERSION$a = '5.0.0-alpha3';
-var DATA_KEY$a = 'bs.toast';
-var EVENT_KEY$a = "." + DATA_KEY$a;
-var EVENT_CLICK_DISMISS$1 = "click.dismiss" + EVENT_KEY$a;
-var EVENT_HIDE$4 = "hide" + EVENT_KEY$a;
-var EVENT_HIDDEN$4 = "hidden" + EVENT_KEY$a;
-var EVENT_SHOW$4 = "show" + EVENT_KEY$a;
-var EVENT_SHOWN$4 = "shown" + EVENT_KEY$a;
-var CLASS_NAME_FADE$4 = 'fade';
-var CLASS_NAME_HIDE = 'hide';
-var CLASS_NAME_SHOW$6 = 'show';
-var CLASS_NAME_SHOWING = 'showing';
-var DefaultType$7 = {
+const NAME = 'toast';
+const DATA_KEY = 'bs.toast';
+const EVENT_KEY = `.${DATA_KEY}`;
+const EVENT_CLICK_DISMISS = `click.dismiss${EVENT_KEY}`;
+const EVENT_MOUSEOVER = `mouseover${EVENT_KEY}`;
+const EVENT_MOUSEOUT = `mouseout${EVENT_KEY}`;
+const EVENT_FOCUSIN = `focusin${EVENT_KEY}`;
+const EVENT_FOCUSOUT = `focusout${EVENT_KEY}`;
+const EVENT_HIDE = `hide${EVENT_KEY}`;
+const EVENT_HIDDEN = `hidden${EVENT_KEY}`;
+const EVENT_SHOW = `show${EVENT_KEY}`;
+const EVENT_SHOWN = `shown${EVENT_KEY}`;
+const CLASS_NAME_FADE = 'fade';
+const CLASS_NAME_HIDE = 'hide';
+const CLASS_NAME_SHOW = 'show';
+const CLASS_NAME_SHOWING = 'showing';
+const DefaultType = {
   animation: 'boolean',
   autohide: 'boolean',
   delay: 'number'
 };
-var Default$7 = {
+const Default = {
   animation: true,
   autohide: true,
   delay: 5000
 };
-var SELECTOR_DATA_DISMISS$1 = '[data-dismiss="toast"]';
+const SELECTOR_DATA_DISMISS = '[data-bs-dismiss="toast"]';
 /**
  * ------------------------------------------------------------------------
  * Class Definition
  * ------------------------------------------------------------------------
  */
 
-var Toast = /*#__PURE__*/function () {
-  function Toast(element, config) {
-    this._element = element;
+class Toast extends BaseComponent {
+  constructor(element, config) {
+    super(element);
     this._config = this._getConfig(config);
     this._timeout = null;
+    this._hasMouseInteraction = false;
+    this._hasKeyboardInteraction = false;
 
     this._setListeners();
-
-    Data.setData(element, DATA_KEY$a, this);
   } // Getters
 
 
-  var _proto = Toast.prototype;
+  static get DefaultType() {
+    return DefaultType;
+  }
 
-  // Public
-  _proto.show = function show() {
-    var _this = this;
+  static get Default() {
+    return Default;
+  }
 
-    var showEvent = EventHandler.trigger(this._element, EVENT_SHOW$4);
+  static get NAME() {
+    return NAME;
+  } // Public
+
+
+  show() {
+    const showEvent = EventHandler.trigger(this._element, EVENT_SHOW);
 
     if (showEvent.defaultPrevented) {
       return;
@@ -4832,21 +7939,17 @@ var Toast = /*#__PURE__*/function () {
     this._clearTimeout();
 
     if (this._config.animation) {
-      this._element.classList.add(CLASS_NAME_FADE$4);
+      this._element.classList.add(CLASS_NAME_FADE);
     }
 
-    var complete = function complete() {
-      _this._element.classList.remove(CLASS_NAME_SHOWING);
+    const complete = () => {
+      this._element.classList.remove(CLASS_NAME_SHOWING);
 
-      _this._element.classList.add(CLASS_NAME_SHOW$6);
+      this._element.classList.add(CLASS_NAME_SHOW);
 
-      EventHandler.trigger(_this._element, EVENT_SHOWN$4);
+      EventHandler.trigger(this._element, EVENT_SHOWN);
 
-      if (_this._config.autohide) {
-        _this._timeout = setTimeout(function () {
-          _this.hide();
-        }, _this._config.delay);
-      }
+      this._maybeScheduleHide();
     };
 
     this._element.classList.remove(CLASS_NAME_HIDE);
@@ -4855,122 +7958,122 @@ var Toast = /*#__PURE__*/function () {
 
     this._element.classList.add(CLASS_NAME_SHOWING);
 
-    if (this._config.animation) {
-      var transitionDuration = getTransitionDurationFromElement(this._element);
-      EventHandler.one(this._element, TRANSITION_END, complete);
-      emulateTransitionEnd(this._element, transitionDuration);
-    } else {
-      complete();
-    }
-  };
+    this._queueCallback(complete, this._element, this._config.animation);
+  }
 
-  _proto.hide = function hide() {
-    var _this2 = this;
-
-    if (!this._element.classList.contains(CLASS_NAME_SHOW$6)) {
+  hide() {
+    if (!this._element.classList.contains(CLASS_NAME_SHOW)) {
       return;
     }
 
-    var hideEvent = EventHandler.trigger(this._element, EVENT_HIDE$4);
+    const hideEvent = EventHandler.trigger(this._element, EVENT_HIDE);
 
     if (hideEvent.defaultPrevented) {
       return;
     }
 
-    var complete = function complete() {
-      _this2._element.classList.add(CLASS_NAME_HIDE);
+    const complete = () => {
+      this._element.classList.add(CLASS_NAME_HIDE);
 
-      EventHandler.trigger(_this2._element, EVENT_HIDDEN$4);
+      EventHandler.trigger(this._element, EVENT_HIDDEN);
     };
 
-    this._element.classList.remove(CLASS_NAME_SHOW$6);
+    this._element.classList.remove(CLASS_NAME_SHOW);
 
-    if (this._config.animation) {
-      var transitionDuration = getTransitionDurationFromElement(this._element);
-      EventHandler.one(this._element, TRANSITION_END, complete);
-      emulateTransitionEnd(this._element, transitionDuration);
-    } else {
-      complete();
-    }
-  };
+    this._queueCallback(complete, this._element, this._config.animation);
+  }
 
-  _proto.dispose = function dispose() {
+  dispose() {
     this._clearTimeout();
 
-    if (this._element.classList.contains(CLASS_NAME_SHOW$6)) {
-      this._element.classList.remove(CLASS_NAME_SHOW$6);
+    if (this._element.classList.contains(CLASS_NAME_SHOW)) {
+      this._element.classList.remove(CLASS_NAME_SHOW);
     }
 
-    EventHandler.off(this._element, EVENT_CLICK_DISMISS$1);
-    Data.removeData(this._element, DATA_KEY$a);
-    this._element = null;
-    this._config = null;
+    super.dispose();
   } // Private
-  ;
 
-  _proto._getConfig = function _getConfig(config) {
-    config = _extends({}, Default$7, Manipulator.getDataAttributes(this._element), typeof config === 'object' && config ? config : {});
-    typeCheckConfig(NAME$a, config, this.constructor.DefaultType);
+
+  _getConfig(config) {
+    config = { ...Default,
+      ...Manipulator.getDataAttributes(this._element),
+      ...(typeof config === 'object' && config ? config : {})
+    };
+    typeCheckConfig(NAME, config, this.constructor.DefaultType);
     return config;
-  };
+  }
 
-  _proto._setListeners = function _setListeners() {
-    var _this3 = this;
+  _maybeScheduleHide() {
+    if (!this._config.autohide) {
+      return;
+    }
 
-    EventHandler.on(this._element, EVENT_CLICK_DISMISS$1, SELECTOR_DATA_DISMISS$1, function () {
-      return _this3.hide();
-    });
-  };
+    if (this._hasMouseInteraction || this._hasKeyboardInteraction) {
+      return;
+    }
 
-  _proto._clearTimeout = function _clearTimeout() {
+    this._timeout = setTimeout(() => {
+      this.hide();
+    }, this._config.delay);
+  }
+
+  _onInteraction(event, isInteracting) {
+    switch (event.type) {
+      case 'mouseover':
+      case 'mouseout':
+        this._hasMouseInteraction = isInteracting;
+        break;
+
+      case 'focusin':
+      case 'focusout':
+        this._hasKeyboardInteraction = isInteracting;
+        break;
+    }
+
+    if (isInteracting) {
+      this._clearTimeout();
+
+      return;
+    }
+
+    const nextElement = event.relatedTarget;
+
+    if (this._element === nextElement || this._element.contains(nextElement)) {
+      return;
+    }
+
+    this._maybeScheduleHide();
+  }
+
+  _setListeners() {
+    EventHandler.on(this._element, EVENT_CLICK_DISMISS, SELECTOR_DATA_DISMISS, () => this.hide());
+    EventHandler.on(this._element, EVENT_MOUSEOVER, event => this._onInteraction(event, true));
+    EventHandler.on(this._element, EVENT_MOUSEOUT, event => this._onInteraction(event, false));
+    EventHandler.on(this._element, EVENT_FOCUSIN, event => this._onInteraction(event, true));
+    EventHandler.on(this._element, EVENT_FOCUSOUT, event => this._onInteraction(event, false));
+  }
+
+  _clearTimeout() {
     clearTimeout(this._timeout);
     this._timeout = null;
   } // Static
-  ;
 
-  Toast.jQueryInterface = function jQueryInterface(config) {
+
+  static jQueryInterface(config) {
     return this.each(function () {
-      var data = Data.getData(this, DATA_KEY$a);
-
-      var _config = typeof config === 'object' && config;
-
-      if (!data) {
-        data = new Toast(this, _config);
-      }
+      const data = Toast.getOrCreateInstance(this, config);
 
       if (typeof config === 'string') {
         if (typeof data[config] === 'undefined') {
-          throw new TypeError("No method named \"" + config + "\"");
+          throw new TypeError(`No method named "${config}"`);
         }
 
         data[config](this);
       }
     });
-  };
+  }
 
-  Toast.getInstance = function getInstance(element) {
-    return Data.getData(element, DATA_KEY$a);
-  };
-
-  _createClass(Toast, null, [{
-    key: "VERSION",
-    get: function get() {
-      return VERSION$a;
-    }
-  }, {
-    key: "DefaultType",
-    get: function get() {
-      return DefaultType$7;
-    }
-  }, {
-    key: "Default",
-    get: function get() {
-      return Default$7;
-    }
-  }]);
-
-  return Toast;
-}();
+}
 /**
  * ------------------------------------------------------------------------
  * jQuery
@@ -4979,21 +8082,7 @@ var Toast = /*#__PURE__*/function () {
  */
 
 
-onDOMContentLoaded(function () {
-  var $ = getjQuery();
-  /* istanbul ignore if */
-
-  if ($) {
-    var JQUERY_NO_CONFLICT = $.fn[NAME$a];
-    $.fn[NAME$a] = Toast.jQueryInterface;
-    $.fn[NAME$a].Constructor = Toast;
-
-    $.fn[NAME$a].noConflict = function () {
-      $.fn[NAME$a] = JQUERY_NO_CONFLICT;
-      return Toast.jQueryInterface;
-    };
-  }
-});
+defineJQueryPlugin(Toast);
 
 
 //# sourceMappingURL=bootstrap.esm.js.map
@@ -5009,17 +8098,17 @@ onDOMContentLoaded(function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
- * jQuery JavaScript Library v3.5.1
+ * jQuery JavaScript Library v3.6.0
  * https://jquery.com/
  *
  * Includes Sizzle.js
  * https://sizzlejs.com/
  *
- * Copyright JS Foundation and other contributors
+ * Copyright OpenJS Foundation and other contributors
  * Released under the MIT license
  * https://jquery.org/license
  *
- * Date: 2020-05-04T22:49Z
+ * Date: 2021-03-02T17:08Z
  */
 ( function( global, factory ) {
 
@@ -5086,12 +8175,16 @@ var support = {};
 
 var isFunction = function isFunction( obj ) {
 
-      // Support: Chrome <=57, Firefox <=52
-      // In some browsers, typeof returns "function" for HTML <object> elements
-      // (i.e., `typeof document.createElement( "object" ) === "function"`).
-      // We don't want to classify *any* DOM node as a function.
-      return typeof obj === "function" && typeof obj.nodeType !== "number";
-  };
+		// Support: Chrome <=57, Firefox <=52
+		// In some browsers, typeof returns "function" for HTML <object> elements
+		// (i.e., `typeof document.createElement( "object" ) === "function"`).
+		// We don't want to classify *any* DOM node as a function.
+		// Support: QtWeb <=3.8.5, WebKit <=534.34, wkhtmltopdf tool <=0.12.5
+		// Plus for old WebKit, typeof returns "function" for HTML collections
+		// (e.g., `typeof document.getElementsByTagName("div") === "function"`). (gh-4756)
+		return typeof obj === "function" && typeof obj.nodeType !== "number" &&
+			typeof obj.item !== "function";
+	};
 
 
 var isWindow = function isWindow( obj ) {
@@ -5157,7 +8250,7 @@ function toType( obj ) {
 
 
 var
-	version = "3.5.1",
+	version = "3.6.0",
 
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
@@ -5411,7 +8504,7 @@ jQuery.extend( {
 			if ( isArrayLike( Object( arr ) ) ) {
 				jQuery.merge( ret,
 					typeof arr === "string" ?
-					[ arr ] : arr
+						[ arr ] : arr
 				);
 			} else {
 				push.call( ret, arr );
@@ -5506,9 +8599,9 @@ if ( typeof Symbol === "function" ) {
 
 // Populate the class2type map
 jQuery.each( "Boolean Number String Function Array Date RegExp Object Error Symbol".split( " " ),
-function( _i, name ) {
-	class2type[ "[object " + name + "]" ] = name.toLowerCase();
-} );
+	function( _i, name ) {
+		class2type[ "[object " + name + "]" ] = name.toLowerCase();
+	} );
 
 function isArrayLike( obj ) {
 
@@ -5528,14 +8621,14 @@ function isArrayLike( obj ) {
 }
 var Sizzle =
 /*!
- * Sizzle CSS Selector Engine v2.3.5
+ * Sizzle CSS Selector Engine v2.3.6
  * https://sizzlejs.com/
  *
  * Copyright JS Foundation and other contributors
  * Released under the MIT license
  * https://js.foundation/
  *
- * Date: 2020-03-14
+ * Date: 2021-02-16
  */
 ( function( window ) {
 var i,
@@ -6118,8 +9211,8 @@ support = Sizzle.support = {};
  * @returns {Boolean} True iff elem is a non-HTML XML node
  */
 isXML = Sizzle.isXML = function( elem ) {
-	var namespace = elem.namespaceURI,
-		docElem = ( elem.ownerDocument || elem ).documentElement;
+	var namespace = elem && elem.namespaceURI,
+		docElem = elem && ( elem.ownerDocument || elem ).documentElement;
 
 	// Support: IE <=8
 	// Assume HTML when documentElement doesn't yet exist, such as inside loading iframes
@@ -8034,9 +11127,9 @@ var rneedsContext = jQuery.expr.match.needsContext;
 
 function nodeName( elem, name ) {
 
-  return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+	return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
 
-};
+}
 var rsingleTag = ( /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i );
 
 
@@ -9007,8 +12100,8 @@ jQuery.extend( {
 			resolveContexts = Array( i ),
 			resolveValues = slice.call( arguments ),
 
-			// the master Deferred
-			master = jQuery.Deferred(),
+			// the primary Deferred
+			primary = jQuery.Deferred(),
 
 			// subordinate callback factory
 			updateFunc = function( i ) {
@@ -9016,30 +12109,30 @@ jQuery.extend( {
 					resolveContexts[ i ] = this;
 					resolveValues[ i ] = arguments.length > 1 ? slice.call( arguments ) : value;
 					if ( !( --remaining ) ) {
-						master.resolveWith( resolveContexts, resolveValues );
+						primary.resolveWith( resolveContexts, resolveValues );
 					}
 				};
 			};
 
 		// Single- and empty arguments are adopted like Promise.resolve
 		if ( remaining <= 1 ) {
-			adoptValue( singleValue, master.done( updateFunc( i ) ).resolve, master.reject,
+			adoptValue( singleValue, primary.done( updateFunc( i ) ).resolve, primary.reject,
 				!remaining );
 
 			// Use .then() to unwrap secondary thenables (cf. gh-3000)
-			if ( master.state() === "pending" ||
+			if ( primary.state() === "pending" ||
 				isFunction( resolveValues[ i ] && resolveValues[ i ].then ) ) {
 
-				return master.then();
+				return primary.then();
 			}
 		}
 
 		// Multiple arguments are aggregated like Promise.all array elements
 		while ( i-- ) {
-			adoptValue( resolveValues[ i ], updateFunc( i ), master.reject );
+			adoptValue( resolveValues[ i ], updateFunc( i ), primary.reject );
 		}
 
-		return master.promise();
+		return primary.promise();
 	}
 } );
 
@@ -9190,8 +12283,8 @@ var access = function( elems, fn, key, value, chainable, emptyGet, raw ) {
 			for ( ; i < len; i++ ) {
 				fn(
 					elems[ i ], key, raw ?
-					value :
-					value.call( elems[ i ], i, fn( elems[ i ], key ) )
+						value :
+						value.call( elems[ i ], i, fn( elems[ i ], key ) )
 				);
 			}
 		}
@@ -10099,10 +13192,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 }
 
 
-var
-	rkeyEvent = /^key/,
-	rmouseEvent = /^(?:mouse|pointer|contextmenu|drag|drop)|click/,
-	rtypenamespace = /^([^.]*)(?:\.(.+)|)/;
+var rtypenamespace = /^([^.]*)(?:\.(.+)|)/;
 
 function returnTrue() {
 	return true;
@@ -10397,8 +13487,8 @@ jQuery.event = {
 			event = jQuery.event.fix( nativeEvent ),
 
 			handlers = (
-					dataPriv.get( this, "events" ) || Object.create( null )
-				)[ event.type ] || [],
+				dataPriv.get( this, "events" ) || Object.create( null )
+			)[ event.type ] || [],
 			special = jQuery.event.special[ event.type ] || {};
 
 		// Use the fix-ed jQuery.Event rather than the (read-only) native event
@@ -10522,12 +13612,12 @@ jQuery.event = {
 			get: isFunction( hook ) ?
 				function() {
 					if ( this.originalEvent ) {
-							return hook( this.originalEvent );
+						return hook( this.originalEvent );
 					}
 				} :
 				function() {
 					if ( this.originalEvent ) {
-							return this.originalEvent[ name ];
+						return this.originalEvent[ name ];
 					}
 				},
 
@@ -10666,7 +13756,13 @@ function leverageNative( el, type, expectSync ) {
 						// Cancel the outer synthetic event
 						event.stopImmediatePropagation();
 						event.preventDefault();
-						return result.value;
+
+						// Support: Chrome 86+
+						// In Chrome, if an element having a focusout handler is blurred by
+						// clicking outside of it, it invokes the handler synchronously. If
+						// that handler calls `.remove()` on the element, the data is cleared,
+						// leaving `result` undefined. We need to guard against this.
+						return result && result.value;
 					}
 
 				// If this is an inner synthetic event for an event with a bubbling surrogate
@@ -10831,34 +13927,7 @@ jQuery.each( {
 	targetTouches: true,
 	toElement: true,
 	touches: true,
-
-	which: function( event ) {
-		var button = event.button;
-
-		// Add which for key events
-		if ( event.which == null && rkeyEvent.test( event.type ) ) {
-			return event.charCode != null ? event.charCode : event.keyCode;
-		}
-
-		// Add which for click: 1 === left; 2 === middle; 3 === right
-		if ( !event.which && button !== undefined && rmouseEvent.test( event.type ) ) {
-			if ( button & 1 ) {
-				return 1;
-			}
-
-			if ( button & 2 ) {
-				return 3;
-			}
-
-			if ( button & 4 ) {
-				return 2;
-			}
-
-			return 0;
-		}
-
-		return event.which;
-	}
+	which: true
 }, jQuery.event.addProp );
 
 jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateType ) {
@@ -10881,6 +13950,12 @@ jQuery.each( { focus: "focusin", blur: "focusout" }, function( type, delegateTyp
 			leverageNative( this, type );
 
 			// Return non-false to allow normal event-path propagation
+			return true;
+		},
+
+		// Suppress native focus or blur as it's already being fired
+		// in leverageNative.
+		_default: function() {
 			return true;
 		},
 
@@ -11551,6 +14626,10 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 		// set in CSS while `offset*` properties report correct values.
 		// Behavior in IE 9 is more subtle than in newer versions & it passes
 		// some versions of this test; make sure not to make it pass there!
+		//
+		// Support: Firefox 70+
+		// Only Firefox includes border widths
+		// in computed dimensions. (gh-4529)
 		reliableTrDimensions: function() {
 			var table, tr, trChild, trStyle;
 			if ( reliableTrDimensionsVal == null ) {
@@ -11558,9 +14637,22 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 				tr = document.createElement( "tr" );
 				trChild = document.createElement( "div" );
 
-				table.style.cssText = "position:absolute;left:-11111px";
+				table.style.cssText = "position:absolute;left:-11111px;border-collapse:separate";
+				tr.style.cssText = "border:1px solid";
+
+				// Support: Chrome 86+
+				// Height set through cssText does not get applied.
+				// Computed height then comes back as 0.
 				tr.style.height = "1px";
 				trChild.style.height = "9px";
+
+				// Support: Android 8 Chrome 86+
+				// In our bodyBackground.html iframe,
+				// display for all div elements is set to "inline",
+				// which causes a problem only in Android 8 Chrome 86.
+				// Ensuring the div is display: block
+				// gets around this issue.
+				trChild.style.display = "block";
 
 				documentElement
 					.appendChild( table )
@@ -11568,7 +14660,9 @@ var rboxStyle = new RegExp( cssExpand.join( "|" ), "i" );
 					.appendChild( trChild );
 
 				trStyle = window.getComputedStyle( tr );
-				reliableTrDimensionsVal = parseInt( trStyle.height ) > 3;
+				reliableTrDimensionsVal = ( parseInt( trStyle.height, 10 ) +
+					parseInt( trStyle.borderTopWidth, 10 ) +
+					parseInt( trStyle.borderBottomWidth, 10 ) ) === tr.offsetHeight;
 
 				documentElement.removeChild( table );
 			}
@@ -12032,10 +15126,10 @@ jQuery.each( [ "height", "width" ], function( _i, dimension ) {
 					// Running getBoundingClientRect on a disconnected node
 					// in IE throws an error.
 					( !elem.getClientRects().length || !elem.getBoundingClientRect().width ) ?
-						swap( elem, cssShow, function() {
-							return getWidthOrHeight( elem, dimension, extra );
-						} ) :
-						getWidthOrHeight( elem, dimension, extra );
+					swap( elem, cssShow, function() {
+						return getWidthOrHeight( elem, dimension, extra );
+					} ) :
+					getWidthOrHeight( elem, dimension, extra );
 			}
 		},
 
@@ -12094,7 +15188,7 @@ jQuery.cssHooks.marginLeft = addGetHookIf( support.reliableMarginLeft,
 					swap( elem, { marginLeft: 0 }, function() {
 						return elem.getBoundingClientRect().left;
 					} )
-				) + "px";
+			) + "px";
 		}
 	}
 );
@@ -12233,7 +15327,7 @@ Tween.propHooks = {
 			if ( jQuery.fx.step[ tween.prop ] ) {
 				jQuery.fx.step[ tween.prop ]( tween );
 			} else if ( tween.elem.nodeType === 1 && (
-					jQuery.cssHooks[ tween.prop ] ||
+				jQuery.cssHooks[ tween.prop ] ||
 					tween.elem.style[ finalPropName( tween.prop ) ] != null ) ) {
 				jQuery.style( tween.elem, tween.prop, tween.now + tween.unit );
 			} else {
@@ -12478,7 +15572,7 @@ function defaultPrefilter( elem, props, opts ) {
 
 			anim.done( function() {
 
-			/* eslint-enable no-loop-func */
+				/* eslint-enable no-loop-func */
 
 				// The final step of a "hide" animation is actually hiding the element
 				if ( !hidden ) {
@@ -12598,7 +15692,7 @@ function Animation( elem, properties, options ) {
 			tweens: [],
 			createTween: function( prop, end ) {
 				var tween = jQuery.Tween( elem, animation.opts, prop, end,
-						animation.opts.specialEasing[ prop ] || animation.opts.easing );
+					animation.opts.specialEasing[ prop ] || animation.opts.easing );
 				animation.tweens.push( tween );
 				return tween;
 			},
@@ -12771,7 +15865,8 @@ jQuery.fn.extend( {
 					anim.stop( true );
 				}
 			};
-			doAnimation.finish = doAnimation;
+
+		doAnimation.finish = doAnimation;
 
 		return empty || optall.queue === false ?
 			this.each( doAnimation ) :
@@ -13411,8 +16506,8 @@ jQuery.fn.extend( {
 				if ( this.setAttribute ) {
 					this.setAttribute( "class",
 						className || value === false ?
-						"" :
-						dataPriv.get( this, "__className__" ) || ""
+							"" :
+							dataPriv.get( this, "__className__" ) || ""
 					);
 				}
 			}
@@ -13427,7 +16522,7 @@ jQuery.fn.extend( {
 		while ( ( elem = this[ i++ ] ) ) {
 			if ( elem.nodeType === 1 &&
 				( " " + stripAndCollapse( getClass( elem ) ) + " " ).indexOf( className ) > -1 ) {
-					return true;
+				return true;
 			}
 		}
 
@@ -13717,9 +16812,7 @@ jQuery.extend( jQuery.event, {
 				special.bindType || type;
 
 			// jQuery handler
-			handle = (
-					dataPriv.get( cur, "events" ) || Object.create( null )
-				)[ event.type ] &&
+			handle = ( dataPriv.get( cur, "events" ) || Object.create( null ) )[ event.type ] &&
 				dataPriv.get( cur, "handle" );
 			if ( handle ) {
 				handle.apply( cur, data );
@@ -13866,7 +16959,7 @@ var rquery = ( /\?/ );
 
 // Cross-browser xml parsing
 jQuery.parseXML = function( data ) {
-	var xml;
+	var xml, parserErrorElem;
 	if ( !data || typeof data !== "string" ) {
 		return null;
 	}
@@ -13875,12 +16968,17 @@ jQuery.parseXML = function( data ) {
 	// IE throws on parseFromString with invalid input.
 	try {
 		xml = ( new window.DOMParser() ).parseFromString( data, "text/xml" );
-	} catch ( e ) {
-		xml = undefined;
-	}
+	} catch ( e ) {}
 
-	if ( !xml || xml.getElementsByTagName( "parsererror" ).length ) {
-		jQuery.error( "Invalid XML: " + data );
+	parserErrorElem = xml && xml.getElementsByTagName( "parsererror" )[ 0 ];
+	if ( !xml || parserErrorElem ) {
+		jQuery.error( "Invalid XML: " + (
+			parserErrorElem ?
+				jQuery.map( parserErrorElem.childNodes, function( el ) {
+					return el.textContent;
+				} ).join( "\n" ) :
+				data
+		) );
 	}
 	return xml;
 };
@@ -13981,16 +17079,14 @@ jQuery.fn.extend( {
 			// Can add propHook for "elements" to filter or add form elements
 			var elements = jQuery.prop( this, "elements" );
 			return elements ? jQuery.makeArray( elements ) : this;
-		} )
-		.filter( function() {
+		} ).filter( function() {
 			var type = this.type;
 
 			// Use .is( ":disabled" ) so that fieldset[disabled] works
 			return this.name && !jQuery( this ).is( ":disabled" ) &&
 				rsubmittable.test( this.nodeName ) && !rsubmitterTypes.test( type ) &&
 				( this.checked || !rcheckableType.test( type ) );
-		} )
-		.map( function( _i, elem ) {
+		} ).map( function( _i, elem ) {
 			var val = jQuery( this ).val();
 
 			if ( val == null ) {
@@ -14043,7 +17139,8 @@ var
 
 	// Anchor tag for parsing the document origin
 	originAnchor = document.createElement( "a" );
-	originAnchor.href = location.href;
+
+originAnchor.href = location.href;
 
 // Base "constructor" for jQuery.ajaxPrefilter and jQuery.ajaxTransport
 function addToPrefiltersOrTransports( structure ) {
@@ -14424,8 +17521,8 @@ jQuery.extend( {
 			// Context for global events is callbackContext if it is a DOM node or jQuery collection
 			globalEventContext = s.context &&
 				( callbackContext.nodeType || callbackContext.jquery ) ?
-					jQuery( callbackContext ) :
-					jQuery.event,
+				jQuery( callbackContext ) :
+				jQuery.event,
 
 			// Deferreds
 			deferred = jQuery.Deferred(),
@@ -14737,8 +17834,10 @@ jQuery.extend( {
 				response = ajaxHandleResponses( s, jqXHR, responses );
 			}
 
-			// Use a noop converter for missing script
-			if ( !isSuccess && jQuery.inArray( "script", s.dataTypes ) > -1 ) {
+			// Use a noop converter for missing script but not if jsonp
+			if ( !isSuccess &&
+				jQuery.inArray( "script", s.dataTypes ) > -1 &&
+				jQuery.inArray( "json", s.dataTypes ) < 0 ) {
 				s.converters[ "text script" ] = function() {};
 			}
 
@@ -15476,12 +18575,6 @@ jQuery.offset = {
 			options.using.call( elem, props );
 
 		} else {
-			if ( typeof props.top === "number" ) {
-				props.top += "px";
-			}
-			if ( typeof props.left === "number" ) {
-				props.left += "px";
-			}
 			curElem.css( props );
 		}
 	}
@@ -15650,8 +18743,11 @@ jQuery.each( [ "top", "left" ], function( _i, prop ) {
 
 // Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
 jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
-	jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name },
-		function( defaultExtra, funcName ) {
+	jQuery.each( {
+		padding: "inner" + name,
+		content: type,
+		"": "outer" + name
+	}, function( defaultExtra, funcName ) {
 
 		// Margin is only for outerHeight, outerWidth
 		jQuery.fn[ funcName ] = function( margin, value ) {
@@ -15736,7 +18832,8 @@ jQuery.fn.extend( {
 	}
 } );
 
-jQuery.each( ( "blur focus focusin focusout resize scroll click dblclick " +
+jQuery.each(
+	( "blur focus focusin focusout resize scroll click dblclick " +
 	"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
 	"change select submit keydown keypress keyup contextmenu" ).split( " " ),
 	function( _i, name ) {
@@ -15747,7 +18844,8 @@ jQuery.each( ( "blur focus focusin focusout resize scroll click dblclick " +
 				this.on( name, null, data, fn ) :
 				this.trigger( name );
 		};
-	} );
+	}
+);
 
 
 
