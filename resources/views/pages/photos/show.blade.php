@@ -143,6 +143,42 @@
                 $("#caption").focus();
                 return
             }
+            var formData = new FormData($('form#photoUploadForm')[0]);
+            resize.croppie('result', {
+                type: 'canvas',
+                size: {
+                    width: {{config('photo.maxWidth')}},
+                    height: {{config('photo.maxHeight')}}
+                }
+            }).then(function (img) {
+                $('.btn-upload-image').prop('disabled', true);
+                var dataURL = img;
+                var blob = dataURItoBlob(dataURL);
+                formData.append("file", blob, '{{pathinfo($record->src,PATHINFO_BASENAME)}}');
+
+                $.ajax({
+                    url: '{{route('photo::photos.update',$record->id)}}',
+                    method: 'post',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (result) {
+                        @if(request('returnUrl') && filter_var(request('returnUrl'),FILTER_VALIDATE_URL))
+                            window.location.href = '{{request('returnUrl')}}'
+                        @else
+                        window.location.reload();
+                        @endif
+
+                        $('.btn-upload-image').prop('disabled', false);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        $('.btn-upload-image').prop('disabled', false);
+                    }
+                });
+            });
         });
 
         function dataURItoBlob(dataURI) {

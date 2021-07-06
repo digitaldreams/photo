@@ -13,7 +13,7 @@ require('laravel-mix-purgecss');
  */
 mix.setPublicPath(path.join(__dirname));
 mix.setResourceRoot(path.join(__dirname, 'resources'))
-    .js('resources/js/photo.js', 'dist/js')
+    .js('resources/js/photo.js', 'dist/js').sourceMaps()
     .extract(['popper.js', 'jquery', 'bootstrap'])
     .sass('resources/sass/photo.scss', 'dist/css').purgeCss({
     extend: {
