@@ -8,11 +8,15 @@
     </li>
     <li class="breadcrumb-item">Edit</li>
 @endsection
+@section('css')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet"/>
+@endsection
 @section('header')
-<i class="fa fa-pencil"></i> {{!empty($model->caption)?$model->caption:$model->id}}
+    <i class="fa fa-pencil"></i> {{!empty($model->caption)?$model->caption:$model->id}}
 @endsection
 @section('tools')
-    <a class="btn btn-secondary" href="{{route('photo::photos.create')}}"><i class="fa fa-plus"></i> Create New Photo</a>
+    <a class="btn btn-secondary" href="{{route('photo::photos.create')}}"><i class="fa fa-plus"></i> Create New
+        Photo</a>
 @endsection
 @section('content')
     <div class="row">
@@ -30,12 +34,13 @@
 @endSection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
     <script>
         $("#photo_tags").select2({
             tags: true,
             tokenSeparators: [",",],
-            createSearchChoice: function(term, data) {
-                if ($(data).filter(function() {
+            createSearchChoice: function (term, data) {
+                if ($(data).filter(function () {
                     return this.text.localeCompare(term) === 0;
                 }).length === 0) {
                     return {

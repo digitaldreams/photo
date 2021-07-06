@@ -53,6 +53,10 @@ class PhotoServiceProvider extends ServiceProvider
             __DIR__ . '/../config/photo.php',
             'photo'
         );
+        $this->publishes([
+            __DIR__ . '/../dist' => public_path('photo'),
+        ], 'photo-dist');
+
     }
 
     /**

@@ -152,7 +152,8 @@ Here render method take class name as first argument and style as second.
             $thumbnailWidth = 220;
             $thumbnailHheight= 200;
             $crop="no"; // "yes" will resize image automatically based on your maximum height,width.
-            $thumbnailPath = "thumbnails"; // Thumbnails path are relative to main Image folder. In this case it will create a folder thumbnails under posts folder.
+            $thumbnailPath = "thumbnails"; // Thumbnails path are relative to main Image folder. 
+                                            //In this case it will create a folder thumbnails under posts folder.
                         
             $post->image =  $this->photoService
                                     ->setDimension($thumbnailWidth, $thumbnailHheight, $thumbnailPath)
