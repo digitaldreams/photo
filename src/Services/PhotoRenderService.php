@@ -40,7 +40,8 @@ class PhotoRenderService
     /**
      * @var array
      */
-    protected array $info = [];
+    protected array
+        $info = [];
 
     /**
      * @param \Photo\Models\Photo $photo

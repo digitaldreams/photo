@@ -48,7 +48,29 @@
             </div>
             <div id="upload-demo"></div>
             <div class="form-group text-center">
-                <button class="btn btn-primary" id="upload-image">Resize Image</button>
+                <button class="btn btn-primary" id="upload-image">Crop Image</button>
+            </div>
+        </form>
+        <p>Frame size</p>
+        <form>
+            <div class="row">
+                <div class="mb-3 col-5">
+                    <div class="input-group">
+                        <div class="input-group-text">Width</div>
+                        <input type="number" class="form-control" name="maxWidth" value="{{config('photo.maxWidth')}}"
+                               required>
+                    </div>
+                </div>
+                <div class="mb-3 col-5">
+                    <div class="input-group">
+                        <div class="input-group-text">Height</div>
+                        <input type="number" class="form-control" name="maxWidth" value="{{config('photo.maxHeight')}}"
+                               required>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <input type="submit" class="btn btn-secondary" value="Reset Frame size">
+                </div>
             </div>
         </form>
         <hr/>
@@ -125,13 +147,13 @@
             enforceBoundary: false,
             url: '{{$record->getUrl()}}',
             viewport: { // Default { width: 100, height: 100, type: 'square' }
-                width: "{{config('photo.maxWidth')}}",
-                height: '{{config('photo.maxHeight')}}',
-                type: 'square' //square
+                width: "{{request('maxWidth',config('photo.maxWidth'))}}",
+                height: '{{request('maxHeight',config('photo.maxHeight'))}}',
+                type: '{{request('viewportType',"square")}}' //square
             },
             boundary: {
-                width: {{config('photo.maxWidth')}}+100,
-                height: {{config('photo.maxHeight')}}+100
+                width: {{request('maxWidth',config('photo.maxWidth'))}} + 100,
+                height: {{request('maxHeight',config('photo.maxHeight'))}} + 100
             },
 
         });

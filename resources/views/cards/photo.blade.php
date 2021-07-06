@@ -12,7 +12,7 @@
         <div class="btn-group col-2 text-center">
             <div class="dropdown" id="dropdown-{{$record->id}}">
                 <a href="#" title="Click here to See Action Buttons" class="fa fa-ellipsis-v" data-toggle="dropdown"
-                   role="button" aria-expanded="false">
+                   role="button" aria-expanded="false">...
                 </a>
                 <ul class="dropdown-menu">
                     @can('update',$record)
