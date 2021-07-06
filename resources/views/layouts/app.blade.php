@@ -6,7 +6,6 @@
     <title>{{config('app.name')}}</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="{{asset('photo/css/app.css')}}" crossorigin="anonymous">
     <link rel="stylesheet" href="{{asset('photo/css/photo.css')}}" crossorigin="anonymous">
 
 

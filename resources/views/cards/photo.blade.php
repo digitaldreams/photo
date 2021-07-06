@@ -47,7 +47,7 @@
 
     <div class="card-footer bg-transparent">
         @foreach($record->tags as $tag)
-            <a class="badge badge-light" href="{{route('photo::photos.index',['tag'=>$tag->name])}}">{{$tag->name}}</a>
+            <a class="link-dark" href="{{route('photo::photos.index',['tag'=>$tag->name])}}">{{$tag->name}}</a>
         @endforeach
 
     </div>

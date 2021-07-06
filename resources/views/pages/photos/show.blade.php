@@ -70,7 +70,7 @@
                             </div>
                         </div>
                         @foreach($info as $name=>$value)
-                            {{$name}}:<span class="badge badge-light">{{$value}}</span>
+                            {{$name}}:<span class="badge bg-secondary">{{$value}}</span>
                         @endforeach
                     </div>
                 @endforeach
