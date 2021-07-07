@@ -110,6 +110,9 @@ class PhotoRenderService
         if ($size) {
             $info = [];
             $info['size'] = round($this->storage->size($source) / 1000) . ' kb';
+            $wh = getimagesize($mainUrl);
+            $info['width'] = $wh[0] ?? null;
+            $info['height'] = $wh[1] ?? null;
             $this->info[$mainUrl] = $info;
         }
 
@@ -158,7 +161,11 @@ class PhotoRenderService
                 if ($size) {
                     $info = [];
                     $info['size'] = round($this->storage->size($thumbPath) / 1000) . ' kb';
+                    $wh = getimagesize($thumbUrl);
+                    $info['width'] = $wh[0] ?? null;
+                    $info['height'] = $wh[1] ?? null;
                     $this->info[$thumbUrl] = $info;
+
                 }
             }
 
