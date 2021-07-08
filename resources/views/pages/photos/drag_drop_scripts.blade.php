@@ -53,7 +53,7 @@
         var whiteListUrl = ["images.unsplash.com", "instagram.fdac13-1.fna.fbcdn.net"];
         var ext = photoUrl.pathname.split('.').pop();
         var allowedExt = ["jpg", "jpeg", "png", 'gif', 'webp'];
-        if ((allowedExt.length > 0 && allowedExt.indexOf(ext) !== -1) || whiteListUrl.indexOf(photoUrl.hostname) !== -1) {
+        if ((allowedExt.length > 0 && allowedExt.indexOf(ext.toLowerCase()) !== -1) || whiteListUrl.indexOf(photoUrl.hostname) !== -1) {
             $("#downloading-status").text('Downloading....');
             $.get(url, {
                 'url': pastedData,
