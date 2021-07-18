@@ -77,7 +77,7 @@
         <div class="card">
             <h3 class="card-header text-center">Image Sources</h3>
             <div class="card-body">
-                @foreach($photoRenderService->getImageDetailsInfo($record->src) as $url=>$info)
+                @foreach($record->info as $url=>$info)
                     <div class="form-group form-group-sm mb-3">
                         <div class="input-group">
                             <input type="text" class="form-control" value="{{$url}}"

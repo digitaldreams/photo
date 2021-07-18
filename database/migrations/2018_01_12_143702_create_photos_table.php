@@ -16,13 +16,16 @@ class CreatePhotosTable extends Migration
         Schema::create('photo_photos', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id')->unsigned()->nullable();
-            $table->string('caption')->nullable();
+            $table->enum('status', ['active', 'inactive', 'pending'])->default('active');
             $table->string('mime_type', 100)->nullable();
             $table->string('src')->unique();
-
-            $table->enum('status', ['active', 'inactive', 'pending'])->default('active');
+            $table->string('src_webp')->nullable();
+            $table->string('caption')->nullable();
+            $table->json('thumbnails')->nullable();
+            $table->string('disk')->default(env('FILESYSTEM_DRIVER'));
+            $table->json('info')->nullable();
+            $table->string('hash', 100)->nullable();
             $table->text('exif')->nullable();
-            $table->dateTime('taken_at')->nullable();
             $table->dateTime('captured_at')->nullable();
 
             $table->string('photoable_type')->nullable();

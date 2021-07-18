@@ -51,11 +51,11 @@ class PhotoRenderService
     public function render(Photo $photo): string
     {
         $tag = '<picture>';
-        $mainUrls = $this->getMainUrls($photo->src);
+        $mainUrls = $this->getMainUrls($photo);
         if (isset($mainUrls[1])) {
             $tag .= '<source media="(min-width:577px)" type="' . $mainUrls[1]['type'] . '" srcset="' . $mainUrls[1]['url'] . '">';
         }
-        $thumbs = $this->getThumbnailUrls($photo->src);
+        $thumbs = $this->getThumbnailUrls($photo->thumbnails);
 
         foreach ($thumbs as $thumb) {
             $tag .= '<source media="(max-width:576px)" type="' . $thumb['type'] . '" srcset="' . $thumb['url'] . '">';
@@ -75,7 +75,7 @@ class PhotoRenderService
     public function renderThumbnails(Photo $photo): string
     {
         $tag = '<picture>';
-        $thumbs = $this->getThumbnailUrls($photo->src);
+        $thumbs = $this->getThumbnailUrls($photo->thumbnails);
         if (empty($thumbs)) {
             $tag .= '<img src="' . config('photo.default') . '" alt="Our Default Image source" class="card-img-top  img img-responsive">';
             $tag .= '</picture>';
@@ -99,38 +99,20 @@ class PhotoRenderService
      *
      * @return array
      */
-    public function getMainUrls($source, $size = false): array
+    public function getMainUrls(Photo $photo, $size = false): array
     {
-        $mainUrl = $this->storage->url($source);
+        $mainUrl = $this->storage->url($photo->src);
         $sourceSets[] = [
-            'type' => 'image/' . pathinfo($source, PATHINFO_EXTENSION),
+            'type' => 'image/' . pathinfo($photo->src, PATHINFO_EXTENSION),
             'url' => $mainUrl,
         ];
 
-        if ($size) {
-            $info = [];
-            $info['size'] = round($this->storage->size($source) / 1000) . ' kb';
-            $wh = getimagesize($mainUrl);
-            $info['width'] = $wh[0] ?? null;
-            $info['height'] = $wh[1] ?? null;
-            $this->info[$mainUrl] = $info;
-        }
-
-        $pathInfo = pathinfo($source);
-        $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-
-        if ($this->exists($webP)) {
-            $mainWebP = $this->storage->url($webP);
+        if (!empty($photo->src_webp) && $this->storage->exists($photo->src_webp)) {
+            $mainWebP = $this->storage->url($photo->src_webp);
             $sourceSets[] = [
                 'type' => 'image/webp',
                 'url' => $mainWebP,
             ];
-
-            if ($size) {
-                $info = [];
-                $info['size'] = round($this->storage->size($webP) / 1000) . ' kb';
-                $this->info[$mainWebP] = $info;
-            }
         }
 
         return $sourceSets;
@@ -143,45 +125,17 @@ class PhotoRenderService
      *
      * @return array
      */
-    public function getThumbnailUrls($source, $size = false): array
+    public function getThumbnailUrls($sources, $size = false): array
     {
         $sourceSets = [];
-        $pathInfo = pathinfo($source);
 
-        foreach (config('photo.sizes', []) as $name => $info) {
-            $thumbWebPPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
-            $thumbPath = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
+        foreach ($sources as $dimensionFormat => $path) {
 
-            if ($this->exists($thumbPath)) {
+            if ($this->storage->exists($path)) {
                 $sourceSets[] = [
-                    'type' => 'image/' . $pathInfo['extension'],
-                    'url' => $thumbUrl = $this->storage->url($thumbPath),
+                    'type' => 'image/' . pathinfo($path, PATHINFO_EXTENSION),
+                    'url' => $thumbUrl = $this->storage->url($path),
                 ];
-
-                if ($size) {
-                    $info = [];
-                    $info['size'] = round($this->storage->size($thumbPath) / 1000) . ' kb';
-                    $wh = getimagesize($thumbUrl);
-                    $info['width'] = $wh[0] ?? null;
-                    $info['height'] = $wh[1] ?? null;
-                    $this->info[$thumbUrl] = $info;
-
-                }
-            }
-
-            if ($this->exists($thumbWebPPath)) {
-                $thumbWUrl = $this->storage->url($thumbWebPPath);
-
-                $sourceSets[] = [
-                    'type' => 'image/webp',
-                    'url' => $thumbWUrl,
-                ];
-
-                if ($size) {
-                    $info = [];
-                    $info['size'] = round($this->storage->size($thumbWebPPath) / 1000) . ' kb';
-                    $this->info[$thumbWUrl] = $info;
-                }
             }
         }
 
@@ -195,9 +149,9 @@ class PhotoRenderService
      *
      * @return array
      */
-    public function getUrls($source): array
+    public function getUrls($source, array $thumbnails = []): array
     {
-        return array_merge($this->getMainUrls($source), $this->getThumbnailUrls($source));
+        return array_merge($this->getMainUrls($source), $this->getThumbnailUrls($thumbnails));
     }
 
     /**
@@ -215,10 +169,10 @@ class PhotoRenderService
      *
      * @return array
      */
-    public function getImageDetailsInfo(string $source): array
+    public function getImageDetailsInfo(Photo $photo, array $thumbnails = []): array
     {
-        $this->getMainUrls($source, true);
-        $this->getThumbnailUrls($source, true);
+        $this->getMainUrls($photo, true);
+        $this->getThumbnailUrls($photo->thumbnails, true);
 
         return $this->info;
     }

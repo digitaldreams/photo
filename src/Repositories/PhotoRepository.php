@@ -5,6 +5,7 @@ namespace Photo\Repositories;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\UploadedFile;
+use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
 
@@ -53,10 +54,11 @@ class PhotoRepository
     {
         $caption = $data['caption'] ?? null;
         $crop = $data['crop'] ?? null;
-        $this->photo->src = $this->uploadAndGenerateThumbnails($file, $caption, $crop);
+        $this->photo->src = $this->photoService->store(config('photo.rootPath', 'images'), $file, $caption, $crop);
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
         $this->photo->save();
+        dispatch(new PhotoProcessJob( $this->photo));
 
         return $this->photo;
     }
@@ -78,9 +80,11 @@ class PhotoRepository
     {
         if ($file) {
             $oldPhoto = $photo->src;
-            $photo->src = $this->uploadAndGenerateThumbnails($file, $caption, $crop);
+            $photo->src = $this->photoService->store(config('photo.rootPath', 'images'), $file, $caption, $crop);
             $photo->mime_type = $this->storage->mimeType($photo->src);
+            $photo->save();
             $this->removeFiles($oldPhoto);
+            dispatch(new PhotoProcessJob($photo));
         }
 
         $photo->caption = $caption ?: $file->getClientOriginalName();
@@ -116,46 +120,9 @@ class PhotoRepository
     {
         if ($this->storage->exists($source)) {
             $this->storage->delete($source);
-            $pathInfo = pathinfo($source);
-
-            $webP = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-            if ($this->storage->exists($webP)) {
-                $this->storage->delete($webP);
-            }
-
-            foreach (config('photo.sizes', []) as $name => $info) {
-                $thumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['basename'];
-                if ($this->storage->exists($thumbnail)) {
-                    $this->storage->delete($thumbnail);
-                }
-
-                $webPthumbnail = $pathInfo['dirname'] . '/' . $info['path'] . '/' . $pathInfo['filename'] . '.webp';
-                if ($this->storage->exists($webPthumbnail)) {
-                    $this->storage->delete($webPthumbnail);
-                }
-            }
         }
 
         return $this;
-    }
-
-    /**
-     * @param             $file
-     * @param             $caption
-     * @param string|null $crop
-     *
-     * @return mixed
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    private function uploadAndGenerateThumbnails($file, $caption, string $crop = null)
-    {
-        $thumbnail = config('photo.sizes.thumbnail');
-
-        return $this->photoService->setDimension($thumbnail['width'], $thumbnail['height'], $thumbnail['path'])
-            ->store(config('photo.rootPath', 'images'), $file, $caption, $crop)
-            ->convert()
-            ->getStoredImagePath();
     }
 
     /**

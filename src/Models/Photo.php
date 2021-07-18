@@ -8,13 +8,11 @@ use Photo\Services\PhotoRenderService;
 /**
  * @property int                                      $user_id     user id
  * @property string                                   $caption     caption
- * @property string                                   $title       title
  * @property string                                   $mime_type   mime type
  * @property string                                   $src         src
- * @property int                                      $location_id location id
  * @property \Carbon\Carbon                           $created_at  created at
  * @property \Carbon\Carbon                           $updated_at  updated at
- * @property \Illuminate\Database\Eloquent\Collection $albumphoto  belongsToMany
+ * @property \Illuminate\Database\Eloquent\Collection $tags        belongsToMany
  */
 class Photo extends Model
 {
@@ -30,13 +28,32 @@ class Photo extends Model
     /**
      * Protected columns from mass assignment.
      */
-    protected $fillable = ['user_id', 'caption', 'src', 'exif'];
+    protected $fillable = [
+        'user_id',
+        'status',
+        'caption',
+        'src',
+        'src_webp',
+        'thumbnails',
+        'mime_type',
+        'disk',
+        'hash',
+        'info',
+        'exif',
+    ];
 
-    protected $dates = ['captured_at'];
+    protected $dates = [
+        'captured_at'
+    ];
+
     /**
      * @var array
      */
-    protected $casts = ['exif' => 'array'];
+    protected $casts = [
+        'exif' => 'array',
+        'thumbnails' => 'array',
+        'info' => 'array',
+    ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
@@ -54,16 +71,6 @@ class Photo extends Model
         $userModel = config('auth.providers.users.model');
 
         return $this->belongsTo($userModel);
-    }
-
-    /**
-     * Album.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function albums()
-    {
-        return $this->belongsToMany(Tag::class, 'album_photo');
     }
 
     /**

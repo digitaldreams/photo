@@ -41,18 +41,9 @@ return [
     /*
      * How many size of your image you want.
      */
-    'sizes' => [
-        /*
-         * Thumbnail size in pixel
-         */
-        'thumbnail' => [
-            /*
-             * Path are relative to rootPath.
-             * Suppose rootPath is photos and thumbnail path is thumbnails.
-             * Then your thumbnail full path will be photos/thumbnails
-             */
-            'path' => 'thumbnails',
-            'height' => 250,
+    'dimensions' => [
+        [
+            'height' => 200,
             'width' => 250,
         ],
     ],
