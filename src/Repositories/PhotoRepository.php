@@ -11,6 +11,7 @@ use Jenssegers\ImageHash\Hash;
 use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
+use Photo\Services\SortRelevantImage;
 
 class PhotoRepository
 {
@@ -167,15 +168,16 @@ class PhotoRepository
 
     public function compareSimilarities(Photo $photo, $distance = 20)
     {
-        $matching = [];
+        $matching = new SortRelevantImage();
         $hash = Hash::fromHex($photo->hash);
-        $photos= $this->findSimilar($photo)->take(50)->get();
+        $photos = $this->findSimilar($photo)->take(100)->get();
 
         foreach ($photos as $img) {
             $hash2 = Hash::fromHex($img->hash);
             $diff = $hash->distance($hash2);
             if ($diff <= $distance) {
-                $matching[] = $img;
+                $img->score = $diff;
+                $matching->insert($img);
             }
             unset($hash2);
         }
