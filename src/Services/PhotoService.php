@@ -248,9 +248,9 @@ class PhotoService
      * @param        $size
      * @param string $format
      *
-     * @return mixed|null
+     * @return string|null
      */
-    public function getSize($size, $format = 'jpeg'): string
+    public function getSize($size, string $format = 'jpeg'): ?string
     {
         return $this->convertedSizes[$size][$format] ?? null;
     }
