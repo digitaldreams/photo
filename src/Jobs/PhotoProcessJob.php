@@ -8,6 +8,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Jenssegers\ImageHash\ImageHash;
+use Jenssegers\ImageHash\Implementations\DifferenceHash;
 use Photo\Models\Photo;
 use Photo\Repositories\PhotoRepository;
 use Photo\Services\PhotoService;
@@ -55,7 +58,14 @@ class PhotoProcessJob implements ShouldQueue
 
         $this->photo->src_webp = $image_webp_src;
         $this->photo->thumbnails = $thumbnails;
-        $info[$filesystem->url($this->photo->src)] = [
+        try {
+            $hasher = new ImageHash(new DifferenceHash());
+            $this->photo->hash = $hasher->hash($filesystem->readStream($this->photo->src));
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+        }
+
+        $info[] = [
             'size' => round($filesystem->size($this->photo->src) / 1000) . 'kb',
         ];
         $info[$filesystem->url($image_webp_src)] = [

@@ -4,6 +4,7 @@ namespace Photo\Http\Requests\Photos;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Photo\Models\Photo;
+use Photo\Rules\DuplicateImageRule;
 
 class Store extends FormRequest
 {
@@ -26,7 +27,7 @@ class Store extends FormRequest
     {
         return [
             'caption' => 'required|max:191',
-            'file'    => 'required|image|max:2048',
+            'file' => ['required', 'image', 'max:2048',new DuplicateImageRule()],
         ];
     }
 

@@ -28,7 +28,7 @@
     </div>
     <div class="form-group">
         <label>
-            <input type="checkbox" name="crop" value="yes" checked>
+            <input type="checkbox" name="crop" value="yes">
             Yes crop my image to {{config('photo.maxHeight')}}px Height and {{config('photo.maxWidth')}}px Width
         </label>
     </div>

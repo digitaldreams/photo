@@ -52,4 +52,6 @@ return [
      * Photo Policy Class.
      */
     'policy' => \Photo\Policies\PhotoPolicy::class,
+
+    'allowDuplicate' => false,
 ];
