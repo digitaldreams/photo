@@ -3,8 +3,11 @@
 namespace Photo\Repositories;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Jenssegers\ImageHash\Hash;
 use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
@@ -58,7 +61,7 @@ class PhotoRepository
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
         $this->photo->save();
-        dispatch(new PhotoProcessJob( $this->photo));
+        dispatch(new PhotoProcessJob($this->photo));
 
         return $this->photo;
     }
@@ -141,5 +144,42 @@ class PhotoRepository
             ->when($search, function ($query) use ($search) {
                 $query->q($search);
             })->paginate($perPage);
+    }
+
+    public function findSimilarids(Photo $photo, $total = 10)
+    {
+        $returnIds = [];
+        $records = DB::select("SELECT id, HEX(hash), BIT_COUNT(hash ^ '$photo->hash') as score
+            FROM photo_photos  order by score asc limit $total");
+        foreach ($records as $record) {
+            $returnIds[] = $record->id;
+        }
+        return $returnIds;
+    }
+
+    public function findSimilar(Photo $photo): Builder
+    {
+        return Photo::query()->whereNotNull('hash')
+            ->selectRaw("*, HEX(hash), BIT_COUNT(hash ^ '$photo->hash') as score")
+            ->whereNotIn('id', [$photo->id])
+            ->orderByRaw('score asc');
+    }
+
+    public function compareSimilarities(Photo $photo, $distance = 20)
+    {
+        $matching = [];
+        $hash = Hash::fromHex($photo->hash);
+        $photos= $this->findSimilar($photo)->take(50)->get();
+
+        foreach ($photos as $img) {
+            $hash2 = Hash::fromHex($img->hash);
+            $diff = $hash->distance($hash2);
+            if ($diff <= $distance) {
+                $matching[] = $img;
+            }
+            unset($hash2);
+        }
+
+        return $matching;
     }
 }

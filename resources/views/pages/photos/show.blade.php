@@ -30,6 +30,8 @@
             </form>
             <a class="btn btn-light" href="{{route('photo::photos.download',$record->id)}}"><i
                     class="fa fa-download"></i> Download</a>
+            <a class="btn btn-light" href="{{route('photo::photos.find.similar_photos',$record->id)}}"><i
+                    class="fa fa-download"></i> Similar Photos</a>
         @endcan
 
     </div>

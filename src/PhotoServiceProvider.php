@@ -9,6 +9,7 @@ use Photo\Models\Tag;
 use Photo\Observers\PhotoObserver;
 use Photo\Observers\TagObserver;
 use Photo\Policies\PhotoPolicy;
+use Illuminate\Pagination\Paginator;
 
 /**
  * Class ServiceProvider.
@@ -32,6 +33,8 @@ class PhotoServiceProvider extends ServiceProvider
 
         Photo::observe(PhotoObserver::class);
         Tag::observe(TagObserver::class);
+        Paginator::useBootstrap();
+
     }
 
     /**
