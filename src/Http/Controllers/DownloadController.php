@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Photo\Http\Requests\Photos\Download;
 use Photo\Http\Requests\Photos\Dropzone;
+use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Repositories\PhotoRepository;
 use Photo\Services\ImageDownloadService;
@@ -70,12 +71,7 @@ class DownloadController extends Controller
             $photo->caption = $request->get('caption');
             $photo->src = $path;
             $photo->save();
-
-            $this->photoService->convertMaxDimensionToWebP($path, false);
-            foreach (config('photo.sizes') as $name => $info) {
-                $this->photoService->setDimension($info['width'], $info['height'], $info['path']);
-            }
-            $this->photoService->convert($path);
+            $this->dispatch(new PhotoProcessJob($photo));
 
             return response()->json([
                 'file' => $photo->getUrl(),

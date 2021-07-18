@@ -43,8 +43,8 @@ return [
      */
     'dimensions' => [
         [
-            'height' => 200,
-            'width' => 250,
+            'height' => 250,
+            'width' => 320,
         ],
     ],
 

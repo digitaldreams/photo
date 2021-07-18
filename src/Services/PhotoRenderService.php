@@ -74,8 +74,9 @@ class PhotoRenderService
      */
     public function renderThumbnails(Photo $photo): string
     {
+        $thumbnails= !is_array($photo->thumbnails)?[$photo->thumbnails]:$photo->thumbnails;
         $tag = '<picture>';
-        $thumbs = $this->getThumbnailUrls($photo->thumbnails);
+        $thumbs = $this->getThumbnailUrls($thumbnails);
         if (empty($thumbs)) {
             $tag .= '<img src="' . config('photo.default') . '" alt="Our Default Image source" class="card-img-top  img img-responsive">';
             $tag .= '</picture>';

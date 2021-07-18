@@ -18,7 +18,7 @@
             <p class="help-block text-muted">Image size must be less than 2MB</p>
         </div>
         <div class="col-md-3">
-            @if(!empty($model->id) && !empty($thumbs=$photoRender->getThumbnailUrls($model->src)))
+            @if(!empty($model->id) && !empty($thumbs=$photoRender->getThumbnailUrls($model->thumbnails)))
                 <img height="120px" id="file_preview" src="{{$thumbs[0]['url']}}">
             @else
                 <img height="120px" id="file_preview" src="{{config('photo.default')}}">
