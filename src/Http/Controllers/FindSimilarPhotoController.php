@@ -45,7 +45,7 @@ class FindSimilarPhotoController
         return view('photo::pages.photos.similar', [
             'photoRender' => $this->photoRenderService,
             'original' => $photo,
-            'records' => $this->photoRepository->compareSimilarities($photo, $request->get('distance', 25)),
+            'records' => $this->photoRepository->compareSimilarities($photo, $request->get('distance', 15)),
         ]);
     }
 }

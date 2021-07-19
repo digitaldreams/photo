@@ -166,7 +166,7 @@ class PhotoRepository
             ->orderByRaw('score asc');
     }
 
-    public function compareSimilarities(Photo $photo, $distance = 20)
+    public function compareSimilarities(Photo $photo, $distance = 15)
     {
         $matching = new SortRelevantImage();
         $hash = Hash::fromHex($photo->hash);
