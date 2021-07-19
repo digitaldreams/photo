@@ -151,7 +151,7 @@ class PhotoService
     public function resizeAndConvert($source, string $destination, int $width, int $height, string $format): string
     {
         $imageStream = $this->image->make($this->getImageSource($source))
-            ->fit($width, $height, function ($constraint) {
+            ->widen($width, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             })->encode($format, $this->quality)->stream();

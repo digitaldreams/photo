@@ -75,10 +75,10 @@ class PhotoRenderService
     public function renderThumbnails(Photo $photo): string
     {
         $thumbnails= !is_array($photo->thumbnails)?[$photo->thumbnails]:$photo->thumbnails;
-        $tag = '<picture>';
+        $tag = '<picture style="max-height: 250px">';
         $thumbs = $this->getThumbnailUrls($thumbnails);
         if (empty($thumbs)) {
-            $tag .= '<img src="' . config('photo.default') . '" alt="Our Default Image source" class="card-img-top  img img-responsive">';
+            $tag .= '<img src="' . config('photo.default') . '"  alt="'.$photo->caption.'" class="card-img-top  img img-responsive" style="object-fit:contain">';
             $tag .= '</picture>';
 
             return $tag;

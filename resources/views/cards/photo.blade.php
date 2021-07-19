@@ -1,6 +1,6 @@
-<div class="card card-default" style="min-height: 320px">
+<div class="card card-default" >
     <a href="{{route('photo::photos.show',$record->id)}}">
-        {!! $photoRender->renderThumbnails($record) !!}
+        {!! $photoRender->setStyle('object-fit:cover')->renderThumbnails($record) !!}
     </a>
     <div class="row">
         <h6 class="card-title col-10">

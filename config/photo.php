@@ -44,7 +44,7 @@ return [
     'dimensions' => [
         [
             'height' => 250,
-            'width' => 320,
+            'width' => 250,
         ],
     ],
 

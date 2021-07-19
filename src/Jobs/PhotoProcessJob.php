@@ -64,9 +64,17 @@ class PhotoProcessJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error($e->getMessage());
         }
+        $wh=[];
+        try {
+            $wh = getimagesize($filesystem->url($this->photo->src));
+        }catch (\Exception $e){
 
-        $info[] = [
+        }
+
+        $info[$filesystem->url($this->photo->src)] = [
             'size' => round($filesystem->size($this->photo->src) / 1000) . 'kb',
+            'width' => $wh[0] ?? null,
+            'height' => $wh[1] ?? null,
         ];
         $info[$filesystem->url($image_webp_src)] = [
             'size' => round($filesystem->size($image_webp_src) / 1000) . 'kb',

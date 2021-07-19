@@ -52,13 +52,19 @@
         </div>
         <hr/>
         <div class="row">
-            @foreach($records as $photo)
+            @foreach($records->chunk(2) as $photos)
                 <div class="col-sm-2">
-                    @include('photo::cards.photo',['record'=>$photo])
+                    <div class="d-flex flex-column align-items-start flex">
+                        @foreach($photos as $photo)
+                            <div class="">
+                                @include('photo::cards.photo',['record'=>$photo])
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             @endforeach
-
         </div>
+        <div class="clearfix"></div>
         {!! $records->appends(['search'=>request('search')])->render() !!}
     </section>
 @endSection

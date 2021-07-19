@@ -70,6 +70,7 @@ class DownloadController extends Controller
             $photo = new Photo();
             $photo->caption = $request->get('caption');
             $photo->src = $path;
+            $photo->mime_type = $this->storage->mimeType($path);
             $photo->save();
             $this->dispatch(new PhotoProcessJob($photo));
 
