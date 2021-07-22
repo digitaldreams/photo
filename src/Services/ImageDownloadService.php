@@ -96,6 +96,9 @@ class ImageDownloadService
             case 'image/jpeg':
                 $extension = 'jpeg';
                 break;
+            case 'image/webp':
+                $extension = 'webp';
+                break;
             default:
                 $extension = 'jpg';
                 break;

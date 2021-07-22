@@ -20,7 +20,7 @@
 @section('tools')
     <span id="downloading-status"></span>
     <form class="d-inline">
-        <input class="form-control" type="number" name="distance" value="{{request('distance',15)}}" required>
+        <input class="form-control" type="number" name="distance" value="{{request('distance',10)}}" required>
     </form>
     <div class="btn-group">
         <a class="btn btn-secondary" href="{{route('photo::photos.create')}}"><span class="fa fa-plus"></span>

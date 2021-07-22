@@ -14,6 +14,7 @@
             for (var i = 0; i < files.length; i++) {
                 var allowedMimes = ["image/png", "image/jpg", "image/gif", "image/jpeg"];
                 if (allowedMimes.includes(files[i].type) == true) {
+                    $("#downloading-status").text('Uploading....');
                     uploadFile(files[i]);
                 } else {
                     console.log('Invalid file type');
@@ -33,6 +34,7 @@
         formData.append('_token', csrfToken)
 
         xhr.onreadystatechange = function () {
+            console.log(xhr.readyState);
             if (xhr.readyState === 4) {
                 var response = JSON.parse(xhr.response);
                 window.location.href = redirectUrl.replace("@id@", response.data.id);

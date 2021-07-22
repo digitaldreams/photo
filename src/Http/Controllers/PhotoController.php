@@ -56,7 +56,7 @@ class PhotoController extends Controller
     {
         $this->authorize('viewAny', Photo::class);
 
-        $photos = Photo::query();
+        $photos = Photo::query()->where('user_id',auth()->id());
         $search = $request->get('search');
         $folder = $request->get('folder');
         $tag = $request->get('tag');

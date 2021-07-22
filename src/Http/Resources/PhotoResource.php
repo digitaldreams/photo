@@ -21,8 +21,8 @@ class PhotoResource extends JsonResource
         return [
             'id'         => $this->id,
             'user_id'    => $this->id,
-            'urls'       => $photoRender->getMainUrls($this->src),
-            'thumbnails' => $photoRender->getThumbnailUrls($this->src),
+            'urls'       => $photoRender->getMainUrls($this->resource),
+            'thumbnails' => $photoRender->getThumbnailUrls($this->resource->thumbnails ??[]),
             'caption'    => $this->caption,
         ];
     }
