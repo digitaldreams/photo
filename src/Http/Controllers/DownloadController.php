@@ -63,12 +63,12 @@ class DownloadController extends Controller
         $this->authorize('create', Photo::class);
 
         try {
-            $url = $request->get('url');
+            $url = htmlspecialchars_decode($request->get('url'));
             $this->imageDownloadService->setImageUrl($url);
 
             $path = $this->imageDownloadService->download('images');
             $photo = new Photo();
-            $photo->caption = $request->get('caption');
+            $photo->caption = filter_var($request->get('caption'), FILTER_VALIDATE_URL) ? '' : $request->get('caption');
             $photo->src = $path;
             $photo->mime_type = $this->storage->mimeType($path);
             $photo->save();

@@ -13,6 +13,7 @@
 @endsection
 
 @section('tools')
+    <span id="downloading-status"></span>
     <div class="btn-group btn-group-sm">
         @can('update',$record)
             <a class="btn btn-light" href="{{route('photo::photos.edit',$record->id)}}">
