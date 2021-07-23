@@ -4,13 +4,14 @@
 namespace Photo\Http\Controllers;
 
 
+use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use Photo\Models\Photo;
 use Photo\Repositories\PhotoRepository;
 use Photo\Services\PhotoRenderService;
 
-class FindSimilarPhotoController
+class FindSimilarPhotoController extends Controller
 {
     /**
      * @var \Illuminate\Contracts\Filesystem\Filesystem
