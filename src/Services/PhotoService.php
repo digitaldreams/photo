@@ -6,6 +6,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Encoders\WebpEncoder;
 
 class PhotoService
 {
@@ -66,12 +67,11 @@ class PhotoService
      * ImageOptimizationService constructor.
      *
      * @param \Illuminate\Contracts\Filesystem\Filesystem $filesystem
-     * @param \Intervention\Image\ImageManager            $imageManager
      */
-    public function __construct(Filesystem $filesystem, ImageManager $imageManager)
+    public function __construct(Filesystem $filesystem)
     {
         $this->storage = $filesystem;
-        $this->image = $imageManager;
+        $this->image = ImageManager::gd();
         $this->maxDimension['height'] = config('photo.maxHeight', 450);
         $this->maxDimension['width'] = config('photo.maxWidth', 800);
         $this->dimensions = config('photo.dimensions', []);
@@ -150,11 +150,9 @@ class PhotoService
      */
     public function resizeAndConvert($source, string $destination, int $width, int $height, string $format): string
     {
-        $imageStream = $this->image->make($this->getImageSource($source))
-            ->widen($width, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            })->encode($format, $this->quality)->stream();
+        $imageStream = $this->image->read($this->getImageSource($source))
+            ->resizeDown($width, $height)
+            ->toWebp( $this->quality);
 
         $this->storage->put($destination, $imageStream, $this->visibility);
 
@@ -163,8 +161,8 @@ class PhotoService
 
     public function encode($source, string $destination, string $format)
     {
-        $imageStream = $this->image->make($this->getImageSource($source))
-            ->encode($format, $this->quality)->stream();
+        $imageStream = $this->image->read($this->getImageSource($source))
+            ->encodeByExtension($format, $this->quality);
 
         return $this->storage->put($destination, $imageStream, $this->visibility);
     }

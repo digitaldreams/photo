@@ -60,7 +60,7 @@ class PhotoProcessJob implements ShouldQueue
         $this->photo->thumbnails = $thumbnails;
         try {
             $hasher = new ImageHash(new DifferenceHash());
-            $this->photo->hash = $hasher->hash($filesystem->readStream($this->photo->src));
+            $this->photo->hash = $hasher->hash($filesystem->url($this->photo->src));
         } catch (\Exception $e) {
             Log::error($e->getMessage());
         }

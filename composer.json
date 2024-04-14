@@ -14,11 +14,11 @@
         }
     ],
     "require": {
-        "php": "^7.4|^8.0",
-        "laravel/framework": "^8.0",
-        "intervention/image": "^2.6",
-        "guzzlehttp/guzzle": "^6.0.1|^8.0.0",
-        "jenssegers/imagehash": "dev-master"
+        "php": "^8.0",
+        "laravel/framework": "^10.0",
+        "intervention/image": "^3.5",
+        "jenssegers/imagehash": "^0.4.2",
+        "guzzlehttp/guzzle": "^7.8.1"
     },
     "require-dev": {
     },

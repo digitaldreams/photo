@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Jenssegers\ImageHash\Hash;
+use Jenssegers\ImageHash\ImageHash;
 use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
@@ -59,6 +59,7 @@ class PhotoRepository
         $caption = $data['caption'] ?? null;
         $crop = $data['crop'] ?? null;
         $this->photo->src = $this->photoService->store(config('photo.rootPath', 'images'), $file, $caption, $crop);
+        $this->photo->disk = config('filesystems.default');
         $this->photo->caption = $caption ?: $file->getClientOriginalName();
         $this->photo->mime_type = $this->storage->mimeType($this->photo->src);
         $this->photo->save();
