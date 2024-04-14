@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "laravel/framework": "^10.0",
+        "laravel/framework": "^10.0|^11.0",
         "intervention/image": "^3.5",
         "jenssegers/imagehash": "^0.4.2",
         "guzzlehttp/guzzle": "^7.8.1"
