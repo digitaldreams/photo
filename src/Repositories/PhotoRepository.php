@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Jenssegers\ImageHash\Hash;
 use Jenssegers\ImageHash\ImageHash;
+use Jenssegers\ImageHash\Implementations\DifferenceHash;
 use Photo\Jobs\PhotoProcessJob;
 use Photo\Models\Photo;
 use Photo\Services\PhotoService;
@@ -170,12 +172,14 @@ class PhotoRepository
     public function compareSimilarities(Photo $photo, $distance = 15)
     {
         $matching = new SortRelevantImage();
-        $hash = Hash::fromHex($photo->hash);
+        $hasher = new ImageHash(new DifferenceHash());
+
         $photos = $this->findSimilar($photo)->take(100)->get();
 
         foreach ($photos as $img) {
-            $hash2 = Hash::fromHex($img->hash);
-            $diff = $hash->distance($hash2);
+            $hasher2 = new ImageHash(new DifferenceHash());
+            $diff = $hasher2->compare($photo->getUrl(), $img->getUrl());
+
             if ($diff <= $distance) {
                 $img->score = $diff;
                 $matching->insert($img);
